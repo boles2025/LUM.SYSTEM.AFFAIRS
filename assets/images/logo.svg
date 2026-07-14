@@ -1,0 +1,26 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 450" fill="none">
+  <!-- Shield -->
+  <path d="M200 25 L350 100 L350 260 Q350 360 200 420 Q50 360 50 260 L50 100 Z" 
+        fill="#1a3a5c" stroke="#0f2640" stroke-width="4" stroke-linejoin="round"/>
+  <!-- Inner shield highlight -->
+  <path d="M200 38 L338 108 L338 255 Q338 348 200 408 Q62 348 62 255 L62 108 Z" 
+        fill="none" stroke="rgba(255,255,255,0.08)" stroke-width="1"/>
+  <!-- Lotus petals -->
+  <g transform="translate(200,165)" fill="#d4af37">
+    <ellipse cx="0" cy="-42" rx="16" ry="48" opacity="0.95"/>
+    <ellipse cx="0" cy="-42" rx="16" ry="48" transform="rotate(-30)" opacity="0.82"/>
+    <ellipse cx="0" cy="-42" rx="16" ry="48" transform="rotate(-58)" opacity="0.68"/>
+    <ellipse cx="0" cy="-42" rx="16" ry="48" transform="rotate(-82)" opacity="0.52"/>
+    <ellipse cx="0" cy="-42" rx="16" ry="48" transform="rotate(30)" opacity="0.82"/>
+    <ellipse cx="0" cy="-42" rx="16" ry="48" transform="rotate(58)" opacity="0.68"/>
+    <ellipse cx="0" cy="-42" rx="16" ry="48" transform="rotate(82)" opacity="0.52"/>
+  </g>
+  <!-- LUM text -->
+  <text x="200" y="268" text-anchor="middle" font-family="Georgia, serif" font-size="50" font-weight="bold" fill="#d4af37" letter-spacing="10">LUM</text>
+  <!-- Divider -->
+  <line x1="125" y1="288" x2="275" y2="288" stroke="#d4af37" stroke-width="1.2" opacity="0.4"/>
+  <!-- LOTUS UNIVERSITY -->
+  <text x="200" y="322" text-anchor="middle" font-family="Georgia, serif" font-size="21" fill="#ffffff" letter-spacing="3" font-weight="bold">LOTUS UNIVERSITY</text>
+  <!-- in Minya -->
+  <text x="200" y="352" text-anchor="middle" font-family="Georgia, serif" font-size="19" fill="rgba(255,255,255,0.7)" font-style="italic">in Minya</text>
+</svg>

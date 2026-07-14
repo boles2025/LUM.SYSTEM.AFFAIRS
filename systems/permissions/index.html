@@ -1,0 +1,434 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>إدارة الصلاحيات والسجل - جامعة اللوتس</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.rtl.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700;800;900&family=Changa:wght@500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../../styles.css">
+    <style>
+        :root {
+            --bg-main: #0f1119;
+            --bg-card: #1a1d2e;
+            --text-primary: #e8eaf0;
+            --text-secondary: #9ca3b8;
+            --border: #2a2d3e;
+            --accent-amber: #f59e0b;
+            --accent-blue: #3b82f6;
+            --accent-emerald: #10b981;
+            --accent-rose: #f43f5e;
+            --shadow: 0 4px 6px rgba(0,0,0,0.2);
+        }
+        body { background: var(--bg-main); color: var(--text-primary); font-family: 'Tajawal', sans-serif; }
+        .page-header { background: var(--bg-card); border-bottom: 1px solid var(--border); padding: 16px 20px; display: flex; justify-content: space-between; align-items: center; box-shadow: var(--shadow); }
+        .page-title { font-family: 'Changa', sans-serif; font-weight: 800; font-size: 1.4rem; color: var(--accent-amber); margin: 0; display: flex; align-items: center; gap: 10px; }
+        .btn-back { background: transparent; border: 1px solid var(--border); color: var(--text-primary); padding: 6px 14px; border-radius: 8px; text-decoration: none; font-size: 0.9rem; transition: all 0.3s; }
+        .btn-back:hover { background: rgba(255,255,255,0.05); color: var(--text-primary); }
+        
+        .tabs { display: flex; gap: 10px; border-bottom: 2px solid var(--border); margin-top: 24px; padding-bottom: 0; }
+        .tab-btn { background: transparent; border: none; color: var(--text-secondary); font-size: 1rem; font-weight: 700; padding: 10px 20px; cursor: pointer; border-bottom: 2px solid transparent; margin-bottom: -2px; transition: all 0.3s; }
+        .tab-btn.active { color: var(--accent-amber); border-bottom-color: var(--accent-amber); }
+        .tab-content { display: none; padding: 24px 0; }
+        .tab-content.active { display: block; animation: fadeIn 0.4s ease; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+
+        .card { background: var(--bg-card); border: 1px solid var(--border); border-radius: 12px; padding: 20px; margin-bottom: 20px; box-shadow: var(--shadow); }
+        .input-main { background: var(--bg-main); border: 1px solid var(--border); border-radius: 8px; padding: 8px 12px; color: var(--text-primary); width: 100%; font-family: 'Tajawal', sans-serif; }
+        .input-main:focus { border-color: var(--accent-amber); outline: none; }
+        .btn-action { background: linear-gradient(135deg, var(--accent-amber), #d97706); border: none; color: white; padding: 8px 16px; border-radius: 8px; font-weight: 700; cursor: pointer; transition: all 0.3s; }
+        .btn-action:hover { box-shadow: 0 4px 12px rgba(245,158,11,0.3); transform: translateY(-2px); }
+        
+        .perm-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 12px; margin-top: 10px; }
+        .perm-item { display: flex; align-items: center; gap: 8px; font-size: 0.9rem; font-weight: 700; color: #ffffff; background: var(--bg-main); padding: 8px 12px; border-radius: 8px; border: 1px solid var(--border); }
+        .perm-item input[type="checkbox"] { width: 18px; height: 18px; accent-color: var(--accent-amber); }
+
+        table { width: 100%; border-collapse: collapse; font-size: 0.9rem; color: #ffffff; }
+        th, td { border-bottom: 1px solid var(--border); padding: 12px; text-align: right; color: #ffffff; }
+        th { color: #ffffff; font-weight: 700; background: rgba(0,0,0,0.2); }
+        tr:hover { background: rgba(255,255,255,0.05); }
+        
+        .badge { padding: 4px 8px; border-radius: 4px; font-size: 0.75rem; font-weight: 700; }
+        .badge-admin { background: rgba(245,158,11,0.15); color: var(--accent-amber); border: 1px solid rgba(245,158,11,0.3); }
+        .badge-emp { background: rgba(59,130,246,0.15); color: var(--accent-blue); border: 1px solid rgba(59,130,246,0.3); }
+    </style>
+</head>
+<body data-theme="dark">
+
+<div class="page-header">
+    <h1 class="page-title"><i class="fas fa-users-cog"></i> إدارة الصلاحيات والسجل</h1>
+    <a href="../../index.html" class="btn-back"><i class="fas fa-arrow-right me-1"></i> العودة للرئيسية</a>
+</div>
+
+<div class="container mt-4">
+    <div class="tabs">
+        <button class="tab-btn active" onclick="switchTab('users')"><i class="fas fa-users me-1"></i> المستخدمين والصلاحيات</button>
+        <button class="tab-btn" onclick="switchTab('logs')"><i class="fas fa-history me-1"></i> سجل النشاطات</button>
+    </div>
+
+    <!-- Users Tab -->
+    <div id="tab-users" class="tab-content active">
+        <div class="card mb-4" style="border: 1px solid var(--accent-emerald);">
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:16px;">
+                <h4 style="margin:0; font-size:1.1rem; color:var(--accent-emerald); font-weight:700;"><i class="fas fa-user-plus me-1"></i> إضافة موظف جديد</h4>
+            </div>
+            <div class="row g-2">
+                <div class="col-md-3">
+                    <input type="text" id="new_username" class="input-main" placeholder="اسم المستخدم بالانجليزية">
+                </div>
+                <div class="col-md-3">
+                    <input type="text" id="new_name" class="input-main" placeholder="الاسم بالكامل (بالعربية)">
+                </div>
+                <div class="col-md-3">
+                    <input type="password" id="new_password" class="input-main" style="direction:ltr; text-align:left;" placeholder="كلمة المرور">
+                </div>
+                <div class="col-md-3">
+                    <button class="btn-action w-100" style="background:var(--accent-emerald);" onclick="addNewEmployee()"><i class="fas fa-plus me-1"></i> إضافة الموظف</button>
+                </div>
+            </div>
+            <div id="new_emp_msg" style="font-size:0.85rem; font-weight:bold; margin-top:10px; text-align:center;"></div>
+        </div>
+
+        <div class="row" id="users-container">
+            <!-- Populated via JS -->
+            <div class="text-center mt-5"><i class="fas fa-spinner fa-spin fa-2x text-secondary"></i> جاري التحميل...</div>
+        </div>
+    </div>
+
+    <!-- Logs Tab -->
+    <div id="tab-logs" class="tab-content">
+        <div class="card">
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:16px;">
+                <h4 style="margin:0; font-size:1.1rem; color:var(--text-primary);"><i class="fas fa-list me-1"></i> آخر العمليات في النظام</h4>
+                <button class="btn-action" style="background:var(--accent-rose);" onclick="clearLogs()"><i class="fas fa-trash me-1"></i> مسح السجل</button>
+            </div>
+            <div style="overflow-x:auto;">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>التاريخ والوقت</th>
+                            <th>الموظف</th>
+                            <th>العملية</th>
+                            <th>الهدف</th>
+                            <th>تفاصيل إضافية</th>
+                        </tr>
+                    </thead>
+                    <tbody id="logs-tbody">
+                        <!-- Populated via JS -->
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+<script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-auth.js"></script>
+<script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
+<script src="../../auth.js"></script>
+<script>
+    const ALL_PERMISSIONS = [
+        { id: 'view', name: 'عرض البيانات الأساسية' },
+        { id: 'create', name: 'إنشاء/إضافة بيانات' },
+        { id: 'edit', name: 'تعديل البيانات' },
+        { id: 'delete', name: 'حذف البيانات' },
+        { id: 'manage_employees', name: 'إدارة الموظفين' },
+        { id: 'manage_settings', name: 'إدارة إعدادات النظام' },
+        { id: 'view_logs', name: 'استعراض السجلات' },
+        { id: 'manage_delivery', name: 'إدارة التسليمات (سحب/إيداع)' },
+        { id: 'upload_files', name: 'رفع الملفات المجمعة' }
+    ];
+
+    let cachedEmployees = [];
+
+    document.addEventListener('DOMContentLoaded', async () => {
+        const user = window.getCurrentUser();
+        if (!user || user.username !== 'boles') {
+            alert('ليس لديك صلاحية للدخول إلى هذه الصفحة. هذه الصفحة مخصصة للمدير العام فقط.');
+            window.location.href = '../../index.html';
+            return;
+        }
+
+        const savedTheme = localStorage.getItem('dash_theme') || 'dark';
+        document.body.setAttribute('data-theme', savedTheme);
+
+        await loadEmployees();
+    });
+
+    function switchTab(tab) {
+        document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
+        document.querySelectorAll('.tab-content').forEach(content => content.classList.remove('active'));
+        
+        event.currentTarget.classList.add('active');
+        document.getElementById('tab-' + tab).classList.add('active');
+
+        if (tab === 'logs') loadLogs();
+    }
+
+    async function loadEmployees() {
+        const container = document.getElementById('users-container');
+        try {
+            cachedEmployees = await window.authGetAllEmployees();
+            renderEmployees();
+        } catch (e) {
+            container.innerHTML = '<div class="alert alert-danger">حدث خطأ أثناء تحميل المستخدمين</div>';
+        }
+    }
+
+    function renderEmployees() {
+        const container = document.getElementById('users-container');
+        container.innerHTML = '';
+        
+        cachedEmployees.forEach((emp, index) => {
+            // Determine active permissions
+            let activePerms = [];
+            if (emp.permissions && Array.isArray(emp.permissions)) {
+                activePerms = emp.permissions;
+            } else {
+                activePerms = window.AUTH_ROLE_PERMISSIONS[emp.role] || [];
+            }
+
+            const roleName = emp.role === 'admin' ? 'مدير' : (emp.role === 'supervisor' ? 'مشرف' : (emp.role === 'viewer' ? 'مشاهد' : 'موظف'));
+            const badgeClass = emp.role === 'admin' ? 'badge-admin' : 'badge-emp';
+
+            let permsHtml = '';
+            ALL_PERMISSIONS.forEach(p => {
+                const isChecked = activePerms.includes(p.id) ? 'checked' : '';
+                permsHtml += `
+                    <label class="perm-item">
+                        <input type="checkbox" id="perm_${index}_${p.id}" value="${p.id}" ${isChecked}>
+                        <span>${p.name}</span>
+                    </label>
+                `;
+            });
+
+            const card = document.createElement('div');
+            card.className = 'col-md-6 mb-4';
+            card.innerHTML = `
+                <div class="card h-100">
+                    <div style="display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:16px;">
+                        <div>
+                            <h4 style="margin:0; font-family:'Changa', sans-serif; font-weight:700; color:#fff;">${emp.name || 'بدون اسم'} <span class="badge ${badgeClass}">${roleName}</span></h4>
+                            <div style="color:#ffffff; font-weight:700; font-size:0.85rem; margin-top:4px;"><i class="fas fa-user me-1"></i> ${emp.username}</div>
+                        </div>
+                    </div>
+                    
+                    <div class="row g-2 mb-3">
+                        <div class="col-6">
+                            <label style="font-size:0.85rem; font-weight:700; color:#ffffff; margin-bottom:4px;">تعديل الاسم</label>
+                            <input type="text" class="input-main" id="name_${index}" value="${emp.name || ''}">
+                        </div>
+                        <div class="col-6">
+                            <label style="font-size:0.85rem; font-weight:700; color:#ffffff; margin-bottom:4px;">الرتبة (الصفة)</label>
+                            <select class="input-main" id="role_${index}">
+                                <option value="admin" ${emp.role === 'admin' ? 'selected' : ''}>مدير</option>
+                                <option value="supervisor" ${emp.role === 'supervisor' ? 'selected' : ''}>مشرف</option>
+                                <option value="employee" ${emp.role === 'employee' ? 'selected' : ''}>موظف</option>
+                                <option value="viewer" ${emp.role === 'viewer' ? 'selected' : ''}>مشاهد</option>
+                            </select>
+                        </div>
+                        <div class="col-12 mt-2" style="background: rgba(255,255,255,0.05); padding: 10px; border-radius: 8px;">
+                            <label style="font-size:0.85rem; font-weight:700; color:#ffffff; margin-bottom:4px;">كلمة المرور الحالية: <span style="color:var(--accent-amber); direction:ltr; display:inline-block;">${emp.plainPassword || (emp.password === window.authHashPassword('123456') ? '123456' : (emp.password === window.authHashPassword('8520') ? '8520' : 'غير معروفة (مشفرة)'))}</span></label>
+                            <div style="display:flex; gap: 8px; margin-top: 8px;">
+                                <input type="password" class="input-main" id="pass_${index}" placeholder="تغيير كلمة المرور (اختياري)" style="direction:ltr;">
+                                <button class="btn-action" style="background: var(--text-secondary); white-space:nowrap;" onclick="resetPassword(${index}, '${emp.username}')" title="إعادة ضبط إلى 123456"><i class="fas fa-undo"></i> Reset</button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div style="border-top: 1px solid var(--border); padding-top: 12px; margin-top: 12px;">
+                        <h5 style="font-size:0.95rem; font-weight:700; color:#fff; margin-bottom:10px;"><i class="fas fa-shield-alt me-1 text-warning"></i> الصلاحيات المخصصة</h5>
+                        <div class="perm-grid">
+                            ${permsHtml}
+                        </div>
+                    </div>
+                    
+                    <div class="mt-4" style="display:flex; justify-content:space-between; align-items:center;">
+                        ${emp.username === 'boles' ? '<div><small style="color:var(--text-secondary);">مدير النظام الأساسي لا يمكن حذفه</small></div>' : `<button class="btn-action" style="background:var(--accent-rose);" onclick="deleteEmployee('${emp.username}')"><i class="fas fa-trash me-1"></i> حذف الموظف</button>`}
+                        <div class="text-end">
+                            <span id="msg_${index}" style="font-size:0.85rem; font-weight:bold; margin-left:12px;"></span>
+                            <button class="btn-action" onclick="saveUser(${index}, '${emp.username}')"><i class="fas fa-save me-1"></i> حفظ التعديلات</button>
+                        </div>
+                    </div>
+                </div>
+            `;
+            container.appendChild(card);
+        });
+    }
+
+    async function saveUser(index, username) {
+        const emp = cachedEmployees.find(e => e.username === username);
+        if (!emp) return;
+
+        const newName = document.getElementById('name_' + index).value.trim();
+        const newRole = document.getElementById('role_' + index).value;
+        const newPass = document.getElementById('pass_' + index).value;
+        const msgEl = document.getElementById('msg_' + index);
+
+        if (!newName) {
+            msgEl.textContent = 'الاسم مطلوب!';
+            msgEl.style.color = 'var(--accent-rose)';
+            return;
+        }
+
+        emp.name = newName;
+        emp.role = newRole;
+
+        if (newPass) {
+            emp.password = window.authHashPassword(newPass);
+            emp.plainPassword = newPass;
+        }
+
+        // gather permissions
+        const customPerms = [];
+        ALL_PERMISSIONS.forEach(p => {
+            const cb = document.getElementById(`perm_${index}_${p.id}`);
+            if (cb && cb.checked) customPerms.push(p.id);
+        });
+        
+        emp.permissions = customPerms;
+
+        try {
+            msgEl.textContent = 'جاري الحفظ...';
+            msgEl.style.color = 'var(--text-secondary)';
+            
+            await window.authSaveEmployeeToDb(emp);
+            
+            msgEl.textContent = 'تم الحفظ بنجاح!';
+            msgEl.style.color = 'var(--accent-emerald)';
+            
+            setTimeout(() => { msgEl.textContent = ''; }, 3000);
+        } catch(e) {
+            msgEl.textContent = 'حدث خطأ!';
+            msgEl.style.color = 'var(--accent-rose)';
+        }
+    }
+
+    async function deleteEmployee(username) {
+        if (username === 'boles') {
+            alert('لا يمكن حذف مدير النظام الأساسي!');
+            return;
+        }
+        if (!confirm('هل أنت متأكد من حذف الموظف: ' + username + ' نهائياً؟ لا يمكن التراجع عن هذا الإجراء.')) {
+            return;
+        }
+        try {
+            await window.authDeleteEmployeeFromDb(username);
+            alert('تم حذف الموظف بنجاح.');
+            await loadEmployees();
+        } catch (e) {
+            alert('حدث خطأ أثناء الحذف.');
+        }
+    }
+
+    async function resetPassword(index, username) {
+        if (!confirm('هل أنت متأكد من إعادة ضبط كلمة مرور ' + username + ' إلى 123456؟')) return;
+        const emp = cachedEmployees.find(e => e.username === username);
+        if (!emp) return;
+        emp.password = window.authHashPassword('123456');
+        emp.plainPassword = '123456';
+        try {
+            await window.authSaveEmployeeToDb(emp);
+            alert('تم إعادة ضبط كلمة المرور بنجاح.');
+            await loadEmployees();
+        } catch (e) {
+            alert('حدث خطأ.');
+        }
+    }
+
+    async function addNewEmployee() {
+        const username = document.getElementById('new_username').value.trim();
+        const name = document.getElementById('new_name').value.trim();
+        const password = document.getElementById('new_password').value;
+        const msgEl = document.getElementById('new_emp_msg');
+
+        if (!username || !name || !password) {
+            msgEl.textContent = 'يرجى إدخال اسم المستخدم، الاسم بالكامل، وكلمة المرور';
+            msgEl.style.color = 'var(--accent-rose)';
+            return;
+        }
+
+        const exists = cachedEmployees.find(e => e.username === username);
+        if (exists) {
+            msgEl.textContent = 'اسم المستخدم موجود بالفعل!';
+            msgEl.style.color = 'var(--accent-rose)';
+            return;
+        }
+
+        msgEl.textContent = 'جاري الإضافة...';
+        msgEl.style.color = 'var(--text-secondary)';
+
+        const newEmp = {
+            username: username,
+            name: name,
+            password: window.authHashPassword(password),
+            role: 'employee',
+            active: true,
+            createdAt: new Date().toISOString(),
+            employeeId: username,
+            permissions: window.AUTH_ROLE_PERMISSIONS['employee']
+        };
+
+        try {
+            await window.authSaveEmployeeToDb(newEmp);
+            msgEl.textContent = 'تمت إضافة الموظف بنجاح!';
+            msgEl.style.color = 'var(--accent-emerald)';
+            document.getElementById('new_username').value = '';
+            document.getElementById('new_name').value = '';
+            document.getElementById('new_password').value = '';
+            setTimeout(() => { msgEl.textContent = ''; }, 3000);
+            await loadEmployees();
+        } catch (e) {
+            msgEl.textContent = 'حدث خطأ أثناء إضافة الموظف!';
+            msgEl.style.color = 'var(--accent-rose)';
+        }
+    }
+
+    function loadLogs() {
+        const tbody = document.getElementById('logs-tbody');
+        try {
+            const raw = localStorage.getItem('lotus_activity_log') || '[]';
+            const logs = JSON.parse(raw);
+            
+            if (logs.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="5" class="text-center py-4">لا توجد حركات مسجلة حتى الآن</td></tr>';
+                return;
+            }
+
+            let html = '';
+            logs.forEach(log => {
+                const date = new Date(log.timestamp);
+                const dateStr = date.toLocaleDateString('ar-EG') + ' ' + date.toLocaleTimeString('ar-EG');
+                
+                let actionColor = 'var(--text-primary)';
+                if (log.action === 'login') actionColor = 'var(--accent-emerald)';
+                if (log.action === 'logout') actionColor = 'var(--text-secondary)';
+                if (log.action === 'delete') actionColor = 'var(--accent-rose)';
+                if (log.action === 'edit' || log.action === 'update') actionColor = 'var(--accent-amber)';
+
+                html += `
+                    <tr>
+                        <td style="direction:ltr; text-align:right;">${dateStr}</td>
+                        <td><strong>${log.employeeName}</strong> <br><small class="text-secondary">${log.employeeUsername}</small></td>
+                        <td style="color:${actionColor}; font-weight:700;">${log.action}</td>
+                        <td>${log.targetType} <br><small class="text-secondary">${log.targetName}</small></td>
+                        <td>${log.details || '-'}</td>
+                    </tr>
+                `;
+            });
+            tbody.innerHTML = html;
+        } catch(e) {
+            tbody.innerHTML = '<tr><td colspan="5" class="text-center py-4 text-danger">حدث خطأ في تحميل السجل</td></tr>';
+        }
+    }
+
+    function clearLogs() {
+        if (confirm('هل أنت متأكد من مسح جميع السجلات؟ لا يمكن التراجع عن هذا الإجراء.')) {
+            localStorage.setItem('lotus_activity_log', '[]');
+            loadLogs();
+        }
+    }
+</script>
+</body>
+</html>
