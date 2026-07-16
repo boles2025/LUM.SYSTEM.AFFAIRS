@@ -7,6 +7,8 @@
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.rtl.min.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700;800;900&family=Changa:wght@500;600;700;800&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
     <style>
         :root {
             --bg-main: #0f1119;
@@ -440,6 +442,7 @@
                 <span class="badge-dev"><i class="fas fa-building-columns me-1"></i> جامعة اللوتس</span>
             </div>
         </div>
+        <button id="floating-close-btn" style="position:fixed; top:20px; left:20px; z-index:9999; display:none; background:var(--accent-rose); color:#fff; border:none; width:45px; height:45px; border-radius:50%; align-items:center; justify-content:center; cursor:pointer; box-shadow:0 4px 15px rgba(244,63,94,0.4); font-size:1.3rem; transition:all 0.3s; border: 2px solid rgba(255,255,255,0.1);" onclick="closeAndBackup()" title="إغلاق النظام وأخذ نسخة احتياطية"><i class="fas fa-times"></i></button>
         <div class="user-menu" id="user-menu" style="display:none;">
             <div class="user-menu-info">
                 <span class="user-avatar" id="user-avatar"><i class="fas fa-user"></i></span>
@@ -449,7 +452,7 @@
                 </div>
             </div>
             <button class="user-logout-btn" style="background:var(--accent-amber); margin-left:8px;" onclick="openChangePassModal()" title="تغيير كلمة المرور"><i class="fas fa-key"></i></button>
-            <button class="user-logout-btn" onclick="window.logoutUser(); window.location.reload()" title="تسجيل الخروج"><i class="fas fa-sign-out-alt"></i></button>
+            <button class="user-logout-btn" onclick="closeAndBackup()" title="تسجيل الخروج وأخذ نسخة احتياطية"><i class="fas fa-sign-out-alt"></i></button>
         </div>
         <div class="login-prompt" id="login-prompt">
             <button class="btn-login-header" onclick="openLoginModal()"><i class="fas fa-lock me-1"></i> تسجيل دخول</button>
@@ -502,7 +505,7 @@
                 </div>
             </a>
 
-            <a href="#" class="system-card card-violet" onclick="requireAuthAndNavigate(event, 'systems/certificate-calc/index.html')">
+            <a href="#" class="system-card card-violet" onclick="localStorage.removeItem('cert_last_student'); requireAuthAndNavigate(event, 'systems/certificate-calc/index.html')">
                 <div class="card-icon"><i class="fas fa-calculator"></i></div>
                 <h3 class="card-title-text">حساب الشهادات</h3>
                 <p class="card-desc">حساب النسبة المئوية للشهادات الأمريكية، الثانوية، الخليج، ليبيا، الأردن، والأزهرية.</p>
@@ -561,6 +564,31 @@
         </div>
     </div>
 </div>
+<!-- Shutdown / Backup Progress Modal -->
+<div class="modal-overlay" id="shutdown-modal" style="display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.82);z-index:20000;justify-content:center;align-items:center;backdrop-filter:blur(8px);pointer-events:none;">
+    <div style="position:relative;background:linear-gradient(160deg,var(--bg-card),rgba(37,99,235,0.06));border:1px solid rgba(37,99,235,0.35);border-radius:24px;padding:40px 44px;text-align:center;min-width:340px;max-width:420px;box-shadow:0 25px 70px rgba(0,0,0,0.6),0 0 40px rgba(37,99,235,0.18);">
+        <!-- Animated Icon Container -->
+        <div id="shutdown-icon-container" style="font-size:2.4rem;margin-bottom:14px;color:var(--accent-amber);display:inline-block;animation:pulseGlow 1.6s ease-in-out infinite;">
+            <i class="fas fa-database"></i>
+        </div>
+
+        <div id="shutdown-title" style="font-weight:800;color:#fff;font-size:1.25rem;margin-bottom:6px;">جاري أخذ نسخة احتياطية...</div>
+        <div id="shutdown-subtitle" style="display:none;"></div>
+        <div id="shutdown-status" style="font-size:0.85rem;color:var(--text-muted);margin-bottom:18px;">جاري التهيئة...</div>
+
+        <!-- Progress Container -->
+        <div style="position:relative;width:100%;height:14px;background:var(--bg-main);border-radius:50px;overflow:hidden;border:1px solid var(--border);">
+            <div id="shutdown-progress" style="width:0%;height:100%;background:linear-gradient(90deg,var(--accent-amber),var(--accent-emerald));border-radius:50px;transition:width 0.6s cubic-bezier(0.4,0,0.2,1);box-shadow:0 0 12px rgba(16,185,129,0.6);"></div>
+        </div>
+        <div id="shutdown-percent" style="margin-top:10px;font-family:'Changa',sans-serif;font-weight:800;font-size:1.05rem;color:var(--accent-emerald);direction:ltr;">0%</div>
+    </div>
+</div>
+<style>
+@keyframes pulseGlow {
+    0%,100% { transform:scale(1); opacity:0.85; filter:drop-shadow(0 0 6px rgba(245,158,11,0.5)); }
+    50% { transform:scale(1.12); opacity:1; filter:drop-shadow(0 0 16px rgba(245,158,11,0.9)); }
+}
+</style>
 
 <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
 <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-auth.js"></script>
@@ -571,7 +599,18 @@
         event.preventDefault();
         const user = window.getCurrentUser();
         if (user) {
-            window.location.href = url;
+            let systemName = 'نظام غير معروف';
+            if (url.indexOf('file-management') !== -1) systemName = 'نظام الملفات';
+            else if (url.indexOf('file-withdrawal') !== -1) systemName = 'نظام السحب';
+            else if (url.indexOf('certificate-calc') !== -1) systemName = 'حساب الشهادات';
+            else if (url.indexOf('permissions') !== -1) systemName = 'نظام الصلاحيات';
+
+            if (window.authLogActivity) {
+                window.authLogActivity('access', systemName, '', '', `فتح ${systemName}`, systemName);
+            }
+            setTimeout(() => {
+                window.location.href = url;
+            }, 100);
         } else {
             openLoginModal();
         }
@@ -581,6 +620,8 @@
         document.getElementById('login-overlay').style.display = 'none';
         document.getElementById('systems-container').style.display = 'block';
         document.getElementById('user-menu').style.display = 'flex';
+        const floatBtn = document.getElementById('floating-close-btn');
+        if (floatBtn) floatBtn.style.display = 'flex';
         document.getElementById('login-prompt').style.display = 'none';
         document.getElementById('user-name').textContent = user.name;
         document.getElementById('user-role').textContent = window.AUTH_ROLE_NAMES ? AUTH_ROLE_NAMES[user.role] : user.role;
@@ -596,6 +637,8 @@
         document.getElementById('login-overlay').style.display = 'flex';
         document.getElementById('systems-container').style.display = 'none';
         document.getElementById('user-menu').style.display = 'none';
+        const floatBtn = document.getElementById('floating-close-btn');
+        if (floatBtn) floatBtn.style.display = 'none';
         document.getElementById('login-prompt').style.display = 'block';
     };
 
@@ -610,6 +653,8 @@
             document.getElementById('login-overlay').style.display = 'none';
             document.getElementById('systems-container').style.display = 'block';
             document.getElementById('user-menu').style.display = 'flex';
+            const floatBtn = document.getElementById('floating-close-btn');
+            if (floatBtn) floatBtn.style.display = 'flex';
             document.getElementById('login-prompt').style.display = 'none';
             document.getElementById('user-name').textContent = session.name;
             document.getElementById('user-role').textContent = AUTH_ROLE_NAMES[session.role] || session.role;
@@ -619,6 +664,8 @@
         } else {
             document.getElementById('login-overlay').style.display = 'flex';
             document.getElementById('systems-container').style.display = 'none';
+            const floatBtn = document.getElementById('floating-close-btn');
+            if (floatBtn) floatBtn.style.display = 'none';
         }
     });
 
@@ -709,6 +756,544 @@
         document.querySelector('#themeBtn i').className = isDark ? 'fas fa-moon' : 'fas fa-sun';
         localStorage.setItem('dash_theme', isDark ? 'light' : 'dark');
     }
+
+    function lsGet(key) { try { return JSON.parse(localStorage.getItem(key) || 'null'); } catch(e) { return null; } }
+
+    function sleep(ms) { return new Promise(r => setTimeout(r, ms)); }
+
+async function colorWorksheetTabs(excelBuffer, colors) {
+    if (typeof JSZip === 'undefined') return excelBuffer;
+    try {
+        const zip = await JSZip.loadAsync(excelBuffer);
+        for (let i = 0; i < colors.length; i++) {
+            const color = colors[i];
+            if (!color) continue;
+            const sheetPath = `xl/worksheets/sheet${i + 1}.xml`;
+            const sheetFile = zip.file(sheetPath);
+            if (sheetFile) {
+                let xmlText = await sheetFile.async("text");
+                if (xmlText.indexOf("<sheetPr") !== -1) {
+                    if (xmlText.indexOf("tabColor") !== -1) {
+                        xmlText = xmlText.replace(/<tabColor[^>]*\/>/, `<tabColor rgb="FF${color}"/>`);
+                    } else {
+                        xmlText = xmlText.replace("<sheetPr", `<sheetPr><tabColor rgb="FF${color}"/>`);
+                    }
+                } else {
+                    const wsIndex = xmlText.indexOf("<worksheet");
+                    if (wsIndex !== -1) {
+                        const insertIndex = xmlText.indexOf(">", wsIndex) + 1;
+                        xmlText = xmlText.slice(0, insertIndex) + `<sheetPr><tabColor rgb="FF${color}"/></sheetPr>` + xmlText.slice(insertIndex);
+                    }
+                }
+                zip.file(sheetPath, xmlText);
+            }
+        }
+        return await zip.generateAsync({ type: "arraybuffer" });
+    } catch (e) {
+        console.error("Error coloring sheet tabs:", e);
+        return excelBuffer;
+    }
+}
+
+async function closeAndBackup() {
+    const modal = document.getElementById('shutdown-modal');
+    if (modal) { modal.style.display = 'flex'; modal.style.pointerEvents = 'auto'; }
+
+    const progress = document.getElementById('shutdown-progress');
+    const status = document.getElementById('shutdown-status');
+
+    const setStatus = (pct, text) => {
+        if (progress) progress.style.width = pct + '%';
+        if (status) status.textContent = text;
+        const pctEl = document.getElementById('shutdown-percent');
+        if (pctEl) pctEl.textContent = Math.round(pct) + '%';
+    };
+
+    const iconContainer = document.getElementById('shutdown-icon-container');
+    const titleEl = document.getElementById('shutdown-title');
+    const subtitleEl = document.getElementById('shutdown-subtitle');
+    const progressEl = document.getElementById('shutdown-progress');
+
+    function animBar() {
+        if (!progress) return;
+        progress.style.background = 'linear-gradient(90deg, var(--accent-rose), var(--accent-amber), var(--accent-emerald), var(--accent-blue), var(--accent-rose))';
+        progress.style.backgroundSize = '300% 100%';
+        progress.style.animation = 'shimmer 1.5s linear infinite';
+    }
+
+    function stopAnim() {
+        if (!progress) return;
+        progress.style.animation = 'none';
+        progress.style.background = 'linear-gradient(90deg, var(--accent-rose), var(--accent-amber))';
+        progress.style.backgroundSize = '100% 100%';
+    }
+
+    try {
+        animBar();
+        
+        setStatus(15, 'جاري قراءة بيانات الطلاب من الخادم...');
+        await sleep(200);
+        let studentsArr = lsGet('lotus_students') || [];
+        if (window.AUTH_DB && !window.AUTH_IS_OFFLINE) {
+            try {
+                const snap = await window.AUTH_DB.ref('students').once('value');
+                if (snap.exists()) {
+                    const fb = snap.val();
+                    studentsArr = [];
+                    Object.keys(fb).forEach(k => {
+                        studentsArr.push({ id: k, ...fb[k] });
+                    });
+                }
+            } catch(e) { /* use local */ }
+        }
+
+        setStatus(30, 'جاري قراءة سجلات السحب...');
+        await sleep(200);
+        let withdrawalArr = [];
+        if (window.WITHDRAWAL_DB && !window.AUTH_IS_OFFLINE) {
+            try {
+                const snap = await window.WITHDRAWAL_DB.ref('withdrawalRequests').once('value');
+                if (snap.exists()) {
+                    const fb = snap.val();
+                    Object.keys(fb).forEach(k => { withdrawalArr.push({ id: k, ...fb[k] }); });
+                }
+            } catch(e) {}
+        }
+
+        setStatus(40, 'جاري قراءة بيانات الموظفين...');
+        await sleep(200);
+        let employeesArr = lsGet('lotus_employees') || [];
+        if (window.AUTH_DB && !window.AUTH_IS_OFFLINE) {
+            try {
+                const snap = await window.AUTH_DB.ref('employees').once('value');
+                if (snap.exists()) {
+                    const fb = snap.val();
+                    employeesArr = [];
+                    Object.keys(fb).forEach(k => { employeesArr.push({ username: k, ...fb[k] }); });
+                }
+            } catch(e) {}
+        }
+
+        setStatus(50, 'جاري قراءة سجل النشاطات وسجل الشهادات...');
+        await sleep(200);
+        let logArr = lsGet('lotus_activity_log') || [];
+        if (window.AUTH_DB && !window.AUTH_IS_OFFLINE) {
+            try {
+                const snap = await window.AUTH_DB.ref('activityLog').once('value');
+                if (snap.exists()) {
+                    const fb = snap.val();
+                    logArr = [];
+                    Object.keys(fb).forEach(k => { logArr.push({ id: k, ...fb[k] }); });
+                }
+            } catch(e) {}
+        }
+
+        let certRecordsArr = [];
+        try {
+            certRecordsArr = JSON.parse(localStorage.getItem('lotus_certificate_records') || '[]');
+        } catch(e) {}
+        if (window.AUTH_DB && !window.AUTH_IS_OFFLINE) {
+            try {
+                const snap = await window.AUTH_DB.ref('certificateRecords').once('value');
+                if (snap.exists()) {
+                    const fb = snap.val();
+                    certRecordsArr = Object.keys(fb).map(k => fb[k]);
+                }
+            } catch(e) {}
+        }
+
+        setStatus(65, 'جاري قراءة الإعدادات والكليات...');
+        await sleep(200);
+        let configObj = lsGet('lotus_config') || {};
+        let collegesArr = [];
+        if (window.WITHDRAWAL_DB && !window.AUTH_IS_OFFLINE) {
+            try {
+                const snapCol = await window.WITHDRAWAL_DB.ref('colleges').once('value');
+                if (snapCol.exists()) {
+                    const fb = snapCol.val();
+                    Object.keys(fb).forEach(k => { collegesArr.push({ id: k, ...fb[k] }); });
+                }
+            } catch(e) {}
+        }
+        if (window.AUTH_DB && !window.AUTH_IS_OFFLINE) {
+            try {
+                const snapConfig = await window.AUTH_DB.ref('settings/config').once('value');
+                if (snapConfig.exists()) {
+                    configObj = snapConfig.val() || {};
+                }
+            } catch(e) {}
+        }
+
+        setStatus(75, 'جاري معالجة البيانات وتحضير ورقات الإكسيل...');
+        await sleep(200);
+
+        const attachmentDefs = configObj.globalAttachments || [];
+
+        const sSheet = studentsArr.map(s => {
+            const deliveredDocs = [];
+            const missingDocs = [];
+            attachmentDefs.forEach(att => {
+                const rec = (s.delivery && s.delivery[att.id]) || {};
+                if (rec.delivered === true) {
+                    deliveredDocs.push(att.name);
+                } else {
+                    missingDocs.push(att.name);
+                }
+            });
+            if (s.delivery) {
+                Object.keys(s.delivery).forEach(k => {
+                    if (k.startsWith('custom::') || k.startsWith('custom_')) {
+                        const rec = s.delivery[k] || {};
+                        const name = k.includes('::') ? k.split('::')[1] : (rec.name || k);
+                        if (rec.delivered === true) {
+                            deliveredDocs.push(name);
+                        } else {
+                            missingDocs.push(name);
+                        }
+                    }
+                });
+            }
+            return {
+                'كود الطالب': s.studentCode || s.code || '',
+                'اسم الطالب': s.studentName || s.name || '',
+                'الرقم القومي': s.nationalId || s.nid || '',
+                'الكلية': s.college || '',
+                'المستوى': s.level || s.grade || '',
+                'رقم الملف': s.fileNo || '',
+                'رقم الدولاب': s.cabinetNo || '',
+                'المستندات المستلمة': deliveredDocs.join(' - ') || 'لا يوجد',
+                'المستندات الناقصة': missingDocs.join(' - ') || 'لا يوجد',
+                'تاريخ التسجيل': (s.createdAt || s.regDate) ? new Date(s.createdAt || s.regDate).toLocaleDateString('ar-EG') : ''
+            };
+        });
+
+        const wSheet = withdrawalArr.map(w => ({
+            'رقم الملف': w.fileNumber || '',
+            'كود الطالب': w.studentCode || '',
+            'اسم الطالب': w.studentName || '',
+            'الرقم القومي': w.nationalId || '',
+            'الكلية': w.college || '',
+            'الفرقة': (function() {
+                var stu = studentsArr.find(function(s) { return s.studentCode === w.studentCode || s.code === w.studentCode; });
+                if (stu && stu.level) return stu.level;
+                var c = String(w.studentCode || '').substring(0, 2);
+                if (c === '24') return 'الفرقة الثالثة';
+                if (c === '25') return 'الفرقة الثانية';
+                if (c === '26') return 'الفرقة الأولى';
+                return 'غير محدد';
+            })() || '',
+            'تاريخ السحب': w.withdrawalDate || '',
+            'العام الجامعي': w.academicYear || '',
+            'موقف الدفع': w.paymentStatus || '',
+            'الجامعة المحول إليها': w.transferUniversity || '',
+            'التليفون': w.phone || '',
+            'الملاحظات': w.notes || ''
+        }));
+
+        const certSheet = certRecordsArr.map(rec => ({
+            'اسم الطالب': rec.studentName || '',
+            'نوع الشهادة': rec.certificateLabel || rec.certificateType || '',
+            'النسبة المئوية': rec.totalPercentage ? rec.totalPercentage + '%' : '',
+            'المجموع الفعلي': rec.totalScore || 0,
+            'المجموع المعادل': rec.equivalentScore || 0,
+            'الموظف الذي قام بالحساب': rec.employeeName || rec.employeeUsername || '',
+            'تاريخ الحساب': rec.updatedAt ? new Date(rec.updatedAt).toLocaleString('ar-EG') : ''
+        }));
+
+        const logSheet = logArr.map(log => ({
+            'اسم النظام': log.system || '',
+            'العملية': log.action || '',
+            'نوع الهدف': log.targetType || '',
+            'اسم الهدف/الطالب': log.targetName || '',
+            'التفاصيل': log.details || '',
+            'اسم الموظف': log.employeeName || '',
+            'اسم المستخدم': log.employeeUsername || '',
+            'التاريخ والوقت': log.timestamp ? new Date(log.timestamp).toLocaleString('ar-EG') : ''
+        }));
+
+        // Build combined sheet
+        const combinedSheet = [];
+        const studentMap = {};
+
+        studentsArr.forEach(s => {
+            const code = s.studentCode || s.code || '';
+            const name = s.studentName || s.name || '';
+            const nid = s.nationalId || s.nid || '';
+            
+            const deliveredDocs = [];
+            const missingDocs = [];
+            attachmentDefs.forEach(att => {
+                const rec = (s.delivery && s.delivery[att.id]) || {};
+                if (rec.delivered === true) {
+                    deliveredDocs.push(att.name);
+                } else {
+                    missingDocs.push(att.name);
+                }
+            });
+            if (s.delivery) {
+                Object.keys(s.delivery).forEach(k => {
+                    if (k.startsWith('custom::') || k.startsWith('custom_')) {
+                        const rec = s.delivery[k] || {};
+                        const nameStr = k.includes('::') ? k.split('::')[1] : (rec.name || k);
+                        if (rec.delivered === true) {
+                            deliveredDocs.push(nameStr);
+                        } else {
+                            missingDocs.push(nameStr);
+                        }
+                    }
+                });
+            }
+
+            studentMap[name] = {
+                'كود الطالب': code,
+                'اسم الطالب': name,
+                'الرقم القومي': nid,
+                'الكلية': s.college || '',
+                'المستوى/الفرقة': s.level || s.grade || '',
+                'رقم الملف': s.fileNo || '',
+                'رقم الدولاب': s.cabinetNo || '',
+                'المستندات المستلمة': deliveredDocs.join(' - ') || 'لا يوجد',
+                'المستندات الناقصة': missingDocs.join(' - ') || 'لا يوجد',
+                'تاريخ التسجيل': (s.createdAt || s.regDate) ? new Date(s.createdAt || s.regDate).toLocaleDateString('ar-EG') : '',
+                'موقف السحب': 'لا يوجد',
+                'تاريخ السحب': '',
+                'العام الجامعي للسحب': '',
+                'موقف الدفع للسحب': '',
+                'الجامعة المحول إليها': '',
+                'تليفون السحب': '',
+                'ملاحظات السحب': '',
+                'نوع الشهادة المحسوبة': '',
+                'النسبة المئوية للشهادة': '',
+                'المجموع الفعلي للشهادة': '',
+                'المجموع المعادل للشهادة': '',
+                'تاريخ حساب الشهادة': '',
+                'الموظف الذي حسب الشهادة': ''
+            };
+        });
+
+        withdrawalArr.forEach(w => {
+            const name = w.studentName || '';
+            const code = w.studentCode || '';
+            const nid = w.nationalId || '';
+            
+            let entry = studentMap[name];
+            if (!entry && code) {
+                entry = Object.values(studentMap).find(s => s['كود الطالب'] === code);
+            }
+            if (!entry && nid) {
+                entry = Object.values(studentMap).find(s => s['الرقم القومي'] === nid);
+            }
+            
+            if (entry) {
+                entry['موقف السحب'] = 'تم السحب';
+                entry['رقم الملف'] = w.fileNumber || entry['رقم الملف'] || '';
+                entry['تاريخ السحب'] = w.withdrawalDate || '';
+                entry['العام الجامعي للسحب'] = w.academicYear || '';
+                entry['موقف الدفع للسحب'] = w.paymentStatus || '';
+                entry['الجامعة المحول إليها'] = w.transferUniversity || '';
+                entry['تليفون السحب'] = w.phone || '';
+                entry['ملاحظات السحب'] = w.notes || '';
+            } else {
+                studentMap[name || code || nid] = {
+                    'كود الطالب': code,
+                    'اسم الطالب': name,
+                    'الرقم القومي': nid,
+                    'الكلية': w.college || '',
+                    'المستوى/الفرقة': (function() {
+                        var c = String(code || '').substring(0, 2);
+                        if (c === '24') return 'الفرقة الثالثة';
+                        if (c === '25') return 'الفرقة الثانية';
+                        if (c === '26') return 'الفرقة الأولى';
+                        return 'غير مححدد';
+                    })() || '',
+                    'رقم الملف': w.fileNumber || '',
+                    'رقم الدولاب': '',
+                    'المستندات المستلمة': '',
+                    'المستندات الناقصة': '',
+                    'تاريخ التسجيل': '',
+                    'موقف السحب': 'تم السحب',
+                    'تاريخ السحب': w.withdrawalDate || '',
+                    'العام الجامعي للسحب': w.academicYear || '',
+                    'موقف الدفع للسحب': w.paymentStatus || '',
+                    'الجامعة المحول إليها': w.transferUniversity || '',
+                    'تليفون السحب': w.phone || '',
+                    'ملاحظات السحب': w.notes || '',
+                    'نوع الشهادة المحسوبة': '',
+                    'النسبة المئوية للشهادة': '',
+                    'المجموع الفعلي للشهادة': '',
+                    'المجموع المعادل للشهادة': '',
+                    'تاريخ حساب الشهادة': '',
+                    'الموظف الذي حسب الشهادة': ''
+                };
+            }
+        });
+
+        certRecordsArr.forEach(c => {
+            const name = c.studentName || '';
+            let entry = studentMap[name];
+            
+            if (entry) {
+                if (entry['نوع الشهادة المحسوبة']) {
+                    const duplicatedEntry = Object.assign({}, entry);
+                    duplicatedEntry['نوع الشهادة المحسوبة'] = c.certificateLabel || c.certificateType || '';
+                    duplicatedEntry['النسبة المئوية للشهادة'] = c.totalPercentage ? c.totalPercentage + '%' : '';
+                    duplicatedEntry['المجموع الفعلي للشهادة'] = c.totalScore || 0;
+                    duplicatedEntry['المجموع المعادل للشهادة'] = c.equivalentScore || 0;
+                    duplicatedEntry['تاريخ حساب الشهادة'] = c.updatedAt ? new Date(c.updatedAt).toLocaleString('ar-EG') : '';
+                    duplicatedEntry['الموظف الذي حسب الشهادة'] = c.employeeName || c.employeeUsername || '';
+                    combinedSheet.push(duplicatedEntry);
+                } else {
+                    entry['نوع الشهادة المحسوبة'] = c.certificateLabel || c.certificateType || '';
+                    entry['النسبة المئوية للشهادة'] = c.totalPercentage ? c.totalPercentage + '%' : '';
+                    entry['المجموع الفعلي للشهادة'] = c.totalScore || 0;
+                    entry['المجموع المعادل للشهادة'] = c.equivalentScore || 0;
+                    entry['تاريخ حساب الشهادة'] = c.updatedAt ? new Date(c.updatedAt).toLocaleString('ar-EG') : '';
+                    entry['الموظف الذي حسب الشهادة'] = c.employeeName || c.employeeUsername || '';
+                }
+            } else {
+                studentMap[name] = {
+                    'كود الطالب': '',
+                    'اسم الطالب': name,
+                    'الرقم القومي': '',
+                    'الكلية': '',
+                    'المستوى/الفرقة': '',
+                    'رقم الملف': '',
+                    'رقم الدولاب': '',
+                    'المستندات المستلمة': '',
+                    'المستندات الناقصة': '',
+                    'تاريخ التسجيل': '',
+                    'موقف السحب': 'لا يوجد',
+                    'تاريخ السحب': '',
+                    'العام الجامعي للسحب': '',
+                    'موقف الدفع للسحب': '',
+                    'الجامعة المحول إليها': '',
+                    'تليفون السحب': '',
+                    'ملاحظات السحب': '',
+                    'نوع الشهادة المحسوبة': c.certificateLabel || c.certificateType || '',
+                    'النسبة المئوية للشهادة': c.totalPercentage ? c.totalPercentage + '%' : '',
+                    'المجموع الفعلي للشهادة': c.totalScore || 0,
+                    'المجموع المعادل للشهادة': c.equivalentScore || 0,
+                    'تاريخ حساب الشهادة': c.updatedAt ? new Date(c.updatedAt).toLocaleString('ar-EG') : '',
+                    'الموظف الذي حسب الشهادة': c.employeeName || c.employeeUsername || ''
+                };
+            }
+        });
+
+        Object.values(studentMap).forEach(entry => {
+            combinedSheet.push(entry);
+        });
+
+        const session = window.getCurrentUser();
+        const isAdmin = session && (session.role === 'admin' || session.username === 'boles');
+
+        const wb = XLSX.utils.book_new();
+        if (isAdmin) {
+            XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(sSheet), 'إدارة الملفات');
+            XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(wSheet), 'سحب الملفات');
+            XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(certSheet), 'سجل حساب الشهادات');
+            XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(logSheet), 'سجل النشاطات');
+        } else {
+            XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(sSheet), 'إدارة الملفات');
+            XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(wSheet), 'سحب الملفات');
+            XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(certSheet), 'سجل حساب الشهادات');
+        }
+
+        setStatus(85, 'جاري تحضير ملف النسخة الاحتياطية JSON...');
+        await sleep(200);
+
+        const jsonBackup = JSON.stringify({
+            version: '1.0',
+            exportedAt: new Date().toISOString(),
+            data: {
+                students: studentsArr,
+                withdrawalRequests: withdrawalArr,
+                employees: employeesArr,
+                activityLog: logArr,
+                colleges: collegesArr,
+                config: configObj
+            }
+        }, null, 2);
+
+        setStatus(90, 'جاري إنشاء ملف الـ ZIP المضغوط وتلوين التبويبات...');
+        await sleep(200);
+
+        const days = ['الأحد', 'الإثنين', 'الثلاثاء', 'الأربعاء', 'الخميس', 'الجمعة', 'السبت'];
+        const dayName = days[new Date().getDay()];
+        const dateStr = new Date().toISOString().split('T')[0];
+        const baseName = `السيستم العام - ${dateStr} - ${dayName}`;
+        
+        const zip = new JSZip();
+        
+        const wbout_raw = XLSX.write(wb, { bookType: 'xlsx', type: 'array' });
+        let wbout = wbout_raw;
+        try {
+            const sheetColors = isAdmin ? ['3B82F6', '10B981', '8B5CF6', 'F59E0B'] : ['3B82F6', '10B981', '8B5CF6'];
+            wbout = await colorWorksheetTabs(wbout_raw, sheetColors);
+        } catch(colorErr) {
+            console.error('Error applying sheet tab colors:', colorErr);
+        }
+        zip.file(`${baseName}.xlsx`, wbout);
+        
+        zip.file(`${baseName}.json`, jsonBackup);
+
+        setStatus(95, 'جاري تنزيل الملف المضغوط...');
+        await sleep(200);
+
+        const zipBlob = await zip.generateAsync({ type: 'blob' });
+        stopAnim();
+
+        const url = URL.createObjectURL(zipBlob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `${baseName}.zip`;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        URL.revokeObjectURL(url);
+
+        localStorage.removeItem('lotus_system_modified');
+        setStatus(100, 'تمت العملية بنجاح. مع السلامة!');
+
+        if (iconContainer) {
+            iconContainer.innerHTML = '<i class="fas fa-check-circle" style="color:var(--accent-emerald);"></i>';
+            iconContainer.style.color = 'var(--accent-emerald)';
+        }
+        
+        if (titleEl) titleEl.textContent = 'تم بنجاح!';
+        
+        if (subtitleEl) subtitleEl.textContent = 'تم حفظ النسخة الاحتياطية بنجاح وتسجيل الخروج الآمن.';
+        
+        if (progressEl) {
+            progressEl.style.background = 'var(--accent-emerald)';
+        }
+
+        setTimeout(() => {
+            if (window.logoutUser) window.logoutUser();
+            location.reload();
+        }, 2000);
+
+    } catch (err) {
+        console.error('Backup error:', err);
+        stopAnim();
+        
+        if (iconContainer) {
+            iconContainer.innerHTML = '<i class="fas fa-exclamation-triangle" style="color:var(--accent-rose);"></i>';
+            iconContainer.style.color = 'var(--accent-rose)';
+        }
+        
+        if (titleEl) titleEl.textContent = 'حدث خطأ!';
+        
+        setStatus(100, 'خطأ: ' + err.message);
+        setTimeout(() => {
+            if (confirm('حدث خطأ أثناء أخذ النسخة الاحتياطية. هل تريد إغلاق النظام وتسجيل الخروج على أي حال؟')) {
+                if (window.logoutUser) window.logoutUser();
+                location.reload();
+            } else {
+                if (modal) modal.style.display = 'none';
+            }
+        }, 2500);
+    }
+}
 
     (function() {
         const saved = localStorage.getItem('dash_theme') || 'dark';

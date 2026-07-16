@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+?<!DOCTYPE html>
 <html lang="ar" dir="rtl">
 <head>
     <meta charset="UTF-8">
@@ -52,6 +52,17 @@
         .badge { padding: 4px 8px; border-radius: 4px; font-size: 0.75rem; font-weight: 700; }
         .badge-admin { background: rgba(245,158,11,0.15); color: var(--accent-amber); border: 1px solid rgba(245,158,11,0.3); }
         .badge-emp { background: rgba(59,130,246,0.15); color: var(--accent-blue); border: 1px solid rgba(59,130,246,0.3); }
+
+        .modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.7); display: none; justify-content: center; align-items: center; backdrop-filter: blur(4px); z-index: 20000; }
+        .modal-overlay.active { display: flex; }
+        .modal-box { background: var(--bg-card); border: 1px solid var(--border); border-radius: 20px; padding: 24px; box-shadow: 0 20px 60px rgba(0,0,0,0.5); width: 90%; max-width: 700px; max-height: 85vh; overflow-y: auto; }
+        .card-main { background: var(--bg-card); border: 1px solid var(--border); border-radius: 12px; padding: 14px; margin: 10px 0; }
+        .card-main h6 { color: var(--text-primary); }
+        .badge { background: rgba(255,255,255,0.06); color: #fff; padding: 4px 10px; font-size: 0.75rem; border-radius: 6px; font-weight: 700; }
+        .text-white { color: #fff !important; }
+        .text-danger { color: var(--accent-rose) !important; }
+        .py-4 { padding-top: 1.5rem; padding-bottom: 1.5rem; }
+        .text-center { text-align: center; }
     </style>
 </head>
 <body data-theme="dark">
@@ -62,9 +73,17 @@
 </div>
 
 <div class="container mt-4">
-    <div class="tabs">
-        <button class="tab-btn active" onclick="switchTab('users')"><i class="fas fa-users me-1"></i> المستخدمين والصلاحيات</button>
-        <button class="tab-btn" onclick="switchTab('logs')"><i class="fas fa-history me-1"></i> سجل النشاطات</button>
+    <div class="tabs" style="display:flex; justify-content:space-between; align-items:center; width:100%; flex-wrap:wrap; gap:12px;">
+        <div style="display:flex; gap:10px;">
+            <button class="tab-btn active" onclick="switchTab('users')"><i class="fas fa-users me-1"></i> المستخدمين والصلاحيات</button>
+            <button class="tab-btn" onclick="switchTab('logs')"><i class="fas fa-history me-1"></i> سجل النشاطات</button>
+            <button class="tab-btn" onclick="switchTab('certificates')"><i class="fas fa-certificate me-1"></i> سجل الشهادات</button>
+        </div>
+    <div style="display:flex; gap:8px;">
+            <button class="btn-action" style="background:var(--accent-blue); padding:6px 12px; font-size:0.8rem; border-color:transparent; color:#fff;" onclick="manualExportBackup()"><i class="fas fa-file-export me-1"></i> تصدير نسخة احتياطية</button>
+            <button class="btn-action" style="background:var(--accent-purple); padding:6px 12px; font-size:0.8rem; border-color:transparent; color:#fff;" onclick="document.getElementById('manual-import-file').click()"><i class="fas fa-file-import me-1"></i> استيراد نسخة احتياطية</button>
+            <input type="file" id="manual-import-file" style="display:none;" accept=".json" onchange="manualImportBackup(this)">
+        </div>
     </div>
 
     <!-- Users Tab -->
@@ -96,29 +115,76 @@
         </div>
     </div>
 
-    <!-- Logs Tab -->
-    <div id="tab-logs" class="tab-content">
+<!-- Logs Tab -->
+<div id="tab-logs" class="tab-content">
+<div class="card">
+<div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:16px;">
+<h4 style="margin:0; font-size:1.1rem; color:var(--text-primary);"><i class="fas fa-list me-1"></i> آخر العمليات في النظام</h4>
+<button class="btn-action" style="background:var(--accent-rose);" onclick="clearLogs()"><i class="fas fa-trash me-1"></i> مسح السجل</button>
+</div>
+<div style="overflow-x:auto;">
+<table>
+<thead>
+<tr>
+<th>التاريخ والوقت</th>
+<th>الموظف</th>
+<th>العملية</th>
+<th>الهدف</th>
+<th>النظام</th>
+<th>تفاصيل إضافية</th>
+</tr>
+</thead>
+<tbody id="logs-tbody">
+<!-- Populated via JS -->
+</tbody>
+</table>
+</div>
+</div>
+</div>
+
+    <!-- Certificates Tab -->
+    <div id="tab-certificates" class="tab-content">
         <div class="card">
             <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:16px;">
-                <h4 style="margin:0; font-size:1.1rem; color:var(--text-primary);"><i class="fas fa-list me-1"></i> آخر العمليات في النظام</h4>
-                <button class="btn-action" style="background:var(--accent-rose);" onclick="clearLogs()"><i class="fas fa-trash me-1"></i> مسح السجل</button>
+                <h4 style="margin:0; font-size:1.1rem; color:var(--accent-amber);"><i class="fas fa-certificate me-1"></i> سجل الشهادات المحفوظة</h4>
+                <button class="btn-action" style="background:var(--accent-rose);" onclick="clearCertRecords()"><i class="fas fa-trash me-1"></i> مسح الكل</button>
+            </div>
+            <div style="margin-bottom:12px; display:flex; gap:8px; flex-wrap:wrap;">
+                <input type="text" id="certRecordsSearch" class="input-main" placeholder="بحث باسم الموظف أو الطالب..." style="flex:1; min-width:200px; border-radius:8px; font-weight:700;">
+                <button class="btn-action" onclick="loadCertRecords()"><i class="fas fa-search me-1"></i> بحث</button>
             </div>
             <div style="overflow-x:auto;">
                 <table>
                     <thead>
                         <tr>
-                            <th>التاريخ والوقت</th>
+                            <th>التاريخ</th>
+                            <th>اسم الطالب</th>
+                            <th>نوع الشهادة</th>
+                            <th>المجموع</th>
+                            <th>المجموع المكافئ</th>
+                            <th>النسبة</th>
                             <th>الموظف</th>
-                            <th>العملية</th>
-                            <th>الهدف</th>
-                            <th>تفاصيل إضافية</th>
+                            <th>حذف</th>
                         </tr>
                     </thead>
-                    <tbody id="logs-tbody">
-                        <!-- Populated via JS -->
+                    <tbody id="certRecords-tbody">
+                        <tr><td colspan="8" class="text-center py-4">جاري التحميل...</td></tr>
                     </tbody>
                 </table>
             </div>
+        </div>
+    </div>
+
+    <div class="modal-overlay" id="certDetailModal" style="z-index:20000;">
+    <div class="modal-box" style="max-width:700px;max-height:85vh;overflow-y:auto;padding:24px;">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;">
+            <h3 style="font-family:Changa,sans-serif;font-weight:800;color:var(--text-primary);margin:0;">
+                <i class="fas fa-file-invoice me-1" style="color:var(--accent-amber);"></i> تفاصيل حساب الشهادة
+            </h3>
+            <button onclick="closeCertDetailModal()" style="background:none;border:none;color:var(--text-muted);font-size:1.4rem;cursor:pointer;">&times;</button>
+        </div>
+        <div id="certDetailBody">
+            <div style="text-align:center;padding:20px;color:var(--text-muted);">جاري تحميل التفاصيل...</div>
         </div>
     </div>
 </div>
@@ -126,6 +192,7 @@
 <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
 <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-auth.js"></script>
 <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
 <script src="../../auth.js"></script>
 <script>
     const ALL_PERMISSIONS = [
@@ -156,14 +223,17 @@
         await loadEmployees();
     });
 
-    function switchTab(tab) {
-        document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
-        document.querySelectorAll('.tab-content').forEach(content => content.classList.remove('active'));
-        
-        event.currentTarget.classList.add('active');
-        document.getElementById('tab-' + tab).classList.add('active');
+function switchTab(tab, btn) {
+document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+document.querySelectorAll('.tab-content').forEach(content => content.classList.remove('active'));
 
-        if (tab === 'logs') loadLogs();
+const activeBtn = btn || document.querySelector('.tab-btn[onclick*="switchTab(\'' + tab + '\')"]');
+if (activeBtn) activeBtn.classList.add('active');
+const content = document.getElementById('tab-' + tab);
+if (content) content.classList.add('active');
+
+if (tab === 'logs') loadLogs();
+if (tab === 'certificates') loadCertRecords();
     }
 
     async function loadEmployees() {
@@ -294,6 +364,7 @@
             msgEl.style.color = 'var(--text-secondary)';
             
             await window.authSaveEmployeeToDb(emp);
+            await window.authLogActivity('تعديل', 'نظام الصلاحيات', emp.username, emp.name, 'تم تعديل بيانات أو صلاحيات الموظف', 'نظام الصلاحيات');
             
             msgEl.textContent = 'تم الحفظ بنجاح!';
             msgEl.style.color = 'var(--accent-emerald)';
@@ -315,6 +386,7 @@
         }
         try {
             await window.authDeleteEmployeeFromDb(username);
+            await window.authLogActivity('حذف', 'نظام الصلاحيات', username, username, 'تم حذف الموظف نهائياً', 'نظام الصلاحيات');
             alert('تم حذف الموظف بنجاح.');
             await loadEmployees();
         } catch (e) {
@@ -330,6 +402,7 @@
         emp.plainPassword = '123456';
         try {
             await window.authSaveEmployeeToDb(emp);
+            await window.authLogActivity('تعديل', 'نظام الصلاحيات', username, emp.name, 'تم إعادة ضبط كلمة المرور للموظف', 'نظام الصلاحيات');
             alert('تم إعادة ضبط كلمة المرور بنجاح.');
             await loadEmployees();
         } catch (e) {
@@ -372,6 +445,7 @@
 
         try {
             await window.authSaveEmployeeToDb(newEmp);
+            await window.authLogActivity('إضافة', 'نظام الصلاحيات', username, name, 'تم إضافة موظف جديد', 'نظام الصلاحيات');
             msgEl.textContent = 'تمت إضافة الموظف بنجاح!';
             msgEl.style.color = 'var(--accent-emerald)';
             document.getElementById('new_username').value = '';
@@ -392,7 +466,7 @@
             const logs = JSON.parse(raw);
             
             if (logs.length === 0) {
-                tbody.innerHTML = '<tr><td colspan="5" class="text-center py-4">لا توجد حركات مسجلة حتى الآن</td></tr>';
+                tbody.innerHTML = '<tr><td colspan="6" class="text-center py-4">لا توجد حركات مسجلة حتى الآن</td></tr>';
                 return;
             }
 
@@ -401,25 +475,34 @@
                 const date = new Date(log.timestamp);
                 const dateStr = date.toLocaleDateString('ar-EG') + ' ' + date.toLocaleTimeString('ar-EG');
                 
-                let actionColor = 'var(--text-primary)';
-                if (log.action === 'login') actionColor = 'var(--accent-emerald)';
-                if (log.action === 'logout') actionColor = 'var(--text-secondary)';
-                if (log.action === 'delete') actionColor = 'var(--accent-rose)';
-                if (log.action === 'edit' || log.action === 'update') actionColor = 'var(--accent-amber)';
+                let systemBadgeStyle = 'background: rgba(245,158,11,0.25); color: #fff; border: 1px solid rgba(245,158,11,0.5); font-size:0.75rem; padding:3px 8px; border-radius:4px; font-weight:700; '; // default
+                if (log.system === 'نظام الملفات') {
+                    systemBadgeStyle = 'background: rgba(16,185,129,0.25); color: #fff; border: 1px solid rgba(16,185,129,0.5); font-size:0.75rem; padding:3px 8px; border-radius:4px; font-weight:700; ';
+                } else if (log.system === 'نظام السحب') {
+                    systemBadgeStyle = 'background: rgba(59,130,246,0.25); color: #fff; border: 1px solid rgba(59,130,246,0.5); font-size:0.75rem; padding:3px 8px; border-radius:4px; font-weight:700; ';
+                } else if (log.system === 'حساب الشهادات') {
+                    systemBadgeStyle = 'background: rgba(139,92,246,0.25); color: #fff; border: 1px solid rgba(139,92,246,0.5); font-size:0.75rem; padding:3px 8px; border-radius:4px; font-weight:700; ';
+                } else if (log.system === 'نظام الصلاحيات') {
+                    systemBadgeStyle = 'background: rgba(245,158,11,0.25); color: #fff; border: 1px solid rgba(245,158,11,0.5); font-size:0.75rem; padding:3px 8px; border-radius:4px; font-weight:700; ';
+                }
 
-                html += `
-                    <tr>
-                        <td style="direction:ltr; text-align:right;">${dateStr}</td>
-                        <td><strong>${log.employeeName}</strong> <br><small class="text-secondary">${log.employeeUsername}</small></td>
-                        <td style="color:${actionColor}; font-weight:700;">${log.action}</td>
-                        <td>${log.targetType} <br><small class="text-secondary">${log.targetName}</small></td>
-                        <td>${log.details || '-'}</td>
-                    </tr>
-                `;
-            });
-            tbody.innerHTML = html;
-        } catch(e) {
-            tbody.innerHTML = '<tr><td colspan="5" class="text-center py-4 text-danger">حدث خطأ في تحميل السجل</td></tr>';
+const opType = log.action === 'login' ? 'دخول' : log.action === 'logout' ? 'خروج' : log.action === 'تعديل' ? 'تعديل بيانات' : log.action === 'حذف' ? 'حذف' : log.action === 'إضافة' ? 'إضافة جديدة' : log.action || '';
+const detailsText = (opType ? '[' + opType + '] ' : '') + (log.details || '');
+
+html += `
+<tr>
+<td style="direction:ltr; text-align:right;">${dateStr}</td>
+<td><strong>${log.employeeName}</strong> <br><small style="color:#fff;">${log.employeeUsername}</small></td>
+<td style="color:#fff; font-weight:700;">${log.action}</td>
+<td><span style="color:#fff; font-weight:700;">${log.targetType}</span> <br><small style="color:#fff;">${log.targetName}</small></td>
+<td><span class="badge" style="${systemBadgeStyle}">${log.system || 'عام'}</span></td>
+<td style="color:#fff;">${detailsText}</td>
+</tr>
+`;
+});
+tbody.innerHTML = html;
+} catch(e) {
+tbody.innerHTML = '<tr><td colspan="6" class="text-center py-4 text-danger">حدث خطأ في تحميل السجل</td></tr>';
         }
     }
 
@@ -429,6 +512,674 @@
             loadLogs();
         }
     }
+
+    function getCertRecords() { try { return JSON.parse(localStorage.getItem('lotus_certificate_records') || '[]'); } catch(e) { return []; } }
+    function saveCertRecords(arr) { localStorage.setItem('lotus_certificate_records', JSON.stringify(arr)); }
+
+    function loadCertRecords() {
+        // Also try Firebase
+        try {
+            if (window.AUTH_DB && typeof window.AUTH_DB.ref === 'function') {
+                window.AUTH_DB.ref('certificateRecords').once('value').then(function(snap) {
+                    var val = snap.val() || {};
+                    var list = Object.keys(val).map(function(k) { return val[k]; });
+                    list.sort(function(a, b) { return (b.id || '').localeCompare(a.id || ''); });
+                    if (list.length > 0) saveCertRecords(list);
+                    renderCertRecordsTable();
+                }).catch(function() { renderCertRecordsTable(); });
+            } else {
+                renderCertRecordsTable();
+            }
+        } catch(e) { renderCertRecordsTable(); }
+    }
+
+        function renderCertRecordsTable() {
+        const tbody = document.getElementById('certRecords-tbody');
+        try {
+            let records = getCertRecords();
+            const q = document.getElementById('certRecordsSearch').value.trim().toLowerCase();
+            if (q) {
+                records = records.filter(function(r) {
+                    const student = (r.studentName || '').toLowerCase();
+                    const emp = (r.employeeName || r.employeeUsername || '').toLowerCase();
+                    return student.indexOf(q) !== -1 || emp.indexOf(q) !== -1;
+                });
+            }
+
+            if (records.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="8" class="text-center py-4">لا توجد شهادات محفوظة' + (q ? ' تطابق البحث' : '') + '</td></tr>';
+                return;
+            }
+
+            const tabNames = { thanaweya:'المصرية', stem:'STEM', azhar:'الأزهرية', saudi:'السعودية', gulf:'عمان-قطر-الإمارات', libya:'ليبيا', jordan:'الأردن', kuwait:'الكويت', bahrain:'البحرين', american:'أمريكان دبلومة' };
+
+            // Group by employee
+            const groups = {};
+            records.forEach(function(r) {
+                const empUser = r.employeeUsername || '';
+                const empName = r.employeeName || r.employeeUsername || '—';
+                const key = empUser + '||' + empName;
+                if (!groups[key]) groups[key] = [];
+                groups[key].push(r);
+            });
+
+            let html = '';
+            let gi = 0;
+            Object.keys(groups).forEach(function(gk) {
+                gi++;
+                const parts = gk.split('||');
+                const empUser = parts[0], empName = parts[1];
+                const list = groups[gk];
+                const count = list.length;
+                const gid = 'emp' + gi;
+                html += '<tr class="emp-group-row" style="cursor:pointer;background:rgba(245,158,11,0.10);" onclick="toggleEmpGroup(\'' + gid + '\')">'
+                    + '<td colspan="8" style="padding:10px 14px;">'
+                    + '<span id="' + gid + '_arrow" style="display:inline-block;transition:transform .2s;margin-left:8px;color:var(--accent-amber);font-weight:900;">▶</span>'
+                    + '<strong style="color:#fff;font-size:1rem;">' + empName + '</strong>'
+                    + ' <span style="color:var(--text-secondary);font-size:0.8rem;">' + (empUser ? '(' + empUser + ') · ' : '') + count + ' شهادة</span>'
+                    + ''
+                    + '</td></tr>';
+                list.forEach(function(r) {
+                    const date = r.createdAt ? new Date(r.createdAt).toLocaleDateString('ar-EG') : '—';
+                    const label = r.certificateLabel || tabNames[r.certificateType] || r.certificateType || '—';
+                    const total = r.totalScore != null ? r.totalScore : '—';
+                    const equiv = r.equivalentScore != null ? r.equivalentScore : '—';
+                    const pct = r.totalPercentage != null ? r.totalPercentage.toFixed(1) + '%' : '—';
+                    html += '<tr class="emp-detail-' + gid + '" style="display:none;background:rgba(255,255,255,0.02);">'
+                        + '<td style="direction:ltr;text-align:right;color:var(--text-muted);font-size:0.8rem;padding-right:34px;">' + date + '</td>'
+                        + '<td><strong style="color:var(--accent-amber);cursor:pointer;text-decoration:underline;text-decoration-style:dotted;" onclick="viewCertRecordDetail(\'' + r.id + '\')">' + (r.studentName || '—') + '</strong></td>'
+                        + '<td><span class="badge" style="background:rgba(139,92,246,0.25);color:#fff;border:1px solid rgba(139,92,246,0.5);font-size:0.75rem;padding:3px 8px;border-radius:4px;font-weight:700;">' + label + '</span></td>'
+                        + '<td style="color:#fff;font-weight:700;">' + total + '</td>'
+                        + '<td style="color:var(--accent-amber);font-weight:700;">' + equiv + '</td>'
+                        + '<td style="color:var(--accent-emerald);font-weight:900;">' + pct + '</td>'
+                        + '<td style="color:#fff;">' + empName + '</td>'
+                        + '<td><button class="btn-action" style="background:var(--accent-rose);padding:4px 10px;font-size:0.75rem;" onclick="deleteCertRecordAdmin(\'' + r.id + '\')"><i class="fas fa-trash"></i></button></td>'
+                        + '</tr>';
+                });
+            });
+            tbody.innerHTML = html;
+        } catch(e) {
+            tbody.innerHTML = '<tr><td colspan="8" class="text-center py-4 text-danger">حدث خطأ في تحميل السجل</td></tr>';
+        }
+    }
+
+    function toggleEmpGroup(gid) {
+        try {
+            var rows = document.querySelectorAll('.emp-detail-' + gid);
+            var arrow = document.getElementById(gid + '_arrow');
+            var show = rows.length ? (rows[0].style.display === 'none') : false;
+            rows.forEach(function(r){ r.style.display = show ? '' : 'none'; });
+            if (arrow) arrow.style.transform = show ? 'rotate(90deg)' : 'rotate(0deg)';
+        } catch(e) {}
+    }
+function deleteCertRecordAdmin(id) {
+        if (!confirm('حذف سجل الشهادة؟')) return;
+        let records = getCertRecords();
+        records = records.filter(function(r) { return r.id !== id; });
+        saveCertRecords(records);
+        if (window.AUTH_DB && typeof window.AUTH_DB.ref === 'function') {
+            window.AUTH_DB.ref('certificateRecords/' + id).remove().catch(function() {});
+        }
+        renderCertRecordsTable();
+        try { if (typeof window.authLogActivity === 'function') window.authLogActivity('حذف', 'حساب الشهادات', id, '', 'حذف سجل شهادة من لوحة الإدارة'); } catch(e) {}
+    }
+
+    function clearCertRecords() {
+        if (!confirm('هل أنت متأكد من مسح جميع سجلات الشهادات المحفوظة؟ لا يمكن التراجع.')) return;
+        saveCertRecords([]);
+        if (window.AUTH_DB && typeof window.AUTH_DB.ref === 'function') {
+            window.AUTH_DB.ref('certificateRecords').remove().catch(function() {});
+        }
+        renderCertRecordsTable();
+        try { if (typeof window.authLogActivity === 'function') window.authLogActivity('مسح', 'حساب الشهادات', '', '', 'مسح جميع سجلات الشهادات من لوحة الإدارة'); } catch(e) {}
+    }
+
+    function getCertRecords() { try { return JSON.parse(localStorage.getItem('lotus_certificate_records') || '[]'); } catch(e) { return []; } }
+    function saveCertRecords(arr) { localStorage.setItem('lotus_certificate_records', JSON.stringify(arr)); }
+
+    function loadCertRecords() {
+        // Also try Firebase
+        try {
+            if (window.AUTH_DB && typeof window.AUTH_DB.ref === 'function') {
+                window.AUTH_DB.ref('certificateRecords').once('value').then(function(snap) {
+                    var val = snap.val() || {};
+                    var list = Object.keys(val).map(function(k) { return val[k]; });
+                    list.sort(function(a, b) { return (b.id || '').localeCompare(a.id || ''); });
+                    if (list.length > 0) saveCertRecords(list);
+                    renderCertRecordsTable();
+                }).catch(function() { renderCertRecordsTable(); });
+            } else {
+                renderCertRecordsTable();
+            }
+        } catch(e) { renderCertRecordsTable(); }
+    }
+
+    function renderCertRecordsTable() {
+        const tbody = document.getElementById('certRecords-tbody');
+        try {
+            let records = getCertRecords();
+            const q = document.getElementById('certRecordsSearch').value.trim().toLowerCase();
+            if (q) {
+                records = records.filter(function(r) {
+                    const student = (r.studentName || '').toLowerCase();
+                    const emp = (r.employeeName || r.employeeUsername || '').toLowerCase();
+                    return student.indexOf(q) !== -1 || emp.indexOf(q) !== -1;
+                });
+            }
+
+            if (records.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="8" class="text-center py-4">لا توجد شهادات محفوظة' + (q ? ' تطابق البحث' : '') + '</td></tr>';
+                return;
+            }
+
+            const tabNames = { thanaweya:'المصرية', stem:'STEM', azhar:'الأزهرية', saudi:'السعودية', gulf:'عمان-قطر-الإمارات', libya:'ليبيا', jordan:'الأردن', kuwait:'الكويت', bahrain:'البحرين', american:'أمريكان دبلومة' };
+
+            // Group by employee
+            const groups = {};
+            records.forEach(function(r) {
+                const empUser = r.employeeUsername || '';
+                const empName = r.employeeName || r.employeeUsername || '—';
+                const key = empUser + '||' + empName;
+                if (!groups[key]) groups[key] = [];
+                groups[key].push(r);
+            });
+
+            let html = '';
+            let gi = 0;
+            Object.keys(groups).forEach(function(gk) {
+                gi++;
+                const parts = gk.split('||');
+                const empUser = parts[0], empName = parts[1];
+                const list = groups[gk];
+                const count = list.length;
+                const gid = 'emp' + gi;
+                html += '<tr class="emp-group-row" style="cursor:pointer;background:rgba(245,158,11,0.10);" onclick="toggleEmpGroup(\'' + gid + '\')">'
+                    + '<td colspan="8" style="padding:10px 14px;">'
+                    + '<span id="' + gid + '_arrow" style="display:inline-block;transition:transform .2s;margin-left:8px;color:var(--accent-amber);font-weight:900;">▶</span>'
+                    + '<strong style="color:#fff;font-size:1rem;">' + empName + '</strong>'
+                    + ' <span style="color:var(--text-secondary);font-size:0.8rem;">' + (empUser ? '(' + empUser + ') · ' : '') + count + ' شهادة</span>'
+                    + ''
+                    + '</td></tr>';
+                list.forEach(function(r) {
+                    const date = r.createdAt ? new Date(r.createdAt).toLocaleDateString('ar-EG') : '—';
+                    const label = r.certificateLabel || tabNames[r.certificateType] || r.certificateType || '—';
+                    const total = r.totalScore != null ? r.totalScore : '—';
+                    const equiv = r.equivalentScore != null ? r.equivalentScore : '—';
+                    const pct = r.totalPercentage != null ? r.totalPercentage.toFixed(1) + '%' : '—';
+                    html += '<tr class="emp-detail-' + gid + '" style="display:none;background:rgba(255,255,255,0.02);">'
+                        + '<td style="direction:ltr;text-align:right;color:var(--text-muted);font-size:0.8rem;padding-right:34px;">' + date + '</td>'
+                        + '<td><strong style="color:var(--accent-amber);cursor:pointer;text-decoration:underline;text-decoration-style:dotted;" onclick="viewCertRecordDetail(\'' + r.id + '\')">' + (r.studentName || '—') + '</strong></td>'
+                        + '<td><span class="badge" style="background:rgba(139,92,246,0.25);color:#fff;border:1px solid rgba(139,92,246,0.5);font-size:0.75rem;padding:3px 8px;border-radius:4px;font-weight:700;">' + label + '</span></td>'
+                        + '<td style="color:#fff;font-weight:700;">' + total + '</td>'
+                        + '<td style="color:var(--accent-amber);font-weight:700;">' + equiv + '</td>'
+                        + '<td style="color:var(--accent-emerald);font-weight:900;">' + pct + '</td>'
+                        + '<td style="color:#fff;">' + empName + '</td>'
+                        + '<td><button class="btn-action" style="background:var(--accent-rose);padding:4px 10px;font-size:0.75rem;" onclick="deleteCertRecordAdmin(\'' + r.id + '\')"><i class="fas fa-trash"></i></button></td>'
+                        + '</tr>';
+                });
+            });
+            tbody.innerHTML = html;
+        } catch(e) {
+            tbody.innerHTML = '<tr><td colspan="8" class="text-center py-4 text-danger">حدث خطأ في تحميل السجل</td></tr>';
+        }
+    }
+
+    function toggleEmpGroup(gid) {
+        try {
+            var rows = document.querySelectorAll('.emp-detail-' + gid);
+            var arrow = document.getElementById(gid + '_arrow');
+            var show = rows.length ? (rows[0].style.display === 'none') : false;
+            rows.forEach(function(r){ r.style.display = show ? '' : 'none'; });
+            if (arrow) arrow.style.transform = show ? 'rotate(90deg)' : 'rotate(0deg)';
+        } catch(e) {}
+    }
+
+    function deleteCertRecordAdmin(id) {
+        if (!confirm('حذف سجل الشهادة؟')) return;
+        let records = getCertRecords();
+        records = records.filter(function(r) { return r.id !== id; });
+        saveCertRecords(records);
+        if (window.AUTH_DB && typeof window.AUTH_DB.ref === 'function') {
+            window.AUTH_DB.ref('certificateRecords/' + id).remove().catch(function() {});
+        }
+        renderCertRecordsTable();
+        try { if (typeof window.authLogActivity === 'function') window.authLogActivity('حذف', 'حساب الشهادات', id, '', 'حذف سجل شهادة من لوحة الإدارة'); } catch(e) {}
+    }
+
+    function clearCertRecords() {
+        if (!confirm('هل أنت متأكد من مسح جميع سجلات الشهادات المحفوظة؟ لا يمكن التراجع.')) return;
+        saveCertRecords([]);
+        if (window.AUTH_DB && typeof window.AUTH_DB.ref === 'function') {
+            window.AUTH_DB.ref('certificateRecords').remove().catch(function() {});
+        }
+        renderCertRecordsTable();
+        try { if (typeof window.authLogActivity === 'function') window.authLogActivity('مسح', 'حساب الشهادات', '', '', 'مسح جميع سجلات الشهادات من لوحة الإدارة'); } catch(e) {}
+    }
+
+    window.viewCertRecordDetail = function(id) {
+        var modal = document.getElementById('certDetailModal');
+        var body = document.getElementById('certDetailBody');
+        if (!modal || !body) return;
+        // Show loading immediately
+        body.innerHTML = '<div style="text-align:center;padding:20px;color:var(--text-muted);">جاري تحميل التفاصيل...</div>';
+        modal.classList.add('active');
+        // Use setTimeout to allow modal to render first
+        setTimeout(function() {
+            try {
+                var records = getCertRecords();
+                var rec = records.find(function(r) { return r.id === id; });
+                if (!rec) { body.innerHTML = '<div style="text-align:center;padding:20px;color:var(--text-muted);">لم يتم العثور على السجل</div>'; return; }
+                var sc = rec.scores || {};
+                var type = rec.certificateType || '';
+                var html = '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;border-bottom:1px solid var(--border);padding-bottom:12px;"><div><strong style="color:#fff;font-size:1.1rem;">' + (rec.studentName || '') + '</strong><br><span style="color:var(--text-muted);font-size:0.75rem;">' + (rec.certificateLabel || type) + ' | ' + (typeof rec.totalPercentage === 'number' ? rec.totalPercentage.toFixed(1)+'%' : '') + '</span></div><div style="text-align:left;direction:ltr;font-size:0.7rem;color:var(--text-muted);">' + (rec.createdAt ? new Date(rec.createdAt).toLocaleString('ar-EG') : '') + '</div></div>';
+                if (type === 'american') {
+                    var e1s = sc.est1Scores || {part1:'0',part2:'0'};
+                    var e2s = sc.est2Scores || {part1:'0',part2:'0'};
+                    html += '<div class="card-main"><h6 style="color:var(--accent-blue);font-weight:800;">Est1 / SAT1</h6><div class="d-flex gap-3"><span>Round 1: <strong class="text-white">' + (e1s.part1||'0') + '</strong></span><span>Round 2: <strong class="text-white">' + (e1s.part2||'0') + '</strong></span><span style="color:var(--accent-amber);font-weight:800;">= ' + (Number(sc.est1Percent)||0).toFixed(1) + '%</span></div></div>';
+                    html += '<div class="card-main"><h6 style="color:var(--accent-blue);font-weight:800;">Est2 / SAT2</h6><div class="d-flex gap-3"><span>Round 1: <strong class="text-white">' + (e2s.part1||'0') + '</strong></span><span>Round 2: <strong class="text-white">' + (e2s.part2||'0') + '</strong></span><span style="color:var(--accent-amber);font-weight:800;">= ' + (Number(sc.est2Percent)||0).toFixed(1) + '%</span></div></div>';
+                    html += '<div class="card-main"><h6 style="color:var(--accent-blue);font-weight:800;">GPA (8 مقررات)</h6><div class="d-flex flex-wrap gap-2">';
+                    var amSubs = Array.isArray(sc.amSubjects) ? sc.amSubjects : [];
+                    for (var ai = 0; ai < Math.min(amSubs.length, 8); ai++) { html += '<span class="badge" style="background:rgba(255,255,255,0.06);padding:4px 10px;font-size:0.75rem;">م' + (ai+1) + ': <strong class="text-white">' + (amSubs[ai]||'0') + '</strong></span>'; }
+                    if (sc.amHas9th) { html += '<span class="badge" style="background:rgba(255,255,255,0.06);padding:4px 10px;font-size:0.75rem;">تاسع: <strong class="text-white">' + (sc.amSubjects9||'0') + '</strong></span>'; }
+                    html += '</div><div class="mt-2" style="color:var(--accent-amber);font-weight:800;">GPA% = ' + (Number(sc.gpaPercent)||0).toFixed(1) + '%</div></div>';
+                    html += '<div class="mt-3 p-3" style="background:var(--bg-card-alt);border-radius:12px;text-align:center;"><span style="font-size:1.3rem;font-weight:900;color:var(--accent-emerald);">' + ((Number(sc.est1Percent)||0)+(Number(sc.est2Percent)||0)+(Number(sc.gpaPercent)||0)).toFixed(1) + '%</span></div>';
+                } else if (type === 'thanaweya') {
+                    html += '<div class="card-main"><div class="d-flex gap-4"><span>النظام: <strong class="text-white">' + (sc.thSystem === 'new' ? 'حديث (÷320)' : 'قديم (÷410)') + '</strong></span><span>المجموع: <strong class="text-white">' + (sc.thScore||'0') + '</strong></span></div></div>';
+                    var pct = sc.thSystem === 'new' ? (parseFloat(sc.thScore||0)/320*100) : (parseFloat(sc.thScore||0)/410*100);
+                    html += '<div class="mt-3 p-3" style="background:var(--bg-card-alt);border-radius:12px;text-align:center;"><span style="font-size:1.3rem;font-weight:900;color:var(--accent-emerald);">' + (isNaN(pct)?'0':pct.toFixed(1)) + '%</span></div>';
+                } else if (type === 'azhar') {
+                    html += '<div class="card-main"><div class="d-flex gap-4 flex-wrap"><span>المسار: <strong class="text-white">' + (sc.azharPath === 'sci' ? 'علمي' : 'أدبي') + '</strong></span><span>اللغة العربية: <strong class="text-white">' + (sc.azharArabic||'0') + '</strong></span><span>مواد ثقافية: <strong class="text-white">' + (sc.azharCultural||'0') + '</strong></span></div></div>';
+                    var totalA = (parseFloat(sc.azharArabic)||0)+(parseFloat(sc.azharCultural)||0);
+                    var divA = sc.azharPath === 'sci' ? 4.4 : (sc.azharLitSys === '420' ? 4.2 : 3.8);
+                    html += '<div class="mt-3 p-3" style="background:var(--bg-card-alt);border-radius:12px;text-align:center;"><span style="font-size:1.3rem;font-weight:900;color:var(--accent-emerald);">' + (divA ? (totalA/divA).toFixed(1) : '0') + '%</span></div>';
+                } else if (type === 'saudi') {
+                    html += '<div class="card-main"><h6 style="color:var(--accent-cyan);font-weight:800;">' + (sc.saudiSystem === 'fasly' ? 'نظام فصلي' : 'نظام مسارات') + '</h6></div>';
+                    if (sc.saudiSystem === 'fasly') {
+                        html += '<div class="card-main" style="overflow-x:auto;"><table style="font-size:0.7rem;"><thead><tr><th>المادة</th><th>م1</th><th>م2</th><th>م3</th><th>م4</th><th>م5</th><th>م6</th></tr></thead><tbody>';
+                        var subjNames = ['العربي','الرياضيات','الإنجليزى','الفيزياء','الكيمياء','الأحياء','حاسب','اجتماعيات','علم الأرض'];
+                        var saudiSubs = Array.isArray(sc.saudiSubjects) ? sc.saudiSubjects : [];
+                        for (var si = 0; si < Math.min(saudiSubs.length, 9); si++) {
+                            html += '<tr><td><strong>' + subjNames[si] + '</strong></td>';
+                            var row = Array.isArray(saudiSubs[si]) ? saudiSubs[si] : [];
+                            for (var sj = 0; sj < Math.min(row.length, 6); sj++) { html += '<td>' + (row[sj] || '') + '</td>'; }
+                            html += '</tr>';
+                        }
+                        html += '</tbody></table></div>';
+                        html += '<div class="d-flex gap-3 mt-2"><span>مجموع: <strong class="text-white">' + (Number(sc.saudiSum)||0) + '</strong></span><span>متوسط: <strong class="text-white">' + (Number(sc.saudiSchoolAvg)||0).toFixed(2) + '%</strong></span><span>قدرات: <strong class="text-white">' + (sc.saudiQudrat||'0') + '</strong></span></div>';
+                    } else {
+                        var nq = sc.masaratNawaqes || {};
+                        html += '<div class="card-main"><div class="d-flex gap-3 flex-wrap"><span>السنة الأولى: <strong class="text-white">' + (nq.y1||'0') + '</strong></span><span>الثانية: <strong class="text-white">' + (nq.y2||'0') + '</strong></span><span>الثالثة: <strong class="text-white">' + (nq.y3||'0') + '</strong></span><span>قدرات: <strong class="text-white">' + (sc.masaratQudrat||'0') + '</strong></span></div></div>';
+                    }
+                    html += '<div class="mt-3 p-3" style="background:var(--bg-card-alt);border-radius:12px;text-align:center;"><span style="font-size:1.3rem;font-weight:900;color:var(--accent-emerald);">' + (Number(sc.saudiTotalSum)||0).toFixed(1) + '%</span></div>';
+                } else if (type === 'gulf') {
+                    html += '<div class="card-main"><div class="d-flex flex-wrap gap-2">';
+                    var gulfArr = Array.isArray(sc.gulfSubjects) ? sc.gulfSubjects : [];
+                    for (var gi = 0; gi < Math.min(gulfArr.length, 20); gi++) {
+                        var gs = gulfArr[gi] || {};
+                        var gv = gs.isStar ? 50 : (parseFloat(gs.mark)||0);
+                        html += '<span class="badge" style="background:rgba(255,255,255,0.06);padding:4px 10px;font-size:0.75rem;">م' + (gi+1) + ': <strong class="text-white">' + gv + '</strong>' + (gs.isStar ? ' ⭐' : '') + '</span>';
+                    }
+                    html += '</div></div>';
+                    var gSum = gulfArr.reduce(function(e,t){return e+(t.isStar?50:(parseFloat(t.mark)||0));},0);
+                    html += '<div class="mt-3 p-3" style="background:var(--bg-card-alt);border-radius:12px;text-align:center;"><span style="font-size:1.3rem;font-weight:900;color:var(--accent-emerald);">' + (gSum/7).toFixed(1) + '%</span></div>';
+                } else if (type === 'libya') {
+                    html += '<div class="card-main"><div class="d-flex flex-wrap gap-2">';
+                    var libSubs = Array.isArray(sc.libyaSubjects) ? sc.libyaSubjects : [];
+                    for (var li = 0; li < Math.min(libSubs.length, 20); li++) { html += '<span class="badge" style="background:rgba(255,255,255,0.06);padding:4px 10px;font-size:0.75rem;">م' + (li+1) + ': <strong class="text-white">' + (libSubs[li]||'0') + '</strong></span>'; }
+                    html += '</div></div>';
+                    var lSum = libSubs.reduce(function(e,t){return e+(parseFloat(t)||0);},0);
+                    html += '<div class="mt-3 p-3" style="background:var(--bg-card-alt);border-radius:12px;text-align:center;"><span style="font-size:1.3rem;font-weight:900;color:var(--accent-emerald);">' + (lSum/1200*100).toFixed(1) + '%</span></div>';
+                } else if (type === 'jordan') {
+                    html += '<div class="card-main"><div class="d-flex flex-wrap gap-2">';
+                    var jorSubs = Array.isArray(sc.jordanSubjects) ? sc.jordanSubjects : [];
+                    for (var ji = 0; ji < Math.min(jorSubs.length, 20); ji++) { html += '<span class="badge" style="background:rgba(255,255,255,0.06);padding:4px 10px;font-size:0.75rem;">م' + (ji+1) + ': <strong class="text-white">' + (jorSubs[ji]||'0') + '</strong></span>'; }
+                    html += '</div></div>';
+                    var jSum = jorSubs.reduce(function(e,t){return e+(parseFloat(t)||0);},0);
+                    html += '<div class="mt-3 p-3" style="background:var(--bg-card-alt);border-radius:12px;text-align:center;"><span style="font-size:1.3rem;font-weight:900;color:var(--accent-emerald);">' + (jSum/1400*100).toFixed(1) + '%</span></div>';
+                } else if (type === 'kuwait') {
+                    html += '<div class="card-main"><div class="d-flex flex-wrap gap-2">';
+                    if (Array.isArray(sc.kuwait10)) { html += '<div class="w-100 mb-1"><strong class="text-white">الصف العاشر:</strong> ' + sc.kuwait10.slice(0,20).join(' / ') + '</div>'; }
+                    if (Array.isArray(sc.kuwait11)) { html += '<div class="w-100 mb-1"><strong class="text-white">الصف الحادي عشر:</strong> ' + sc.kuwait11.slice(0,20).join(' / ') + '</div>'; }
+                    if (Array.isArray(sc.kuwait12)) { html += '<div class="w-100 mb-1"><strong class="text-white">الصف الثاني عشر:</strong> ' + sc.kuwait12.slice(0,20).join(' / ') + '</div>'; }
+                    html += '</div></div>';
+                    html += '<div class="mt-3 p-3" style="background:var(--bg-card-alt);border-radius:12px;text-align:center;"><span style="font-size:1.3rem;font-weight:900;color:var(--accent-emerald);">' + (Number(sc.kuwaitTotalSum)||0).toFixed(1) + '%</span></div>';
+                } else if (type === 'bahrain') {
+                    html += '<div class="card-main"><div class="d-flex flex-wrap gap-2"><span class="text-white">عرض تفاصيل البحرين</span></div></div>';
+                } else {
+                    html += '<div style="text-align:center;padding:20px;color:var(--text-muted);">لا توجد تفاصيل متاحة لهذا النوع من الشهادات</div>';
+                }
+                if (rec.employeeName || rec.employeeUsername) {
+                    html += '<div class="mt-3 pt-2" style="border-top:1px solid var(--border);font-size:0.7rem;color:var(--text-muted);">بواسطة: ' + (rec.employeeName || rec.employeeUsername || '—') + (rec.updatedAt ? ' | آخر تحديث: ' + new Date(rec.updatedAt).toLocaleString('ar-EG') : '') + '</div>';
+                }
+                body.innerHTML = html;
+            } catch(e) {
+                console.error('viewCertRecordDetail error:', e);
+                body.innerHTML = '<div style="text-align:center;padding:20px;color:var(--accent-rose);">حدث خطأ في عرض التفاصيل</div>';
+            }
+        }, 0);
+    };
+
+    window.closeCertDetailModal = function() {
+        var modal = document.getElementById('certDetailModal');
+        if (modal) modal.classList.remove('active');
+    };
+
+    async function manualExportBackup() {
+        if (!confirm('هل تريد تصدير نسخة احتياطية كاملة من قاعدة بيانات النظام؟')) return;
+        const progEl = document.getElementById('export-progress-overlay');
+        const progFill = document.getElementById('export-progress-fill');
+        const progText = document.getElementById('export-progress-text');
+        if (progEl) progEl.style.display = 'flex';
+        function setProg(pct, txt) { if (progFill) progFill.style.width = pct + '%'; if (progText) progText.textContent = txt || ''; }
+        try {
+            setProg(5, 'جاري قراءة بيانات الطلاب...');
+            let students = {}, withdrawals = {}, colleges = {}, employees = {}, logs = [], config = {}, certRecords = [];
+
+            try { const s = JSON.parse(localStorage.getItem('lotus_students') || '[]'); if (Array.isArray(s)) s.forEach(st => { students[st.id || st.studentCode] = st; }); } catch(e) {}
+            setProg(15, 'جاري قراءة بيانات الموظفين...');
+            try { employees = JSON.parse(localStorage.getItem('lotus_employees') || '[]'); } catch(e) {}
+            setProg(25, 'جاري قراءة سجل النشاطات...');
+            try { logs = JSON.parse(localStorage.getItem('lotus_activity_log') || '[]'); } catch(e) {}
+            setProg(30, 'جاري قراءة إعدادات النظام وسجل الشهادات...');
+            try { config = JSON.parse(localStorage.getItem('lotus_config') || '{}'); } catch(e) {}
+            try { certRecords = JSON.parse(localStorage.getItem('lotus_certificate_records') || '[]'); } catch(e) {}
+
+            setProg(40, 'جاري مزامنة البيانات مع الخادم...');
+            if (typeof window.AUTH_DB !== 'undefined' && window.AUTH_DB) {
+                try { const snap = await window.AUTH_DB.ref('students').once('value'); if (snap.exists()) students = { ...students, ...snap.val() }; } catch(e) {}
+                setProg(50, 'جاري مزامنة سجل النشاطات والشهادات...');
+                try { const snap = await window.AUTH_DB.ref('activityLog').once('value'); if (snap.exists()) { const fb = snap.val(); Object.keys(fb).forEach(k => { if (!logs.find(l => l.timestamp === fb[k].timestamp)) logs.push(fb[k]); }); } } catch(e) {}
+                try { const snap = await window.AUTH_DB.ref('certificateRecords').once('value'); if (snap.exists()) { const fb = snap.val(); certRecords = Object.keys(fb).map(k => fb[k]); } } catch(e) {}
+            }
+            setProg(60, 'جاري مزامنة بيانات السحب...');
+            if (typeof window.WITHDRAWAL_DB !== 'undefined' && window.WITHDRAWAL_DB) {
+                try { const snap = await window.WITHDRAWAL_DB.ref('withdrawalRequests').once('value'); if (snap.exists()) withdrawals = snap.val(); } catch(e) {}
+                setProg(70, 'جاري مزامنة بيانات الكليات...');
+                try { const snap = await window.WITHDRAWAL_DB.ref('colleges').once('value'); if (snap.exists()) colleges = snap.val(); } catch(e) {}
+            }
+            
+            setProg(80, 'جاري تجميع النسخة الاحتياطية...');
+            const backup = {
+                students,
+                withdrawalRequests: withdrawals,
+                colleges,
+                employees,
+                activityLog: logs,
+                certificateRecords: certRecords,
+                config,
+                backupTime: new Date().toISOString(),
+                version: '1.0'
+            };
+            
+            setProg(90, 'جاري إنشاء ملف التصدير...');
+            const blob = new Blob([JSON.stringify(backup, null, 2)], { type: 'application/json' });
+            const dateStr = new Date().toISOString().split('T')[0];
+            const days = ['الأحد', 'الإثنين', 'الثلاثاء', 'الأربعاء', 'الخميس', 'الجمعة', 'السبت'];
+            const dayName = days[new Date().getDay()];
+            
+            const a = document.createElement('a');
+            a.href = URL.createObjectURL(blob);
+            a.download = `نسخة_احتياطية_كاملة_${dateStr}_${dayName}.json`;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            
+            if (window.authLogActivity) {
+                window.authLogActivity('export_backup', 'نظام الصلاحيات', '', '', 'تصدير يدوي لنسخة احتياطية كاملة من النظام', 'نظام الصلاحيات');
+            }
+            
+            setProg(100, 'تم بنجاح!');
+            await new Promise(r => setTimeout(r, 500));
+            if (progEl) progEl.style.display = 'none';
+            alert('تم تصدير النسخة الاحتياطية بنجاح!');
+        } catch (err) {
+            console.error(err);
+            if (progEl) progEl.style.display = 'none';
+            alert('حدث خطأ أثناء التصدير: ' + err.message);
+        }
+    }
+
+    async function manualImportBackup(input) {
+        const file = input.files[0];
+        if (!file) return;
+        
+        if (!confirm(`تحذير هام جداً:\nسيقوم هذا الإجراء باستعادة كافة البيانات من النسخة الاحتياطية المحددة وكتابتها فوق البيانات الحالية.\nهل أنت متأكد من استمرار عملية الاستعادة؟`)) {
+            input.value = '';
+            return;
+        }
+        
+        try {
+            if (typeof window.AUTH_DB === 'undefined' || !window.AUTH_DB) {
+                alert('خطأ: تعذر الاتصال بقاعدة البيانات.');
+                input.value = '';
+                return;
+            }
+            
+            const text = await file.text();
+            const backup = JSON.parse(text);
+            
+            if (!backup.students && !backup.withdrawalRequests && !backup.employees) {
+                alert('الملف المختار غير صالح أو لا يحتوي على بنية النسخة الاحتياطية الصحيحة.');
+                input.value = '';
+                return;
+            }
+            
+            if (backup.students) await window.AUTH_DB.ref('students').set(backup.students);
+            if (backup.withdrawalRequests) await window.WITHDRAWAL_DB.ref('withdrawalRequests').set(backup.withdrawalRequests);
+            if (backup.colleges) await window.WITHDRAWAL_DB.ref('colleges').set(backup.colleges);
+            if (backup.employees) await window.AUTH_DB.ref('employees').set(backup.employees);
+            if (backup.activityLog) await window.AUTH_DB.ref('activityLog').set(backup.activityLog);
+            if (backup.config) await window.AUTH_DB.ref('settings/config').set(backup.config);
+            
+            if (backup.certificateRecords && Array.isArray(backup.certificateRecords)) {
+                const certObj = {};
+                backup.certificateRecords.forEach(r => { certObj[r.id] = r; });
+                await window.AUTH_DB.ref('certificateRecords').set(certObj);
+                localStorage.setItem('lotus_certificate_records', JSON.stringify(backup.certificateRecords));
+            }
+            
+            if (backup.employees) {
+                const list = [];
+                Object.keys(backup.employees).forEach(k => {
+                    list.push({ username: k, ...backup.employees[k] });
+                });
+                localStorage.setItem('lotus_employees', JSON.stringify(list));
+            }
+            
+            if (window.authLogActivity) {
+                window.authLogActivity('import_backup', 'نظام الصلاحيات', '', '', 'استيراد يدوي لنسخة احتياطية كاملة واستعادة البيانات', 'نظام الصلاحيات');
+            }
+            
+            alert('تم استعادة البيانات بالكامل من النسخة الاحتياطية بنجاح! سيتم إعادة تحميل الصفحة لتحديث البيانات.');
+            location.reload();
+        } catch (err) {
+            console.error(err);
+            alert('حدث خطأ أثناء استيراد النسخة الاحتياطية: ' + err.message);
+            input.value = '';
+        }
+    }
+
+    // Close cert detail modal on overlay click
+    document.addEventListener('click', function(e) {
+        var modal = document.getElementById('certDetailModal');
+        if (modal && modal.classList.contains('active') && e.target === modal) {
+            modal.classList.remove('active');
+        }
+    });
+
+    // Self-contained helpers for the Excel export (no dependency on app.js)
+    function showToast(msg, type) {
+        if (typeof window.exportToast === 'function') return window.exportToast(msg, type);
+        try {
+            if (window.showToast && window.showToast !== showToast) return window.showToast(msg, type);
+        } catch (e) {}
+        alert(msg);
+    }
+
+    window.exportEmployeeCertRecordsToExcel = function() {
+        if (typeof XLSX === 'undefined') { showToast("مكتبة Excel غير محملة", "error"); return; }
+
+        let certRecords = [];
+        try {
+            certRecords = JSON.parse(localStorage.getItem('lotus_certificate_records') || '[]');
+        } catch (e) { console.error('خطأ في قراءة شهادات الموظفين:', e); return; }
+
+        if (certRecords.length === 0) {
+            showToast("لا توجد شهادات محفوظة للموظفين للتصدير", "info");
+            return;
+        }
+
+        const employeeRecords = [];
+        const employeeCertificateTypes = {};
+
+        certRecords.forEach(function(record) {
+            const email = record.employeeUsername || '';
+            const name = record.employeeName || '';
+            const role = record.employeeRole || '';
+            const timestamp = record.createdAt || record.updatedAt || '';
+
+            employeeRecords.push({
+                "اسم الموظف": name,
+                "اسم المستخدم": email,
+                "الدور": role,
+                "اسم الطالب": record.studentName || '',
+                "نوع الشهادة": record.certificateLabel || record.certificateType || '',
+                "المجموع": record.totalScore || record.totalPercentage || 0,
+                "المجموع المكافئ": record.equivalentScore || 0,
+                "النسبة": record.totalPercentage || 0,
+                "تاريخ الدخول": new Date(timestamp).toLocaleDateString('ar-EG'),
+                "تاريخ الانتهاء": new Date(timestamp).toLocaleTimeString('ar-EG'),
+                "تاريخ الإنشاء": new Date(timestamp).toLocaleString('ar-EG'),
+                "نوع الشهادة الخام": record.certificateType || '',
+                "تمت بواسطة": record.employeeUsername || record.employeeName || ''
+            });
+
+            const certType = record.certificateLabel || record.certificateType || '';
+            if (!employeeCertificateTypes[certType]) employeeCertificateTypes[certType] = 0;
+            employeeCertificateTypes[certType]++;
+        });
+
+        const currentDate = new Date().toLocaleDateString('ar-EG');
+        const currentTime = new Date().toLocaleTimeString('ar-EG');
+
+        let excelData = [];
+        excelData.push({
+            "عنوان التقرير": "سجلات شهادات الموظفين",
+            "": "",
+            "الموقع": "جامعه اللوتس",
+            "التاريخ": currentDate,
+            "الوقت": currentTime,
+            "إجمالي السجلات": certRecords.length
+        });
+
+        excelData.push({ "": "", "": "", "": "", "": "", "": "", "": "" });
+
+        const summaryRows = [
+            { "الفئة": "إجمالي السجلات", "القيمة": certRecords.length },
+            { "الفئة": "الموظفين المتميزين", "القيمة": new Set(certRecords.map(function(r) { return r.employeeUsername; })).size },
+            { "الفئة": "أنواع الشهادات المختلفة", "القيمة": new Set(certRecords.map(function(r) { return r.certificateLabel || r.certificateType; })).size },
+            { "الفئة": "الطلاب المتفردين", "القيمة": new Set(certRecords.map(function(r) { return r.studentName; })).size },
+            { "الفئة": "متوسط النسبة", "القيمة": (certRecords.reduce(function(s, r) { return s + (r.totalPercentage || 0); }, 0) / certRecords.length).toFixed(1) + "%" },
+            { "الفئة": "أعلى نسبة", "القيمة": Math.max.apply(null, certRecords.map(function(r) { return r.totalPercentage || 0; })).toFixed(1) + "%" },
+            { "الفئة": "أقل نسبة", "القيمة": Math.min.apply(null, certRecords.map(function(r) { return r.totalPercentage || 0; })).toFixed(1) + "%" }
+        ];
+        excelData = excelData.concat(summaryRows);
+        excelData.push({ "": "" });
+
+        excelData.push({
+            "اسم الموظف": "اسم الموظف",
+            "اسم المستخدم": "اسم المستخدم",
+            "الدور": "الدور",
+            "اسم الطالب": "اسم الطالب",
+            "نوع الشهادة": "نوع الشهادة",
+            "المجموع": "المجموع",
+            "المجموع المكافئ": "المجموع المكافئ",
+            "النسبة": "النسبة",
+            "تاريخ الدخول": "التاريخ",
+            "تاريخ الانتهاء": "الوقت",
+            "تاريخ الإنشاء": "تاريخ الإنشاء",
+            "نوع الشهادة الخام": "النوع الخام",
+            "تمت بواسطة": "تمت بواسطة"
+        });
+
+        employeeRecords.forEach(function(record) { excelData.push(record); });
+
+        excelData.push({ "": "" });
+        excelData.push({ "نوع الشهادة": "نوع الشهادة", "العدد": "العدد", "النسبة": "النسبة %" });
+        Object.keys(employeeCertificateTypes).forEach(function(certType) {
+            const count = employeeCertificateTypes[certType];
+            excelData.push({ "نوع الشهادة": certType, "العدد": String(count), "النسبة": ((count / certRecords.length) * 100).toFixed(1) + "%" });
+        });
+
+        excelData.push({ "": "" });
+        excelData.push({ "اسم الموظف": "اسم الموظف", "اسم المستخدم": "اسم المستخدم", "الدور": "الدور", "أنواع الشهادات": "أنواع الشهادات", "عدد الشهادات": "عدد الشهادات" });
+
+        const employeeStats = {};
+        certRecords.forEach(function(record) {
+            const email = record.employeeUsername || '';
+            const name = record.employeeName || '';
+            const role = record.role || '';
+            if (!employeeStats[email]) {
+                employeeStats[email] = { name: name, role: role, certTypes: {}, certCount: 0 };
+            }
+            var ct = record.certificateLabel || record.certificateType;
+            if (ct) employeeStats[email].certTypes[ct] = true;
+            employeeStats[email].certCount++;
+        });
+        Object.keys(employeeStats).forEach(function(email) {
+            const st = employeeStats[email];
+            excelData.push({
+                "اسم الموظف": st.name,
+                "اسم المستخدم": email,
+                "الدور": st.role,
+                "أنواع الشهادات": Object.keys(st.certTypes).join('، '),
+                "عدد الشهادات": String(st.certCount)
+            });
+        });
+
+        excelData.push({ "": "" });
+        excelData.push({ "الملاحظات": "بيانات شهادات الموظفين من نظام حساب شهادات جامعة اللوتس", "المحلل": "النظام", "بتاريخ": currentDate });
+
+        try {
+            const ws = XLSX.utils.json_to_sheet(excelData, { skipHeader: true });
+            ws['!cols'] = [
+                { wch: 25 }, { wch: 20 }, { wch: 15 }, { wch: 20 }, { wch: 20 },
+                { wch: 15 }, { wch: 15 }, { wch: 12 }, { wch: 15 }, { wch: 12 }, { wch: 20 }
+            ];
+            const wb = XLSX.utils.book_new();
+            XLSX.utils.book_append_sheet(wb, ws, "شهادات_الموظفين");
+            ws['A1'].s = {
+                font: { bold: true, sz: 18, color: { rgb: 'FFFFFFFF' } },
+                fill: { patternType: 'solid', fgColor: { rgb: 'FF2563EB' } },
+                alignment: { horizontal: 'center', vertical: 'center' }
+            };
+            const wbout = XLSX.write(wb, { bookType: "xlsx", type: "array" });
+            const blob = new Blob([wbout], { type: "application/octet-stream" });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement("a");
+            a.href = url;
+            a.download = "شهادات_الموظفين_" + currentDate.replace(/\//g, '_') + ".xlsx";
+            document.body.appendChild(a); a.click(); document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+            showToast("تم تصدير شهادات الموظفين بنجاح إلى Excel", "success");
+        } catch (e) {
+            console.error("خطأ في تصدير شهادات الموظفين:", e);
+            showToast("خطأ في تصدير البيانات: " + e.message, "error");
+        }
+    };
 </script>
+
+<!-- Export Progress Overlay -->
+<div id="export-progress-overlay" style="display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.8);z-index:99999;justify-content:center;align-items:center;backdrop-filter:blur(6px);">
+<div style="background:var(--bg-card);border:1px solid var(--border);border-radius:20px;padding:32px 40px;text-align:center;min-width:320px;box-shadow:0 20px 60px rgba(0,0,0,0.5);">
+<div style="font-size:2rem;margin-bottom:12px;"><i class="fas fa-database" style="color:var(--accent-amber);"></i></div>
+<div style="font-weight:800;color:#fff;font-size:1.1rem;margin-bottom:8px;">جاري أخذ نسخة احتياطية...</div>
+<div id="export-progress-text" style="font-size:0.85rem;color:var(--text-muted);margin-bottom:16px;">جاري التحميل...</div>
+<div style="width:100%;height:10px;background:var(--bg-main);border-radius:50px;overflow:hidden;border:1px solid var(--border);">
+<div id="export-progress-fill" style="width:0%;height:100%;background:linear-gradient(90deg,var(--accent-amber),var(--accent-emerald));border-radius:50px;transition:width 0.5s cubic-bezier(0.4,0,0.2,1);"></div>
+</div>
+</div>
+</div>
 </body>
 </html>
+

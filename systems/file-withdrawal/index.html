@@ -35,6 +35,7 @@
     ::-webkit-scrollbar { width: 5px; height: 5px; }
     ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
 
+    @keyframes homeGlow { 0% { color:var(--accent-rose); text-shadow:0 0 12px rgba(244,63,94,0.6); } 25% { color:var(--accent-amber); text-shadow:0 0 12px rgba(245,158,11,0.6); } 50% { color:var(--accent-emerald); text-shadow:0 0 12px rgba(16,185,129,0.6); } 75% { color:var(--accent-blue); text-shadow:0 0 12px rgba(59,130,246,0.6); } 100% { color:var(--accent-rose); text-shadow:0 0 12px rgba(244,63,94,0.6); } }
     .dash-btn {
       width: 42px; height: 42px; border-radius: 50%;
       background: var(--bg-card); border: 2px solid var(--border);
@@ -43,7 +44,9 @@
       transition: all 0.4s ease; text-decoration: none;
       position: fixed; top: 12px; right: 12px; z-index: 9999;
     }
-    .dash-btn:hover { transform: scale(1.1); border-color: var(--accent-blue); color: #fff; background: var(--accent-blue); }
+    .dash-btn:hover { transform: scale(1.15); color: #fff; background: var(--accent-blue); border-color: var(--accent-blue); box-shadow: 0 0 25px rgba(59,130,246,0.5); }
+    .dash-btn .fa-home { animation: homeGlow 2.5s ease infinite; }
+    .dash-btn:hover .fa-home { animation: none; color: #fff; }
     .theme-btn {
       position: fixed; top: 12px; left: 12px; z-index: 9999;
       width: 42px; height: 42px; border-radius: 50%;
@@ -166,6 +169,8 @@
     }
     .form-control:focus, .form-select:focus { border-color: var(--accent-blue); outline: none; box-shadow: 0 0 0 2px rgba(59,130,246,0.2); }
     textarea.form-control { background: var(--bg-card-alt); color: var(--text-primary); }
+    input[type="date"]::-webkit-calendar-picker-indicator { filter: invert(1); cursor: pointer; }
+    input[type="date"] { color-scheme: dark; }
     .form-row { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 14px; }
     .grade-display { padding:9px 12px; border-radius:10px; border:1.5px solid var(--border); background:var(--bg-card-alt); font-weight:900; font-size:0.95rem; color:var(--text-primary); min-height:50px; display:flex; flex-direction:column; justify-content:center; }
     .file-number-info { color:var(--accent-amber); font-size:0.65rem; font-weight:700; margin-top:2px; min-height:1em; }
@@ -1106,6 +1111,9 @@
       if (!data.studentCode || !data.studentName || !data.nationalId || !data.college || !data.withdrawalDate || !data.academicYear || !data.paymentStatus) { btn.classList.remove('loading'); return toast('جميع الحقول المطلوبة', true); }
       if (data.nationalId.length !== 14 || !/^\d+$/.test(data.nationalId)) { btn.classList.remove('loading'); return toast('الرقم القومي 14 رقماً', true); }
       await requestsRef.push(data);
+      if (window.authLogActivity) {
+        window.authLogActivity('create_student', 'سحب ملف', data.studentCode, data.studentName, 'سحب ملف طالب جديد', 'نظام السحب');
+      }
       btn.classList.remove('loading');
       successSave('تم الحفظ بنجاح', `${data.studentCode} - ${data.studentName}`);
       e.target.reset(); document.getElementById('date').valueAsDate = new Date(); document.getElementById('date').dispatchEvent(new Event('change'));
@@ -1115,7 +1123,18 @@
       document.getElementById('addFileNumber').value = '';
     });
 
-    window.deleteRecord = async id => { if (confirm('تأكيد الحذف؟')) { await requestsRef.child(id).remove(); toast('تم الحذف'); } };
+    window.deleteRecord = async id => {
+      if (confirm('تأكيد الحذف؟')) {
+        const r = allRecords.find(x => x.id === id);
+        const sName = r ? r.studentName : '';
+        const sCode = r ? r.studentCode : '';
+        await requestsRef.child(id).remove();
+        toast('تم الحذف');
+        if (window.authLogActivity) {
+          window.authLogActivity('delete_student', 'سحب ملف', sCode, sName, 'حذف طلب سحب ملف طالب', 'نظام السحب');
+        }
+      }
+    };
     window.editRecord = id => {
       const r = allRecords.find(x => x.id === id); if (!r) return;
       document.getElementById('editId').value = id;
@@ -1133,6 +1152,9 @@
       const id = document.getElementById('editId').value;
       const data = { fileNumber: v('editFileNumber'), studentCode: v('editCode'), studentName: v('editName'), nationalId: v('editNid'), college: v('editCollege'), withdrawalDate: fmtDate(v('editDate')), academicYear: v('editYear'), paymentStatus: v('editPayment'), transferUniversity: v('editTransfer'), phone: v('editPhone'), notes: v('editNotes') };
       await requestsRef.child(id).update(data);
+      if (window.authLogActivity) {
+        window.authLogActivity('update_student', 'سحب ملف', data.studentCode, data.studentName, 'تعديل بيانات طلب سحب ملف', 'نظام السحب');
+      }
       successSave('تم التعديل', data.studentName);
       closeEdit();
     });
@@ -1280,9 +1302,15 @@
     document.getElementById('exportExcel').addEventListener('click', () => exportToExcel(getFiltered()));
 
     function exportToExcel(data) {
+      var _stuList = []; try { _stuList = JSON.parse(localStorage.getItem('lotus_students') || '[]'); } catch(e) {}
+      function _getLevel(code) {
+        var _s = _stuList.find(function(x) { return x.studentCode === code || x.code === code; });
+        if (_s && _s.level) return _s.level;
+        return getGrade(code);
+      }
       const rows = data.map((r, i) => ({
         'رقم الملف': r.fileNumber || '', 'كود الطالب': r.studentCode, 'اسم الطالب': r.studentName, 'الرقم القومي': r.nationalId,
-        'الكلية': r.college, 'الفرقة': getGrade(r.studentCode), 'تاريخ السحب': fmtDate(r.withdrawalDate), 'العام الجامعي': r.academicYear,
+        'الكلية': r.college, 'الفرقة': _getLevel(r.studentCode), 'تاريخ السحب': fmtDate(r.withdrawalDate), 'العام الجامعي': r.academicYear,
         'موقف الدفع': r.paymentStatus, 'الجامعة المحول إليها': r.transferUniversity || '', 'التليفون': r.phone || '', 'ملاحظات': r.notes || ''
       }));
       const ws = XLSX.utils.json_to_sheet(rows);
@@ -1428,6 +1456,9 @@
             const updates = {};
             mapped.forEach(function(r) { const key = requestsRef.push().key; updates[key] = Object.assign({}, r, { createdAt: Date.now() }); });
             await requestsRef.update(updates);
+            if (window.authLogActivity) {
+              window.authLogActivity('bulk_import', 'سحب ملف', '', '', `رفع مجمّع لعدد ${mapped.length} ملف (إضافة)`, 'نظام السحب');
+            }
             var previewTable = '<div style="margin-top:10px;max-height:300px;overflow-y:auto;"><table style="width:100%;font-size:0.8rem;border-collapse:collapse;"><thead><tr><th style="background:var(--primary);color:#fff;padding:6px;">رقم الملف</th><th style="background:var(--primary);color:#fff;padding:6px;">الكود</th><th style="background:var(--primary);color:#fff;padding:6px;">الاسم</th><th style="background:var(--primary);color:#fff;padding:6px;">الرقم القومي</th><th style="background:var(--primary);color:#fff;padding:6px;">الكلية</th><th style="background:var(--primary);color:#fff;padding:6px;">الفرقة</th><th style="background:var(--primary);color:#fff;padding:6px;">التاريخ</th><th style="background:var(--primary);color:#fff;padding:6px;">العام</th><th style="background:var(--primary);color:#fff;padding:6px;">الدفع</th><th style="background:var(--primary);color:#fff;padding:6px;">الجامعة</th></tr></thead><tbody>';
             mapped.forEach(function(r, i) {
               previewTable += '<tr style="border-bottom:1px solid var(--border);"><td style="padding:5px;">' + (r.fileNumber||'-') + '</td><td style="padding:5px;">' + (r.studentCode||'') + '</td><td style="padding:5px;">' + (r.studentName||'') + '</td><td style="padding:5px;" dir="ltr">' + (r.nationalId||'') + '</td><td style="padding:5px;">' + (r.college||'') + '</td><td style="padding:5px;">' + getGrade(r.studentCode) + '</td><td style="padding:5px;">' + fmtDate(r.withdrawalDate) + '</td><td style="padding:5px;">' + (r.academicYear||'') + '</td><td style="padding:5px;">' + (r.paymentStatus||'') + '</td><td style="padding:5px;">' + (r.transferUniversity||'-') + '</td></tr>';
@@ -1450,6 +1481,9 @@
               }
             });
             await requestsRef.update(updates);
+            if (window.authLogActivity) {
+              window.authLogActivity('bulk_import', 'سحب ملف', '', '', `تحديث/إضافة مجمّعة لعدد ${mapped.length} ملف`, 'نظام السحب');
+            }
             var msg = '';
             if (added) msg += added + ' سجل جديد';
             if (updated) msg += (msg ? ' + ' : '') + updated + ' سجل تم تعديله';
@@ -1488,12 +1522,19 @@
       if (backup.colleges) backup.colleges.forEach(c => { const { id, ...d } = c; cu[collegesRef.push().key] = d; });
       await requestsRef.update(ru);
       if (Object.keys(cu).length) await collegesRef.update(cu);
+      if (window.authLogActivity) {
+        window.authLogActivity('restore_database', 'سحب ملف', '', '', `استعادة قاعدة البيانات من نسخة احتياطية (عدد ${backup.records.length} سجل)`, 'نظام السحب');
+      }
       toast('تم الاستيراد');
       e.target.value = '';
     });
     document.getElementById('clearAllBtn').addEventListener('click', async () => {
       if (!confirm('حذف جميع السجلات؟') || !confirm('تأكيد أخير؟')) return;
-      await requestsRef.remove(); toast('تم الحذف');
+      await requestsRef.remove(); 
+      toast('تم الحذف');
+      if (window.authLogActivity) {
+        window.authLogActivity('clear_database', 'سحب ملف', '', '', 'مسح كافة سجلات السحب من النظام', 'نظام السحب');
+      }
     });
 
     // Replace column values
@@ -1578,9 +1619,10 @@ document.addEventListener('DOMContentLoaded', function() {
   }
 
   // Check existing session
-  var session = (function(){ try { return JSON.parse(localStorage.getItem('lotus_session')); } catch(e) { return null; } })();
+  var session = window.getCurrentUser ? window.getCurrentUser() : (function(){ try { return JSON.parse(localStorage.getItem('lotus_session')); } catch(e) { return null; } })();
   if (session && session.username && session.loginTime && Date.now() - session.loginTime < 28800000) {
     showUserMenu(session);
+    renderEmps();
   } else {
     localStorage.removeItem('lotus_session');
     // Show login modal
@@ -1591,30 +1633,44 @@ document.addEventListener('DOMContentLoaded', function() {
     var loginBtn = document.getElementById('login-submit-btn');
     if (loginBtn) {
       loginBtn.onclick = function() {
-        var u = document.getElementById('login-username').value.trim();
-        var p = document.getElementById('login-password').value.trim();
-        var errEl = document.getElementById('login-error');
-        if (!u || !p) { if (errEl) { errEl.textContent = 'يرجى إدخال اسم المستخدم وكلمة المرور'; errEl.style.display = 'block'; } return; }
-        if (errEl) errEl.style.display = 'none';
-        var emp = null;
-        SEED_EMPS.forEach(function(e) { if (e.username === u && e.password === hashPw(p)) emp = e; });
-        if (!emp) {
-          // Also check auth.js localStorage employees (in case they were modified)
+        if (window.submitLogin) {
+          window.submitLogin();
+        } else {
+          // Fallback if auth.js not loaded
+          var u = document.getElementById('login-username').value.trim();
+          var p = document.getElementById('login-password').value.trim();
+          var errEl = document.getElementById('login-error');
+          if (!u || !p) { if (errEl) { errEl.textContent = 'يرجى إدخال اسم المستخدم وكلمة المرور'; errEl.style.display = 'block'; } return; }
+          if (errEl) errEl.style.display = 'none';
+          var emp = null;
           var local = (function(){ try { return JSON.parse(localStorage.getItem('lotus_employees') || '[]'); } catch(e) { return []; } })();
           local.forEach(function(e) { if (e.username === u && e.password === hashPw(p) && e.active !== false) emp = e; });
-        }
-        if (emp) {
-          var s = { username: emp.username, name: emp.name, role: emp.role, loginTime: Date.now() };
-          localStorage.setItem('lotus_session', JSON.stringify(s));
-          if (modal) modal.classList.remove('active');
-          showUserMenu(s);
-          renderEmps();
-        } else {
-          if (errEl) { errEl.textContent = 'اسم المستخدم أو كلمة المرور غير صحيحة'; errEl.style.display = 'block'; }
+          if (emp) {
+            var s = { username: emp.username, name: emp.name, role: emp.role, loginTime: Date.now() };
+            localStorage.setItem('lotus_session', JSON.stringify(s));
+            if (modal) modal.classList.remove('active');
+            showUserMenu(s);
+            renderEmps();
+          } else {
+            if (errEl) { errEl.textContent = 'اسم المستخدم أو كلمة المرور غير صحيحة'; errEl.style.display = 'block'; }
+          }
         }
       };
     }
   }
+
+  // Register login/logout callbacks for auth.js
+  window.AUTH_ON_LOGIN_CALLBACK = function(emp) {
+    var modal = document.getElementById('login-modal');
+    if (modal) modal.classList.remove('active');
+    showUserMenu(emp);
+    renderEmps();
+  };
+
+  window.AUTH_ON_LOGOUT_CALLBACK = function() {
+    localStorage.removeItem('lotus_session');
+    location.reload();
+  };
 
   document.addEventListener('click', function(e) {
     var dd = document.getElementById('user-dropdown');
@@ -1701,11 +1757,25 @@ function saveEmp() {
       return;
     }
     var existing = list.find(function(x) { return x.username === (editingEmp || username); });
-    var pw = password ? (function(){ let h=0; for(var i=0;i<password.length;i++){h=((h<<5)-h)+password.charCodeAt(i);h=h&h;} return 'h'+Math.abs(h).toString(36); })() : (existing ? existing.password : '');
+    var pw = password ? (window.authHashPassword ? window.authHashPassword(password) : (function(){ let h=0; for(var i=0;i<password.length;i++){h=((h<<5)-h)+password.charCodeAt(i);h=h&h;} return 'h'+Math.abs(h).toString(36); })()) : (existing ? existing.password : '');
     var empData = { name: name, username: editingEmp || username, password: pw, role: role, active: true, employeeId: editingEmp || username, createdAt: existing ? existing.createdAt : new Date().toISOString() };
+    if (existing) {
+      if (existing.permissions) empData.permissions = existing.permissions; // preserve permissions!
+      if (existing.plainPassword && !password) empData.plainPassword = existing.plainPassword;
+    } else {
+      empData.permissions = window.AUTH_ROLE_PERMISSIONS ? (window.AUTH_ROLE_PERMISSIONS[role] || []) : []; // set default permissions!
+    }
+    if (password) empData.plainPassword = password;
+
     authSaveEmployeeToDb(empData).then(function() {
       closeEmpModal();
       renderEmps();
+      try {
+        if (typeof window.authLogActivity === 'function') {
+          var action = editingEmp ? 'تعديل' : 'إضافة';
+          window.authLogActivity(action, 'موظف', empData.username, empData.name, (editingEmp ? 'تم تعديل بيانات الموظف' : 'تم إضافة موظف جديد'), 'نظام الصلاحيات');
+        }
+      } catch(e) {}
       try { toast('تم الحفظ'); } catch(e) {}
     });
   });
@@ -1713,15 +1783,28 @@ function saveEmp() {
 function deleteEmp(username) {
   if (!confirm('حذف الموظف ' + username + '؟')) return;
   authGetAllEmployees().then(function(list) {
-    var local = (function(){ try { return JSON.parse(localStorage.getItem('lotus_employees') || '[]'); } catch(e) { return []; } })();
-    local = local.filter(function(e) { return e.username !== username; });
-    localStorage.setItem('lotus_employees', JSON.stringify(local));
-    // Also try to remove from Firebase
-    if (typeof AUTH_DB !== 'undefined' && AUTH_DB) {
-      try { AUTH_DB.ref('employees/' + username.replace(/[.#$\/\[\]]/g, '_')).remove(); } catch(e) {}
+    var empName = '';
+    var found = list.find(function(e) { return e.username === username; });
+    if (found) empName = found.name;
+    if (window.authDeleteEmployeeFromDb) {
+      window.authDeleteEmployeeFromDb(username).then(function() {
+        renderEmps();
+        if (typeof window.authLogActivity === 'function') {
+          window.authLogActivity('حذف', 'موظف', username, empName || username, 'تم حذف الموظف نهائياً', 'نظام الصلاحيات');
+        }
+        try { toast('تم الحذف'); } catch(e) {}
+      });
+    } else {
+      // Fallback
+      var local = (function(){ try { return JSON.parse(localStorage.getItem('lotus_employees') || '[]'); } catch(e) { return []; } })();
+      local = local.filter(function(e) { return e.username !== username; });
+      localStorage.setItem('lotus_employees', JSON.stringify(local));
+      if (typeof AUTH_DB !== 'undefined' && AUTH_DB) {
+        try { AUTH_DB.ref('employees/' + username.replace(/[.#$\/\[\]]/g, '_')).remove(); } catch(e) {}
+      }
+      renderEmps();
+      try { toast('تم الحذف'); } catch(e) {}
     }
-    renderEmps();
-    try { toast('تم الحذف'); } catch(e) {}
   });
 }
 </script>

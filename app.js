@@ -658,6 +658,7 @@ function saveAttachmentLocally(file, attachmentId, attachmentName, isCustom, tar
 window.uploadAttachmentFile = async function(input, attachmentId, attachmentName, isCustom) {
   if (input.files.length === 0) return; const file = input.files[0];
   await saveAttachmentLocally(file, attachmentId, attachmentName, isCustom, selectedStudent);
+  if (window.authLogActivity) window.authLogActivity('رفع ملف', 'نظام الملفات', selectedStudent.code, selectedStudent.name, 'تم رفع ملف: ' + (attachmentName || file.name));
   showToast("تم حفظ الملف!", "success"); refreshSelectedStudentDetails();
 };
 
@@ -782,6 +783,7 @@ window.deleteAttachment = async function(id, isCustom) {
   const idx = studentsIndex.findIndex(s => s.id === selectedStudent.id);
   if (idx !== -1) { studentsIndex[idx].attachments = selectedStudent.attachments; localStorage.setItem("lotus_students", JSON.stringify(studentsIndex)); }
   if (!isOfflineMode && db && !selectedStudent.id.startsWith("mock_")) { try { await db.ref(`students/${selectedStudent.id}/attachments/${id}`).remove(); } catch (e) {} }
+  if (window.authLogActivity) window.authLogActivity('حذف ملف', 'نظام الملفات', selectedStudent.code, selectedStudent.name, 'تم حذف ملف المرفق');
   showToast("تم الحذف.", "success"); refreshSelectedStudentDetails();
 };
 
@@ -919,9 +921,13 @@ window.saveStudentEdits = async function() {
   const ud = { name, code, nationalId, college, level, cabinetNo, fileNo, whatsapp, customFields: cf };
   if (isOfflineMode || !db || selectedStudent.id.startsWith("mock_")) {
     const idx = studentsIndex.findIndex(s => s.id === selectedStudent.id); if (idx !== -1) { studentsIndex[idx] = Object.assign({}, studentsIndex[idx], ud); localStorage.setItem("lotus_students", JSON.stringify(studentsIndex)); }
-    Object.assign(selectedStudent, ud); showToast("تم التحديث محلياً.", "success"); closeEditModal(); refreshSelectedStudentDetails(); renderAdminStudentsTable(); return;
+    Object.assign(selectedStudent, ud); 
+    if (window.authLogActivity) window.authLogActivity('تعديل', 'نظام الملفات', selectedStudent.code, selectedStudent.name, 'تم تعديل بيانات الطالب');
+    showToast("تم التحديث محلياً.", "success"); closeEditModal(); refreshSelectedStudentDetails(); renderAdminStudentsTable(); return;
   }
-  try { await db.ref(`students/${selectedStudent.id}`).update(ud); Object.assign(selectedStudent, ud); const idx = studentsIndex.findIndex(s => s.id === selectedStudent.id); if (idx !== -1) { studentsIndex[idx] = Object.assign({}, studentsIndex[idx], ud); localStorage.setItem("lotus_students", JSON.stringify(studentsIndex)); } showToast("تم التحديث.", "success"); closeEditModal(); refreshSelectedStudentDetails(); loadSearchIndex().catch(() => {}); } catch (e) { showToast("خطأ: " + e.message, "error"); }
+  try { await db.ref(`students/${selectedStudent.id}`).update(ud); Object.assign(selectedStudent, ud); const idx = studentsIndex.findIndex(s => s.id === selectedStudent.id); if (idx !== -1) { studentsIndex[idx] = Object.assign({}, studentsIndex[idx], ud); localStorage.setItem("lotus_students", JSON.stringify(studentsIndex)); } 
+  if (window.authLogActivity) window.authLogActivity('تعديل', 'نظام الملفات', selectedStudent.code, selectedStudent.name, 'تم تعديل بيانات الطالب');
+  showToast("تم التحديث.", "success"); closeEditModal(); refreshSelectedStudentDetails(); loadSearchIndex().catch(() => {}); } catch (e) { showToast("خطأ: " + e.message, "error"); }
 };
 
 window.deleteStudentCompletely = async function() {
@@ -929,11 +935,13 @@ window.deleteStudentCompletely = async function() {
   logToArchive(selectedStudent);
   if (isOfflineMode || !db || selectedStudent.id.startsWith("mock_")) {
     studentsIndex = studentsIndex.filter(s => s.id !== selectedStudent.id); allStudentsList = allStudentsList.filter(s => s.id !== selectedStudent.id); localStorage.setItem("lotus_students", JSON.stringify(studentsIndex));
+    if (window.authLogActivity) window.authLogActivity('حذف', 'نظام الملفات', selectedStudent.code, selectedStudent.name, 'تم حذف الطالب نهائياً');
     showToast("تم الحذف.", "success"); selectedStudent = null; if (studentCard) studentCard.style.display = "none"; if (searchInput) searchInput.value = ""; renderAdminStudentsTable(); renderReports(); return;
   }
   try {
     await db.ref(`students/${selectedStudent.id}`).remove();
     studentsIndex = studentsIndex.filter(s => s.id !== selectedStudent.id); allStudentsList = allStudentsList.filter(s => s.id !== selectedStudent.id); localStorage.setItem("lotus_students", JSON.stringify(studentsIndex));
+    if (window.authLogActivity) window.authLogActivity('حذف', 'نظام الملفات', selectedStudent.code, selectedStudent.name, 'تم حذف الطالب نهائياً');
     showToast("تم الحذف.", "success"); selectedStudent = null; if (studentCard) studentCard.style.display = "none"; if (searchInput) searchInput.value = ""; loadSearchIndex().catch(() => {});
   } catch (e) { showToast("خطأ: " + e.message, "error"); }
 };
@@ -1784,11 +1792,12 @@ window.addCustomDeliveryDoc = async function(studentId) {
 };
 
 window.removeCustomDelivery = function(studentId, key) {
-  const st = studentsIndex.find(s => s.id === studentId) || selectedStudent;
+  const st = studentsIndex.find(x => x.id === studentId) || selectedStudent;
   if (!st || !st.delivery) return;
   delete st.delivery[key];
   persistDelivery(st, key);
-  renderDeliveryReview(st);
+  if (currentScreen === "delivery") renderDeliveryReview(st);
+  else updateDeliverySummary(st);
 };
 
 window.onDeliveryChange = function(studentId, attId, checked) {
@@ -2192,11 +2201,412 @@ window.sendAllMissingViaWhatsapp = function() {
   });
 };
 
-function exportToExcel(data, fileName) {
+window.exportEmployeeCertRecordsToExcel = function() {
   if (typeof XLSX === 'undefined') { showToast("مكتبة Excel غير محملة", "error"); return; }
-  const ws = XLSX.utils.json_to_sheet(data);
+  
+  // Get all certificate records from localStorage
+  let certRecords = [];
+  try {
+    certRecords = JSON.parse(localStorage.getItem('lotus_certificate_records') || '[]');
+  } catch(e) { console.error('خطأ في قراءة شهادات الموظفين:', e); return; }
+  
+  if (certRecords.length === 0) {
+    showToast("لا توجد شهادات محفوظة للموظفين للتصدير", "info");
+    return;
+  }
+  
+  // Filter records by employee certificates and organize by employee role
+  const employeeRecords = [];
+  const employeeCertificateTypes = {};
+  
+  certRecords.forEach(record => {
+    const email = record.employeeUsername || '';
+    const name = record.employeeName || '';
+    const role = record.employeeRole || '';
+    const timestamp = record.createdAt || record.updatedAt || '';
+    
+    const recordData = {
+      "اسم الموظف": name,
+      "اسم المستخدم": email,
+      "الدور": role,
+      "الشرطة": record.studentName || '',
+      "نوع الشهادة": record.certificateLabel || record.certificateType || '',
+      "المجموع": record.totalScore || record.totalPercentage || 0,
+      "المجموع المكافئ": record.equivalentScore || 0,
+      "النسبة": record.totalPercentage || 0,
+      "تاريخ الدخول": new Date(timestamp).toLocaleDateString('ar-EG'),
+      "تاريخ الانتهاء": new Date(timestamp).toLocaleTimeString('ar-EG'),
+      "تاريخ الإنشاء": new Date(timestamp).toLocaleString('ar-EG'),
+      "نوع الشهادة الخام": record.certificateType || '',
+      "تمت بواسطة": record.employeeUsername || record.employeeName || ''
+    };
+    
+    employeeRecords.push(recordData);
+    
+    // Track certificate types for grouping
+    const certType = record.certificateLabel || record.certificateType || '';
+    if (!employeeCertificateTypes[certType]) {
+      employeeCertificateTypes[certType] = 0;
+    }
+    employeeCertificateTypes[certType]++;
+  });
+  
+  // Create main data sheet
+  let excelData = [];
+  const currentDate = new Date().toLocaleDateString('ar-EG');
+  const currentTime = new Date().toLocaleTimeString('ar-EG');
+  
+  // Title row
+  excelData.push({
+    "عنوان التقرير": "سجلات شهادات الموظفين",
+    "": "",
+    "الموقع": "جامعه اللوتس",
+    "التاريخ": currentDate,
+    "الوقت": currentTime,
+    "إجمالي السجلات": certRecords.length
+  });
+  
+  excelData.push({
+    "": "",
+    "": "",
+    "": "",
+    "": ""
+  });
+  
+  // Summary statistics
+  const summaryRows = [
+    { "الفئة": "إجمالي السجلات", "القيمة": certRecords.length },
+    { "الفئة": "الموظفين المتميزين", "القيمة": new Set(certRecords.map(r => r.employeeUsername)).size },
+    { "الفئة": "أنواع الشهادات المختلفة", "القيمة": new Set(certRecords.map(r => r.certificateLabel || r.certificateType)).size },
+    { "الفئة": "الطلاب المتفردين", "القيمة": new Set(certRecords.map(r => r.studentName)).size },
+    { "الفئة": "متوسط النسبة", "القيمة": (certRecords.reduce((sum, r) => sum + (r.totalPercentage || 0), 0) / certRecords.length).toFixed(1) + "%" },
+    { "الفئة": "أعلى نسبة", "القيمة": Math.max(...certRecords.map(r => r.totalPercentage || 0)).toFixed(1) + "%" },
+    { "الفئة": "أقل نسبة", "القيمة": Math.min(...certRecords.map(r => r.totalPercentage || 0)).toFixed(1) + "%" }
+  ];
+  
+  excelData = excelData.concat(summaryRows);
+  
+  excelData.push({
+    "": ""
+  });
+  
+  // Main data table
+  excelData.push({
+    "اسم الموظف": "اسم الموظف",
+    "اسم المستخدم": "اسم المستخدم",
+    "الدور": "الدور",
+    "الشرطة": "اسم الطالب",
+    "نوع الشهادة": "نوع الشهادة",
+    "المجموع": "المجموع",
+    "المجموع المكافئ": "المجموع المكافئ",
+    "النسبة": "النسبة",
+    "تاريخ الدخول": "التاريخ",
+    "تاريخ الانتهاء": "الوقت",
+    "تاريخ الإنشاء": "تاريخ الإنشاء",
+    "نوع الشهادة الخام": "النوع الخام",
+    "تمت بواسطة": "تمت بواسطة"
+  });
+  
+  employeeRecords.forEach(record => {
+    excelData.push(record);
+  });
+  
+  // Add certificate type breakdown
+  excelData.push({
+    "": ""
+  });
+  
+  excelData.push({
+    "نوع الشهادة": "نوع الشهادة",
+    "العدد": "العدد",
+    "النسبة": "النسبة %"
+  });
+  
+  Object.entries(employeeCertificateTypes).forEach(([certType, count]) => {
+    const percentage = ((count / certRecords.length) * 100).toFixed(1);
+    excelData.push({
+      "نوع الشهادة": certType,
+      "العدد": count.toString(),
+      "النسبة": percentage + "%"
+    });
+  });
+  
+  // Add detailed employee performance info
+  excelData.push({
+    "": ""
+  });
+  
+  excelData.push({
+    "اسم الموظف": "اسم الموظف",
+    "اسم المستخدم": "اسم المستخدم",
+    "الدور": "الدور",
+    "أنواع الشهادات": "أنواع الشهادات",
+    "عدد الشهادات": "عدد الشهادات",
+    "متوسط النسبة": "متوسط النسبة"
+  });
+  
+  // Group by employee
+  const employeeStats = {};
+  certRecords.forEach(record => {
+    const email = record.employeeUsername || '';
+    const name = record.employeeName || '';
+    const role = record.role || '';
+    
+    if (!employeeStats[email]) {
+      employeeStats[email] = {
+        name: name,
+        role: role,
+        certTypes: new Set(),
+        certCount: 0,
+        totalScore: 0,
+        avgPercentage: 0
+      };
+    }
+    
+    employeeStats[email].certTypes.add(record.certificateLabel || record.certificateType);
+    employeeStats[email].certCount++;
+    employeeStats[email].totalScore += (record.totalScore || record.totalPercentage || 0);
+  });
+  
+   // Calculate averages
+   Object.values(employeeStats).forEach(stats => {
+     stats.avgPercentage = (stats.totalScore / stats.certCount).toFixed(1);
+   });
+  
+  // Add employee rows
+  Object.values(employeeStats).forEach(stats => {
+    excelData.push({
+      "اسم الموظف": stats.name,
+      "اسم المستخدم": stats.name.includes('@') ? stats.name : (stats.name + '@lotus.edu'),
+      "الدور": stats.role,
+      "أنواع الشهادات": Array.from(stats.certTypes).join('، '),
+      "عدد الشهادات": stats.certCount.toString(),
+      "متوسط النسبة": stats.avgPercentage + "%"
+    });
+  });
+  
+  // Add footer
+  excelData.push({
+    "": ""
+  });
+  
+  excelData.push({
+    "الملاحظات": "بيانات شهادات الموظفين من نظام حساب شهادات جامعة اللوتس",
+    "المحلل": "النظام",
+    "بتاريخ": currentDate
+  });
+  
+  // Export with appropriate styling for employee certificates
+  try {
+    const ws = XLSX.utils.json_to_sheet(excelData, { header: true, skipHeader: false });
+    
+    // Set column widths for better readability
+    ws['!cols'] = [
+      { wch: 25 }, // اسم الموظف
+      { wch: 20 }, // اسم المستخدم
+      { wch: 15 }, // الدور
+      { wch: 20 }, // الشرطة
+      { wch: 20 }, // نوع الشهادة
+      { wch: 15 }, // المجموع
+      { wch: 15 }, // المجموع المكافئ
+      { wch: 12 }, // النسبة
+      { wch: 15 }, // التاريخ
+      { wch: 12 }, // الوقت
+      { wch: 20 }  // تاريخ الإنشاء
+    ];
+    
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, "شهادات_الموظفين");
+    
+    // Add color styling for headers and sections
+    ws['A1'].s = {
+      font: { bold: true, sz: 18, color: { rgb: 'FFFFFFFF' } },
+      fill: { patternType: 'solid', fgColor: { rgb: 'FF2563EB' } },
+      alignment: { horizontal: 'center', vertical: 'center' }
+    };
+    
+    // Add summary section styling
+    const summaryStartRow = 5;
+    for (let i = summaryStartRow; i < summaryRows.length + summaryStartRow; i++) {
+      const row = XLSX.utils.encode_row(i);
+      ws[`${row}A`].s = {
+        font: { bold: true, color: { rgb: 'FF1E40AF' } },
+        fill: { patternType: 'solid', fgColor: { rgb: 'FFE3F2FD' } }
+      };
+    }
+    
+    const wbout = XLSX.write(wb, { bookType: "xlsx", type: "array" });
+    const blob = new Blob([wbout], { type: "application/octet-stream" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `شهادات_الموظفين_${currentDate.replace(/\//g, '_')}.xlsx`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+    
+    showToast("تم تصدير شهادات الموظفين بنجاح إلى Excel", "success");
+  } catch (e) {
+    console.error("خطأ في تصدير شهادات الموظفين:", e);
+    showToast("خطأ في تصدير البيانات: " + e.message, "error");
+  }
+};
+
+function exportToExcel(data, fileName, sheetName = "جدول البيانات") {
+  if (typeof XLSX === 'undefined') {
+    showToast("مكتبة Excel غير محملة", "error");
+    return;
+  }
+  const ws = XLSX.utils.json_to_sheet(data, { header: true, skipHeader: false });
+  
+  // Apply formatting based on fileName to different sheets
   const wb = XLSX.utils.book_new();
-  XLSX.utils.book_append_sheet(wb, ws, "Report");
+  XLSX.utils.book_append_sheet(wb, ws, sheetName);
+  
+  // Set column widths based on content and purpose
+  if (sheetName.includes("المصرية") || sheetName.includes("الثانوية")) {
+    ws['!cols'] = [
+      { wch: 4 },   // رقم
+      { wch: 25 },  // الاسم
+      { wch: 12 },  // الكود
+      { wch: 20 },  // الكلية
+      { wch: 10 },  // الفرقة
+      { wch: 15 },  // المجموع
+      { wch: 12 },  // النسبة
+      { wch: 15 }   // تاريخ الدخول
+    ];
+  } else if (sheetName.includes("الازهرية") || sheetName.includes("الأزهرية")) {
+    ws['!cols'] = [
+      { wch: 4 },   // رقم
+      { wch: 25 },  // الاسم
+      { wch: 12 },  // الكود
+      { wch: 20 },  // الكلية
+      { wch: 10 },  // مجموع اللغة العربية
+      { wch: 10 },  // مجموع المواد الثقافية
+      { wch: 12 },  // النسبة
+      { wch: 15 }   // تاريخ الدخول
+    ];
+  } else if (sheetName.includes("السعودية") || sheetName.includes("السعودية")) {
+    ws['!cols'] = [
+      { wch: 4 },   // رقم
+      { wch: 25 },  // الاسم
+      { wch: 12 },  // الكود
+      { wch: 20 },  // الكلية
+      { wch: 12 },  // متوسط المدرسة
+      { wch: 12 },  // القدرات
+      { wch: 10 },  // النسبة
+      { wch: 15 }   // تاريخ الدخول
+    ];
+  } else if (sheetName.includes("الخليج") || sheetName.includes("الخليج")) {
+    ws['!cols'] = [
+      { wch: 4 },   // رقم
+      { wch: 25 },  // الاسم
+      { wch: 12 },  // الكود
+      { wch: 20 },  // الكلية
+      { wch: 15 },  // الدرجات (7 مواد)
+      { wch: 10 },  // النسبة
+      { wch: 15 }   // تاريخ الدخول
+    ];
+  } else if (sheetName.includes("الأردن") || sheetName.includes("الأردن")) {
+    ws['!cols'] = [
+      { wch: 4 },   // رقم
+      { wch: 25 },  // الاسم
+      { wch: 12 },  // الكود
+      { wch: 20 },  // الكلية
+      { wch: 15 },  // الدرجات (7 مواد)
+      { wch: 10 },  // النسبة
+      { wch: 15 }   // تاريخ الدخول
+    ];
+  } else if (sheetName.includes("ليبيا") || sheetName.includes("ليبيا")) {
+    ws['!cols'] = [
+      { wch: 4 },   // رقم
+      { wch: 25 },  // الاسم
+      { wch: 12 },  // الكود
+      { wch: 20 },  // الكلية
+      { wch: 15 },  // الدرجات (8 مواد)
+      { wch: 10 },  // النسبة
+      { wch: 15 }   // تاريخ الدخول
+    ];
+  } else if (sheetName.includes("الكويت") || sheetName.includes("الكويت")) {
+    ws['!cols'] = [
+      { wch: 4 },   // رقم
+      { wch: 25 },  // الاسم
+      { wch: 12 },  // الكود
+      { wch: 20 },  // الكلية
+      { wch: 12 },  // المرحلة 10
+      { wch: 12 },  // المرحلة 11
+      { wch: 12 },  // المرحلة 12
+      { wch: 10 },  // النسبة الإجمالية
+      { wch: 15 }   // تاريخ الدخول
+    ];
+  } else if (sheetName.includes("البحرين") || sheetName.includes("البحرين")) {
+    ws['!cols'] = [
+      { wch: 4 },   // رقم
+      { wch: 25 },  // الاسم
+      { wch: 12 },  // الكود
+      { wch: 20 },  // الكلية
+      { wch: 15 },  // المتوسط المرجح (3 مراحل)
+      { wch: 10 },  // النسبة
+      { wch: 15 }   // تاريخ الدخول
+    ];
+  } else if (sheetName.includes("STEM") || sheetName.includes("STEM")) {
+    ws['!cols'] = [
+      { wch: 4 },   // رقم
+      { wch: 25 },  // الاسم
+      { wch: 12 },  // الكود
+      { wch: 20 },  // الكلية
+      { wch: 15 },  // الدرجات
+      { wch: 10 },  // النسبة
+      { wch: 15 }   // تاريخ الدخول
+    ];
+  } else if (sheetName.includes("امريكان") || sheetName.includes("أمريكان دبلومة")) {
+    ws['!cols'] = [
+      { wch: 4 },   // رقم
+      { wch: 25 },  // الاسم
+      { wch: 12 },  // الكود
+      { wch: 20 },  // الكلية
+      { wch: 10 },  // Est1
+      { wch: 10 },  // Est2
+      { wch: 10 },  // GPA
+      { wch: 10 },  // النسبة الإجمالية
+      { wch: 15 }   // تاريخ الدخول
+    ];
+  }
+  
+  // Apply large Excel format for certificate records
+  ws['A1'].s = {
+    font: { bold: true, sz: 14, color: { rgb: 'FF2563EB' } },
+    fill: { patternType: 'solid', fgColor: { rgb: 'FFEBF5FF' } },
+    alignment: { horizontal: 'center', vertical: 'center' }
+  };
+  
+  if (sheetName.includes("المصرية") || sheetName.includes("الثانوية")) {
+    ws['A1'].s.fill.fgColor.rgb = 'FFEBF5FF';
+    ws['A1'].s.font.color.rgb = 'FF1E40AF';
+  } else if (sheetName.includes("الازهرية") || sheetName.includes("الأزهرية")) {
+    ws['A1'].s.fill.fgColor.rgb = 'FFFCE4EC';
+    ws['A1'].s.font.color.rgb = 'FFC2187F';
+  } else if (sheetName.includes("السعودية") || sheetName.includes("السعودية")) {
+    ws['A1'].s.fill.fgColor.rgb = 'FFD1FAE5';
+    ws['A1'].s.font.color.rgb = 'FF065F46';
+  } else if (sheetName.includes("الخليج") || sheetName.includes("الخليج")) {
+    ws['A1'].s.fill.fgColor.rgb = 'FEF3C7';
+    ws['A1'].s.font.color.rgb = 'DC2626';
+  } else if (sheetName.includes("الأردن") || sheetName.includes("الأردن")) {
+    ws['A1'].s.fill.fgColor.rgb = 'EDE9FE';
+    ws['A1'].s.font.color.rgb = '7C3AED';
+  } else if (sheetName.includes("ليبيا") || sheetName.includes("ليبيا")) {
+    ws['A1'].s.fill.fgColor.rgb = 'FFE0E5';
+    ws['A1'].s.font.color.rgb = 'BE185D';
+  } else if (sheetName.includes("الكويت") || sheetName.includes("الكويت")) {
+    ws['A1'].s.fill.fgColor.rgb = 'FFECF2FF';
+    ws['A1'].s.font.color.rgb = '1E40AF';
+  } else if (sheetName.includes("البحرين") || sheetName.includes("البحرين")) {
+    ws['A1'].s.fill.fgColor.rgb = 'FFE8E5';
+    ws['A1'].s.font.color.rgb = '9F1239';
+  }
+  
   const wbout = XLSX.write(wb, { bookType: "xlsx", type: "array" });
   const blob = new Blob([wbout], { type: "application/octet-stream" });
   const url = URL.createObjectURL(blob);
@@ -2204,7 +2614,7 @@ function exportToExcel(data, fileName) {
   a.href = url; a.download = fileName + ".xlsx";
   document.body.appendChild(a); a.click(); document.body.removeChild(a);
   URL.revokeObjectURL(url);
-  showToast("تم التصدير بنجاح", "success");
+  showToast("تم تصدير الشهادات بنجاح", "success");
 }
 
 function printGeneric(title, bodyHtml) {

@@ -12,15 +12,37 @@ const AUTH_FIREBASE_CONFIG = {
   databaseURL: "https://loutsresults-default-rtdb.firebaseio.com"
 };
 
-let AUTH_DB = null, AUTH_IS_OFFLINE = false;
+const WITHDRAWAL_FIREBASE_CONFIG = {
+  apiKey: "AIzaSyBajCZMATK21mgaEFcccyhLne4pgdaxMfk",
+  authDomain: "dent-35a17.firebaseapp.com",
+  databaseURL: "https://dent-35a17-default-rtdb.firebaseio.com",
+  projectId: "dent-35a17",
+  storageBucket: "dent-35a17.firebasestorage.app",
+  messagingSenderId: "416163754700",
+  appId: "1:416163754700:web:dec496619e3e6fff3e0869"
+};
+
+let AUTH_DB = null, WITHDRAWAL_DB = null, AUTH_IS_OFFLINE = false;
 try {
   if (typeof firebase !== 'undefined') {
+    // 1. Initialize auth app
     let authApp = null;
-    try { authApp = firebase.app('_lotus_auth'); } catch (e) { /* doesn't exist yet */ }
+    try { authApp = firebase.app('_lotus_auth'); } catch (e) {}
     if (!authApp) {
       authApp = firebase.initializeApp(AUTH_FIREBASE_CONFIG, '_lotus_auth');
     }
+    if (authApp.auth) {
+      authApp.auth().signInAnonymously().catch(e => {});
+    }
     AUTH_DB = firebase.database(authApp);
+
+    // 2. Initialize withdrawal app
+    let withdrawalApp = null;
+    try { withdrawalApp = firebase.app('_lotus_withdrawal'); } catch (e) {}
+    if (!withdrawalApp) {
+      withdrawalApp = firebase.initializeApp(WITHDRAWAL_FIREBASE_CONFIG, '_lotus_withdrawal');
+    }
+    WITHDRAWAL_DB = firebase.database(withdrawalApp);
   } else {
     AUTH_IS_OFFLINE = true;
   }
@@ -97,22 +119,26 @@ function authSaveLocalEmployees(emps) {
 
 async function authGetAllEmployees() {
   const list = [];
+  let fromFirebase = false;
   if (!AUTH_IS_OFFLINE && AUTH_DB) {
     try {
       const snap = await withTimeout(AUTH_DB.ref('employees').once('value'), 1500);
       if (snap.exists()) {
         const data = snap.val();
         Object.keys(data).forEach(k => { list.push({ username: k, ...data[k] }); });
+        fromFirebase = true;
       }
     } catch (e) { /* Firebase not available, fall back to local */ }
   }
   const local = authGetLocalEmployees();
   local.forEach(e => { 
     const idx = list.findIndex(x => x.username === e.username);
-    if (idx >= 0) list[idx] = e;
+    if (idx >= 0) {
+      list[idx] = e;
+    }
     else list.push(e); 
   });
-  
+
   const deleted = JSON.parse(localStorage.getItem('lotus_deleted_employees') || '[]');
   return list.filter(e => !deleted.includes(e.username));
 }
@@ -132,13 +158,14 @@ async function authSaveEmployeeToDb(emp) {
   if (emp.plainPassword) empData.plainPassword = emp.plainPassword;
   if (emp.permissions) empData.permissions = emp.permissions;
   if (!AUTH_IS_OFFLINE && AUTH_DB) {
-    try { await withTimeout(AUTH_DB.ref('employees/' + key).set(empData), 1000); } catch (e) { /* save locally only */ }
+    try { await withTimeout(AUTH_DB.ref('employees/' + key).update(empData), 1000); } catch (e) { /* save locally only */ }
   }
   const local = authGetLocalEmployees();
   const idx = local.findIndex(e => e.username === emp.username);
   if (idx >= 0) local[idx] = { ...local[idx], ...empData };
   else local.push(empData);
   authSaveLocalEmployees(local);
+  localStorage.setItem('lotus_system_modified', 'true');
 
   const deleted = JSON.parse(localStorage.getItem('lotus_deleted_employees') || '[]');
   const dIdx = deleted.indexOf(emp.username);
@@ -162,13 +189,28 @@ async function authDeleteEmployeeFromDb(username) {
     deleted.push(username);
     localStorage.setItem('lotus_deleted_employees', JSON.stringify(deleted));
   }
+  localStorage.setItem('lotus_system_modified', 'true');
 }
 
-async function authLogActivity(action, targetType, targetId, targetName, details) {
+function authDetectSystem() {
   try {
+    const path = window.location.pathname;
+    if (path.includes('file-management')) return 'نظام الملفات';
+    if (path.includes('file-withdrawal')) return 'نظام السحب';
+    if (path.includes('certificate-calc')) return 'حساب الشهادات';
+    if (path.includes('permissions')) return 'نظام الصلاحيات';
+  } catch (e) {}
+  return 'الرئيسية';
+}
+
+async function authLogActivity(action, targetType, targetId, targetName, details, system) {
+  try {
+    const user = AUTH_CURRENT_USER || authGetSession();
+    if (user) AUTH_CURRENT_USER = user;
     const entry = {
       action, targetType: targetType || 'unknown', targetId: targetId || '',
       targetName: targetName || '', details: details || '',
+      system: system || authDetectSystem(),
       employeeUsername: AUTH_CURRENT_USER ? AUTH_CURRENT_USER.username : 'unknown',
       employeeName: AUTH_CURRENT_USER ? AUTH_CURRENT_USER.name : 'غير معروف',
       timestamp: new Date().toISOString()
@@ -180,6 +222,10 @@ async function authLogActivity(action, targetType, targetId, targetName, details
     local.unshift(entry);
     if (local.length > 1000) local.length = 1000;
     localStorage.setItem('lotus_activity_log', JSON.stringify(local));
+
+    if (action !== 'login' && action !== 'logout' && action !== 'access') {
+      localStorage.setItem('lotus_system_modified', 'true');
+    }
   } catch (e) { console.error('authLogActivity error:', e); }
 }
 
@@ -210,7 +256,8 @@ window.closeLoginModal = function() {
 
 window.submitLogin = async function() {
   const username = document.getElementById('login-username').value.trim();
-  const password = document.getElementById('login-password').value.trim();
+  const passwordInput = document.getElementById('login-password');
+  const password = passwordInput ? passwordInput.value.trim() : '';
   const errEl = document.getElementById('login-error');
   if (!username || !password) {
     if (errEl) { errEl.textContent = 'يرجى إدخال اسم المستخدم وكلمة المرور'; errEl.style.display = 'block'; }
@@ -220,21 +267,35 @@ window.submitLogin = async function() {
   
   try {
     let emp = null;
-    // Check localStorage first (fast, always works)
-    const local = authGetLocalEmployees();
-    const localData = local.find(e => e.username === username && e.password === authHashPassword(password) && e.active !== false);
-    if (localData) {
-      emp = { username: localData.username, name: localData.name, role: localData.role, employeeId: localData.employeeId || localData.username, permissions: localData.permissions };
-    }
-    // If not found in localStorage, try Firebase
-    if (!emp && !AUTH_IS_OFFLINE && AUTH_DB) {
+    let fromFirebase = false;
+
+    // First try Firebase for the latest data (including updated permissions/password)
+    if (!AUTH_IS_OFFLINE && AUTH_DB) {
       try {
         const snap = await withTimeout(AUTH_DB.ref('employees/' + username.replace(/[.#$\/\[\]]/g, '_')).once('value'), 1500);
-        const data = snap.val();
-        if (data && data.password === authHashPassword(password) && data.active !== false) {
-          emp = { username, name: data.name, role: data.role, employeeId: data.employeeId || username, permissions: data.permissions };
+        if (snap.exists()) {
+          const data = snap.val();
+          if (data.password === authHashPassword(password) && data.active !== false) {
+            emp = { username, name: data.name, role: data.role, employeeId: data.employeeId || username, permissions: data.permissions };
+            fromFirebase = true;
+            // Sync local storage with latest data
+            const local = authGetLocalEmployees();
+            const idx = local.findIndex(e => e.username === username);
+            if (idx >= 0) local[idx] = { ...local[idx], ...data };
+            else local.push({ username, ...data });
+            authSaveLocalEmployees(local);
+          }
         }
-      } catch (fbErr) { /* Firebase not available */ }
+      } catch (fbErr) { /* fallback to local */ }
+    }
+    
+    // If Firebase offline/failed, fallback to localStorage
+    if (!emp && !fromFirebase) {
+      const local = authGetLocalEmployees();
+      const localData = local.find(e => e.username === username && e.password === authHashPassword(password) && e.active !== false);
+      if (localData) {
+        emp = { username: localData.username, name: localData.name, role: localData.role, employeeId: localData.employeeId || localData.username, permissions: localData.permissions };
+      }
     }
     
     // First-time setup: default admin
@@ -243,18 +304,27 @@ window.submitLogin = async function() {
       if (!hasEmps && username === 'admin' && password === 'admin') {
         emp = { username: 'admin', name: 'مدير النظام', role: 'admin', employeeId: 'admin' };
         await authSaveEmployeeToDb({ username: 'admin', name: 'مدير النظام', password: authHashPassword('admin'), role: 'admin', active: true, createdAt: new Date().toISOString(), employeeId: 'admin' });
-      } else {
-        if (errEl) { errEl.textContent = 'اسم المستخدم أو كلمة المرور غير صحيحة'; errEl.style.display = 'block'; }
-        return;
       }
     }
     
-    authSetSession(emp);
-    await authLogActivity('login', 'system', emp.username, emp.name, '');
-    window.closeLoginModal();
-    if (window.AUTH_ON_LOGIN_CALLBACK) window.AUTH_ON_LOGIN_CALLBACK(emp);
+    if (emp) {
+      authSetSession(emp);
+      await authLogActivity('login', 'system', emp.username, emp.name, '');
+      window.closeLoginModal();
+      if (window.AUTH_ON_LOGIN_CALLBACK) window.AUTH_ON_LOGIN_CALLBACK(emp);
+    } else {
+      if (errEl) { errEl.textContent = 'اسم المستخدم أو كلمة المرور غير صحيحة'; errEl.style.display = 'block'; }
+      if (passwordInput) {
+        passwordInput.value = '';
+        passwordInput.focus();
+      }
+    }
   } catch (e) {
     if (errEl) { errEl.textContent = 'خطأ: ' + e.message; errEl.style.display = 'block'; }
+    if (passwordInput) {
+      passwordInput.value = '';
+      passwordInput.focus();
+    }
   }
 };
 
@@ -273,6 +343,12 @@ window.authSaveEmployeeToDb = authSaveEmployeeToDb;
 window.authDeleteEmployeeFromDb = authDeleteEmployeeFromDb;
 window.authHashPassword = authHashPassword;
 window.AUTH_ROLE_PERMISSIONS = AUTH_ROLE_PERMISSIONS;
+window.AUTH_DB = AUTH_DB;
+window.WITHDRAWAL_DB = WITHDRAWAL_DB;
+window.AUTH_IS_OFFLINE = AUTH_IS_OFFLINE;
+
+// Initialize session on script load
+AUTH_CURRENT_USER = authGetSession();
 
 // ============================
 // AUTO-SEED EMPLOYEES

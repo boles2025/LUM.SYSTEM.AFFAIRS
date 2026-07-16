@@ -46,6 +46,9 @@ let globalConfig = {
 };
 
 let studentsIndex = [], selectedStudent = null, currentScreen = "search", allStudentsList = [], bulkSelectedStudent = null;
+var _dataVersion = 0;
+var _cachedVersion = {};
+var _renderTimer = null;
 
 const searchInput = document.getElementById("search-input");
 const autocompleteDropdown = document.getElementById("autocomplete-dropdown");
@@ -71,6 +74,12 @@ const FILE_MATCHING_RULES = [
 ];
 
 function escapeHtml(s) { if (!s) return ''; const d = document.createElement('div'); d.appendChild(document.createTextNode(s)); return d.innerHTML; }
+
+function renderIfChanged(key, fn) {
+    if (_cachedVersion[key] === _dataVersion) return;
+    _cachedVersion[key] = _dataVersion;
+    fn();
+}
 
 // Archive log functions
 function getArchiveLog() {
@@ -157,6 +166,8 @@ function setupRealtimeListener() {
   realtimeListenerActive = true;
   
   db.ref("students").on("value", (snapshot) => {
+    if (_renderTimer) clearTimeout(_renderTimer);
+    _renderTimer = setTimeout(function() {
     const data = snapshot.val();
     const newStudents = [];
     if (data) {
@@ -183,6 +194,7 @@ function setupRealtimeListener() {
     
     studentsIndex = newStudents;
     allStudentsList = [...studentsIndex];
+    _dataVersion++;
     localStorage.setItem("lotus_students", JSON.stringify(studentsIndex));
 
     if (selectedStudent) {
@@ -195,6 +207,7 @@ function setupRealtimeListener() {
     renderReports();
     renderCollegeStats();
     rerenderActiveScreen();
+  }, 100);
   });
 
   db.ref("settings/config").on("value", (snap) => {
@@ -242,7 +255,7 @@ function initLocalDatabase() {
     if (!globalConfig.levels) globalConfig.levels = ["الفرقة الاولى","الفرقة الثانية","الفرقة الثالثة","الفرقة الرابعة","الفرقة الخامسة"];
   } catch (e) {}
   const cs = localStorage.getItem("lotus_students");
-  if (cs) try { studentsIndex = JSON.parse(cs); allStudentsList = [...studentsIndex]; } catch (e) { seedMockStudents(); }
+  if (cs) try { studentsIndex = JSON.parse(cs); allStudentsList = [...studentsIndex]; _dataVersion++; } catch (e) { seedMockStudents(); }
   else seedMockStudents();
 }
 
@@ -279,7 +292,7 @@ async function loadSearchIndex() {
   
   // Then load from Realtime Database
   const snapshot = await db.ref("students").once("value");
-  studentsIndex = []; allStudentsList = [];
+  studentsIndex = []; allStudentsList = []; _dataVersion++;
   const data = snapshot.val();
   if (data) {
     Object.keys(data).forEach(key => {
@@ -298,6 +311,7 @@ async function loadSearchIndex() {
     }
   });
   
+  _dataVersion++;
   localStorage.setItem("lotus_students", JSON.stringify(studentsIndex));
   renderAdminStudentsTable();
   renderRegisteredStudentsTable();
@@ -322,12 +336,17 @@ function setupEventListeners() {
   document.querySelectorAll(".tab-btn").forEach(btn => btn.addEventListener("click", () => {
     if (tabProcessing) return;
     const sid = btn.getAttribute("data-screen");
+    // Switch active tab visually immediately
+    document.querySelectorAll(".tab-btn").forEach(b => b.classList.remove("active"));
+    btn.classList.add("active");
     if (sid === "admin") {
       if (currentUser && (currentUser.role === 'admin' || currentUser.role === 'supervisor')) {
-        switchScreen("admin"); document.querySelectorAll(".tab-btn").forEach(b => b.classList.remove("active")); btn.classList.add("active");
-        renderEmployees(); renderActivityLog();
-        if (!isOfflineMode && db) loadSearchIndex().catch(() => { renderAdminStudentsTable(); renderArchiveLog(); });
-        else { renderAdminStudentsTable(); renderArchiveLog(); }
+        switchScreen("admin");
+        requestAnimationFrame(() => {
+          renderEmployees(); renderActivityLog();
+          if (!isOfflineMode && db && allStudentsList.length === 0) loadSearchIndex().catch(() => { renderAdminStudentsTable(); renderArchiveLog(); });
+          else { renderAdminStudentsTable(); renderArchiveLog(); }
+        });
       } else if (currentUser) {
         showToast("لا تملك صلاحية الوصول للإدارة", "error");
       } else {
@@ -335,16 +354,16 @@ function setupEventListeners() {
       }
     } else if (sid === "registered") {
       tabProcessing = true;
-      switchScreen("registered"); document.querySelectorAll(".tab-btn").forEach(b => b.classList.remove("active")); btn.classList.add("active");
-      setTimeout(() => { renderRegisteredStudentsTable(); tabProcessing = false; }, 50);
+      switchScreen("registered");
+      requestAnimationFrame(() => { renderRegisteredStudentsTable(); tabProcessing = false; });
     } else if (sid === "reports") {
-      switchScreen("reports"); document.querySelectorAll(".tab-btn").forEach(b => b.classList.remove("active")); btn.classList.add("active");
-      renderReports(); renderDocReportOptions(); renderDocReport(); renderMissingReport(); renderUnshelved();
+      switchScreen("reports");
+      requestAnimationFrame(() => { renderIfChanged('reports', renderReports); renderIfChanged('docReportOptions', renderDocReportOptions); renderIfChanged('docReport', renderDocReport); renderIfChanged('missingReport', renderMissingReport); renderIfChanged('unshelved', renderUnshelved); });
     } else if (sid === "delivery") {
-      switchScreen("delivery"); document.querySelectorAll(".tab-btn").forEach(b => b.classList.remove("active")); btn.classList.add("active");
-      if (selectedStudent) renderDeliveryReview(selectedStudent);
+      switchScreen("delivery");
+      if (selectedStudent) requestAnimationFrame(() => renderDeliveryReview(selectedStudent));
       else { const c = document.getElementById("delivery-review"); if (c) c.innerHTML = '<p style="text-align:center;color:var(--text-muted);padding:20px;">اختر طالباً من البحث أعلاه لمراجعة تسليم ملفاته.</p>'; }
-    } else { switchScreen(sid); document.querySelectorAll(".tab-btn").forEach(b => b.classList.remove("active")); btn.classList.add("active"); }
+    } else { switchScreen(sid); }
   }));
 
   if (searchInput) searchInput.addEventListener("input", e => {
@@ -1662,7 +1681,7 @@ async function importStudentsInBatches(students) {
   const pc = document.getElementById("excel-progress-container"), pf = document.getElementById("excel-progress-fill"), pt = document.getElementById("excel-progress-text");
   if (pc) pc.style.display = "block"; if (pf) pf.style.width = "0%"; if (pt) pt.textContent = "جاري...";
   const total = students.length;
-  if (isOfflineMode || !db) { students.forEach((s, i) => { s.id = "student_" + Date.now() + "_" + i; const di = studentsIndex.findIndex(x => x.code === s.code); if (di !== -1) studentsIndex[di] = s; else studentsIndex.push(s); }); allStudentsList = [...studentsIndex]; localStorage.setItem("lotus_students", JSON.stringify(studentsIndex)); if (pf) pf.style.width = "100%"; if (pt) pt.textContent = `تم ${total} محلياً!`; showToast(`تم ${total} بنجاح!`, "success"); setTimeout(() => { if (pc) pc.style.display = "none"; }, 3000); renderAdminStudentsTable(); return; }
+  if (isOfflineMode || !db) { students.forEach((s, i) => { s.id = "student_" + Date.now() + "_" + i; const di = studentsIndex.findIndex(x => x.code === s.code); if (di !== -1) studentsIndex[di] = s; else studentsIndex.push(s); }); allStudentsList = [...studentsIndex]; _dataVersion++; localStorage.setItem("lotus_students", JSON.stringify(studentsIndex)); if (pf) pf.style.width = "100%"; if (pt) pt.textContent = `تم ${total} محلياً!`; showToast(`تم ${total} بنجاح!`, "success"); setTimeout(() => { if (pc) pc.style.display = "none"; }, 3000); renderAdminStudentsTable(); return; }
   let ok = 0;
   for (let i = 0; i < total; i++) {
     const s = students[i];
@@ -2300,6 +2319,7 @@ function clearSession() {
 }
 
 function hasPermission(action) {
+  if (window.hasPermission) return window.hasPermission(action);
   if (!currentUser) return false;
   const perms = ROLE_PERMISSIONS[currentUser.role];
   return perms && perms.includes(action);
@@ -2326,81 +2346,34 @@ function updateUIBasedOnAuth() {
   }
 }
 
+// Delegate login / logout to shared auth.js
 window.openLoginModal = function() {
-  document.getElementById('login-error').style.display = 'none';
-  document.getElementById('login-username').value = '';
-  document.getElementById('login-password').value = '';
-  document.getElementById('login-modal').classList.add('active');
-  setTimeout(() => document.getElementById('login-username').focus(), 100);
+  const errEl = document.getElementById('login-error');
+  if (errEl) errEl.style.display = 'none';
+  const u = document.getElementById('login-username');
+  const p = document.getElementById('login-password');
+  if (u) u.value = '';
+  if (p) p.value = '';
+  const modal = document.getElementById('login-modal');
+  if (modal) modal.classList.add('active');
+  setTimeout(() => { if (u) u.focus(); }, 100);
 };
 
 window.closeLoginModal = function() {
-  document.getElementById('login-modal').classList.remove('active');
+  const modal = document.getElementById('login-modal');
+  if (modal) modal.classList.remove('active');
 };
 
-window.submitLogin = async function() {
-  const username = document.getElementById('login-username').value.trim();
-  const password = document.getElementById('login-password').value.trim();
-  const errEl = document.getElementById('login-error');
-  if (!username || !password) {
-    errEl.textContent = 'يرجى إدخال اسم المستخدم وكلمة المرور';
-    errEl.style.display = 'block';
-    return;
-  }
-  errEl.style.display = 'none';
-  try {
-    let emp = null;
-    if (!isOfflineMode && db) {
-      try {
-        const snap = await db.ref('employees/' + username.replace(/[.#$\/\[\]]/g, '_')).once('value');
-        const data = snap.val();
-        if (data && data.password === hashPassword(password) && data.active !== false) {
-          emp = { username: username, name: data.name, role: data.role, employeeId: data.employeeId || username };
-        }
-      } catch (fbErr) {
-        // Firebase permission_denied or unavailable - fall back to localStorage
-        const local = getLocalEmployees();
-        const data = local.find(e => e.username === username && e.password === hashPassword(password) && e.active !== false);
-        if (data) {
-          emp = { username: data.username, name: data.name, role: data.role, employeeId: data.employeeId || data.username };
-        }
-      }
-    } else {
-      const local = getLocalEmployees();
-      const data = local.find(e => e.username === username && e.password === hashPassword(password) && e.active !== false);
-      if (data) {
-        emp = { username: data.username, name: data.name, role: data.role, employeeId: data.employeeId || data.username };
-      }
-    }
-    if (!emp) {
-      // First time setup: check if no employees exist, create default admin
-      const hasEmployees = await checkHasAnyEmployee();
-      if (!hasEmployees && username === 'admin' && password === 'admin') {
-        emp = { username: 'admin', name: 'مدير النظام', role: 'admin', employeeId: 'admin' };
-        await saveEmployeeToDb({ username: 'admin', name: 'مدير النظام', password: hashPassword('admin'), role: 'admin', active: true, createdAt: new Date().toISOString(), employeeId: 'admin' });
-        showToast('تم إنشاء حساب المدير الافتراضي', 'info');
-      } else {
-        errEl.textContent = 'اسم المستخدم أو كلمة المرور غير صحيحة';
-        errEl.style.display = 'block';
-        return;
-      }
-    }
-    setSession(emp);
-    logActivity('login', 'system', emp.username, emp.name, '');
-    updateUIBasedOnAuth();
-    closeLoginModal();
-    showToast('مرحباً ' + emp.name, 'success');
-    renderEmployees();
-    renderActivityLog();
-  } catch (e) {
-    errEl.textContent = 'خطأ: ' + e.message;
-    errEl.style.display = 'block';
-  }
+window.AUTH_ON_LOGIN_CALLBACK = function(emp) {
+  currentUser = emp;
+  updateUIBasedOnAuth();
+  showToast('مرحباً ' + emp.name, 'success');
+  renderEmployees();
+  renderActivityLog();
 };
 
-window.logoutUser = function() {
-  if (currentUser) logActivity('logout', 'system', currentUser.username, currentUser.name, '');
-  clearSession();
+window.AUTH_ON_LOGOUT_CALLBACK = function() {
+  currentUser = null;
   updateUIBasedOnAuth();
   showToast('تم تسجيل الخروج', 'info');
   // switch to search screen
@@ -2428,6 +2401,7 @@ function saveLocalEmployees(emps) {
 }
 
 async function getAllEmployees() {
+  if (window.authGetAllEmployees) return await window.authGetAllEmployees();
   const list = [];
   if (!isOfflineMode && db) {
     const snap = await db.ref('employees').once('value');
@@ -2444,9 +2418,12 @@ async function getAllEmployees() {
 }
 
 async function saveEmployeeToDb(emp) {
+  if (window.authSaveEmployeeToDb) {
+    return await window.authSaveEmployeeToDb(emp);
+  }
   const key = emp.username.replace(/[.#$\/\[\]]/g, '_');
   if (!isOfflineMode && db) {
-    await db.ref('employees/' + key).set({
+    await db.ref('employees/' + key).update({
       name: emp.name, password: emp.password, role: emp.role || 'employee',
       active: emp.active !== false, createdAt: emp.createdAt || new Date().toISOString(),
       employeeId: emp.employeeId || emp.username
@@ -2545,16 +2522,19 @@ window.saveEmployee = async function() {
   }
   errEl.style.display = 'none';
   try {
-    const empData = { name, username, password: password ? hashPassword(password) : undefined, role, active: true, employeeId: username };
+    const hashedPass = password ? (window.authHashPassword ? window.authHashPassword(password) : hashPassword(password)) : undefined;
+    const empData = { name, username, password: hashedPass, role, active: true, employeeId: username };
     if (mode === 'edit') {
       const list = await getAllEmployees();
       const existing = list.find(e => e.username === editUsername);
       if (existing) {
-        empData.password = password ? hashPassword(password) : existing.password;
+        empData.password = hashedPass || existing.password;
         empData.active = existing.active;
+        if (existing.permissions) empData.permissions = existing.permissions; // preserve custom permissions!
+        if (existing.plainPassword && !password) empData.plainPassword = existing.plainPassword;
       }
       await saveEmployeeToDb(empData);
-      logActivity('update_employee', 'employee', username, name, 'تحديث بيانات الموظف');
+      logActivity('update_employee', 'نظام الملفات', username, name, 'تحديث بيانات الموظف');
     } else {
       const list = await getAllEmployees();
       if (list.find(e => e.username === username)) {
@@ -2563,8 +2543,10 @@ window.saveEmployee = async function() {
         return;
       }
       empData.createdAt = new Date().toISOString();
+      empData.permissions = window.AUTH_ROLE_PERMISSIONS ? (window.AUTH_ROLE_PERMISSIONS[role] || []) : []; // set default permissions!
+      if (password) empData.plainPassword = password;
       await saveEmployeeToDb(empData);
-      logActivity('create_employee', 'employee', username, name, 'إضافة موظف جديد');
+      logActivity('create_employee', 'نظام الملفات', username, name, 'إضافة موظف جديد');
     }
     closeEmployeeModal();
     renderEmployees();
@@ -2583,7 +2565,7 @@ window.toggleEmployeeStatus = async function(username) {
   if (!emp) return;
   emp.active = emp.active === false ? true : false;
   await saveEmployeeToDb(emp);
-  logActivity(emp.active ? 'activate_employee' : 'deactivate_employee', 'employee', username, emp.name, emp.active ? 'تفعيل الموظف' : 'إيقاف الموظف');
+  logActivity(emp.active ? 'activate_employee' : 'deactivate_employee', 'نظام الملفات', username, emp.name, emp.active ? 'تفعيل الموظف' : 'إيقاف الموظف');
   renderEmployees();
   showToast(emp.active ? 'تم التفعيل' : 'تم الإيقاف', 'success');
 };
@@ -2592,12 +2574,16 @@ window.deleteEmployee = async function(username) {
   if (!currentUser || currentUser.role !== 'admin') { showToast('غير مصرح', 'error'); return; }
   if (currentUser.username === username) { showToast('لا يمكن حذف حسابك', 'warning'); return; }
   if (!confirm('حذف الموظف ' + username + '?')) return;
-  if (!isOfflineMode && db) {
-    try { await db.ref('employees/' + username.replace(/[.#$\/\[\]]/g, '_')).remove(); } catch (e) {}
+  if (window.authDeleteEmployeeFromDb) {
+    try { await window.authDeleteEmployeeFromDb(username); } catch (e) {}
+  } else {
+    if (!isOfflineMode && db) {
+      try { await db.ref('employees/' + username.replace(/[.#$\/\[\]]/g, '_')).remove(); } catch (e) {}
+    }
+    const local = getLocalEmployees();
+    saveLocalEmployees(local.filter(e => e.username !== username));
   }
-  const local = getLocalEmployees();
-  saveLocalEmployees(local.filter(e => e.username !== username));
-  logActivity('delete_employee', 'employee', username, '', 'حذف الموظف');
+  logActivity('delete_employee', 'نظام الملفات', username, '', 'حذف الموظف');
   renderEmployees();
   showToast('تم الحذف', 'success');
 };
@@ -2615,27 +2601,28 @@ function saveLocalActivityLog(log) {
 
 async function logActivity(action, targetType, targetId, targetName, details) {
   try {
-    const entry = {
-      action: action,
-      targetType: targetType || 'unknown',
-      targetId: targetId || '',
-      targetName: targetName || '',
-      details: details || '',
-      employeeUsername: currentUser ? currentUser.username : 'unknown',
-      employeeName: currentUser ? currentUser.name : 'غير معروف',
-      timestamp: new Date().toISOString()
-    };
-    // Save to Firebase
-    if (!isOfflineMode && db) {
-      try {
-        await db.ref('activityLog').push(entry);
-      } catch (e) { /* continue with local */ }
+    if (window.authLogActivity) {
+      await window.authLogActivity(action, targetType, targetId, targetName, details, 'نظام الملفات');
+    } else {
+      const entry = {
+        action: action,
+        targetType: targetType || 'unknown',
+        targetId: targetId || '',
+        targetName: targetName || '',
+        details: details || '',
+        system: 'نظام الملفات',
+        employeeUsername: currentUser ? currentUser.username : 'unknown',
+        employeeName: currentUser ? currentUser.name : 'غير معروف',
+        timestamp: new Date().toISOString()
+      };
+      if (!isOfflineMode && db) {
+        try { await db.ref('activityLog').push(entry); } catch (e) {}
+      }
+      const local = getLocalActivityLog();
+      local.unshift(entry);
+      saveLocalActivityLog(local);
     }
-    // Always save locally
-    const local = getLocalActivityLog();
-    local.unshift(entry);
-    saveLocalActivityLog(local);
-    if (document.getElementById('admin-screen').classList.contains('active')) {
+    if (document.getElementById('admin-screen') && document.getElementById('admin-screen').classList.contains('active')) {
       renderActivityLog();
     }
   } catch (e) { console.error('logActivity error:', e); }

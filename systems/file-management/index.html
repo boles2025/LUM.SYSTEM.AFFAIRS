@@ -18,8 +18,11 @@
     </button>
 </div>
 <style>
+@keyframes homeGlow { 0% { color:var(--accent-rose); border-color:var(--accent-rose); box-shadow:0 0 15px rgba(244,63,94,0.4); } 25% { color:var(--accent-amber); border-color:var(--accent-amber); box-shadow:0 0 15px rgba(245,158,11,0.4); } 50% { color:var(--accent-emerald); border-color:var(--accent-emerald); box-shadow:0 0 15px rgba(16,185,129,0.4); } 75% { color:var(--accent-blue); border-color:var(--accent-blue); box-shadow:0 0 15px rgba(59,130,246,0.4); } 100% { color:var(--accent-rose); border-color:var(--accent-rose); box-shadow:0 0 15px rgba(244,63,94,0.4); } }
 .dash-btn { width:42px; height:42px; border-radius:50%; background:var(--bg-card); border:2px solid var(--border); color:var(--accent-blue); display:flex; align-items:center; justify-content:center; font-size:1.1rem; box-shadow:var(--shadow-lg); transition:all 0.4s ease; text-decoration:none; position:fixed; top:12px; right:12px; z-index:9999; }
-.dash-btn:hover { transform:scale(1.1); border-color:var(--accent-blue); color:#fff; background:var(--accent-blue); }
+.dash-btn:hover { transform:scale(1.15); color:#fff; background:var(--accent-blue); border-color:var(--accent-blue); box-shadow:0 0 25px rgba(59,130,246,0.5); }
+.dash-btn .fa-home { animation:homeGlow 3s ease infinite; }
+.dash-btn:hover .fa-home { animation:none; color:#fff; }
 </style>
 
 <div class="app-container">
