@@ -839,23 +839,28 @@ async function closeAndBackup() {
                 const snap = await window.AUTH_DB.ref('students').once('value');
                 if (snap.exists()) {
                     const fb = snap.val();
-                    studentsArr = [];
-                    Object.keys(fb).forEach(k => {
-                        studentsArr.push({ id: k, ...fb[k] });
-                    });
+                    const fbArr = Object.keys(fb).map(k => ({ id: k, ...fb[k] }));
+                    const map = {};
+                    studentsArr.forEach(s => map[s.id] = s);
+                    fbArr.forEach(s => map[s.id] = s);
+                    studentsArr = Object.values(map);
                 }
             } catch(e) { /* use local */ }
         }
 
         setStatus(30, 'جاري قراءة سجلات السحب...');
         await sleep(200);
-        let withdrawalArr = [];
+        let withdrawalArr = lsGet('lotus_withdrawalRequests') || [];
         if (window.WITHDRAWAL_DB && !window.AUTH_IS_OFFLINE) {
             try {
                 const snap = await window.WITHDRAWAL_DB.ref('withdrawalRequests').once('value');
                 if (snap.exists()) {
                     const fb = snap.val();
-                    Object.keys(fb).forEach(k => { withdrawalArr.push({ id: k, ...fb[k] }); });
+                    const fbArr = Object.keys(fb).map(k => ({ id: k, ...fb[k] }));
+                    const map = {};
+                    withdrawalArr.forEach(w => map[w.id] = w);
+                    fbArr.forEach(w => map[w.id] = w);
+                    withdrawalArr = Object.values(map);
                 }
             } catch(e) {}
         }
@@ -868,8 +873,11 @@ async function closeAndBackup() {
                 const snap = await window.AUTH_DB.ref('employees').once('value');
                 if (snap.exists()) {
                     const fb = snap.val();
-                    employeesArr = [];
-                    Object.keys(fb).forEach(k => { employeesArr.push({ username: k, ...fb[k] }); });
+                    const fbArr = Object.keys(fb).map(k => ({ username: k, ...fb[k] }));
+                    const map = {};
+                    employeesArr.forEach(e => map[e.username] = e);
+                    fbArr.forEach(e => map[e.username] = e);
+                    employeesArr = Object.values(map);
                 }
             } catch(e) {}
         }
@@ -882,8 +890,11 @@ async function closeAndBackup() {
                 const snap = await window.AUTH_DB.ref('activityLog').once('value');
                 if (snap.exists()) {
                     const fb = snap.val();
-                    logArr = [];
-                    Object.keys(fb).forEach(k => { logArr.push({ id: k, ...fb[k] }); });
+                    const fbArr = Object.keys(fb).map(k => ({ id: k, ...fb[k] }));
+                    const map = {};
+                    logArr.forEach(l => map[l.id] = l);
+                    fbArr.forEach(l => map[l.id] = l);
+                    logArr = Object.values(map);
                 }
             } catch(e) {}
         }
@@ -897,7 +908,11 @@ async function closeAndBackup() {
                 const snap = await window.AUTH_DB.ref('certificateRecords').once('value');
                 if (snap.exists()) {
                     const fb = snap.val();
-                    certRecordsArr = Object.keys(fb).map(k => fb[k]);
+                    const fbArr = Object.keys(fb).map(k => fb[k]);
+                    const map = {};
+                    certRecordsArr.forEach(c => map[c.id] = c);
+                    fbArr.forEach(c => map[c.id] = c);
+                    certRecordsArr = Object.values(map);
                 }
             } catch(e) {}
         }
