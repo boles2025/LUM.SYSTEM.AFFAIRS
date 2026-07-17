@@ -1632,11 +1632,36 @@ f();
 function getCertRecords() { try { return JSON.parse(localStorage.getItem('lotus_certificate_records') || '[]'); } catch(e) { return []; } }
 function saveCertRecords(arr) { localStorage.setItem('lotus_certificate_records', JSON.stringify(arr)); }
 
+// Unified Firebase handle (same DB as the rest of the system = dent-35a17)
+function getCertDB() {
+    if (window.AUTH_DB && typeof window.AUTH_DB.ref === 'function') return window.AUTH_DB;
+    try {
+        if (typeof firebase !== 'undefined' && firebase.app) {
+            var app = null;
+            try { app = firebase.app('_lotus_auth'); } catch (e) {}
+            if (!app) {
+                app = firebase.initializeApp({
+                    apiKey: "AIzaSyBajCZMATK21mgaEFcccyhLne4pgdaxMfk",
+                    authDomain: "dent-35a17.firebaseapp.com",
+                    databaseURL: "https://dent-35a17-default-rtdb.firebaseio.com",
+                    projectId: "dent-35a17",
+                    storageBucket: "dent-35a17.firebasestorage.app",
+                    messagingSenderId: "416163754700",
+                    appId: "1:416163754700:web:dec496619e3e6fff3e0869"
+                }, '_lotus_auth');
+            }
+            return firebase.database(app);
+        }
+    } catch (e) { console.error('getCertDB error', e); }
+    return null;
+}
+
 // Realtime Sync from Firebase
 (function() {
     function setupFirebaseSync() {
-        if (window.AUTH_DB && typeof window.AUTH_DB.ref === 'function') {
-            window.AUTH_DB.ref('certificateRecords').on('value', function(snap) {
+        var db = getCertDB();
+        if (db && typeof db.ref === 'function') {
+            db.ref('certificateRecords').on('value', function(snap) {
                 try {
                     var val = snap.val() || {};
                     var list = Object.keys(val).map(function(k) { return val[k]; });
@@ -1732,8 +1757,9 @@ window.saveCertRecord = function(silent) {
         saveCertRecords(records);
     }
 
-    if (window.AUTH_DB && typeof window.AUTH_DB.ref === 'function') {
-        window.AUTH_DB.ref('certificateRecords/' + rec.id).set(rec)
+    var cdb = getCertDB();
+    if (cdb && typeof cdb.ref === 'function') {
+        cdb.ref('certificateRecords/' + rec.id).set(rec)
             .then(function() { saveComplete(); })
             .catch(function(err) {
                 console.error('Firebase save error:', err);

@@ -464,6 +464,16 @@
 
     <!-- Login Overlay (when not logged in) -->
     <div class="login-overlay" id="login-overlay">
+        <script>
+            (function(){
+                try {
+                    var s = JSON.parse(localStorage.getItem('lotus_session'));
+                    if (s && s.username && Date.now() - (s.loginTime||0) < 28800000) {
+                        document.getElementById('login-overlay').style.display = 'none';
+                    }
+                } catch(e){}
+            })();
+        </script>
         <div class="login-overlay-content">
             <div class="login-overlay-icon"><i class="fas fa-lock"></i></div>
             <h2>النظام المتكامل لجامعة اللوتس</h2>

@@ -181,8 +181,13 @@ async function authGetAllEmployees() {
     else list.push(e); 
   });
 
+  // De-duplicate by username (safety against double-listing)
+  const seen = {};
+  const deduped = [];
+  list.forEach(e => { if (e && e.username && !seen[e.username]) { seen[e.username] = true; deduped.push(e); } });
+
   const deleted = JSON.parse(localStorage.getItem('lotus_deleted_employees') || '[]');
-  return list.filter(e => !deleted.includes(e.username));
+  return deduped.filter(e => !deleted.includes(e.username));
 }
 
 async function authCheckHasAnyEmployee() {
@@ -340,14 +345,14 @@ window.submitLogin = async function() {
       }
     }
     
-    // First-time setup: default admin
-    if (!emp) {
-      const hasEmps = await authCheckHasAnyEmployee();
-      if (!hasEmps && username === 'admin' && password === 'admin') {
-        emp = { username: 'admin', name: 'مدير النظام', role: 'admin', employeeId: 'admin' };
-        await authSaveEmployeeToDb({ username: 'admin', name: 'مدير النظام', password: authHashPassword('admin'), role: 'admin', active: true, createdAt: new Date().toISOString(), employeeId: 'admin' });
-      }
-    }
+// // First-time setup: default admin
+// if (!emp) {
+//   const hasEmps = await authCheckHasAnyEmployee();
+//   if (!hasEmps && username === 'admin' && password === 'admin') {
+//     emp = { username: 'admin', name: 'مدير النظام', role: 'admin', employeeId: 'admin' };
+//     await authSaveEmployeeToDb({ username: 'admin', name: 'مدير النظام', password: authHashPassword('admin'), role: 'admin', active: true, createdAt: new Date().toISOString(), employeeId: 'admin' });
+//   }
+// }
     
     if (emp) {
       authSetSession(emp);
@@ -402,7 +407,7 @@ AUTH_CURRENT_USER = authGetSession();
   var allPerms = ['view','create','edit','delete','manage_employees','manage_settings','view_logs','manage_delivery','upload_files'];
   var employees = [
     { username: 'boles', name: 'مهندس بولس سمير', password: hash8520, role: 'admin', permissions: allPerms, active: true, createdAt: now, employeeId: 'boles' },
-    { username: 'somya', name: 'د. سمية', password: hash8520, role: 'admin', active: true, createdAt: now, employeeId: 'somya' },
+
     { username: 'safy', name: 'صفاء', password: hash123456, role: 'employee', active: true, createdAt: now, employeeId: 'safy' },
     { username: 'mai', name: 'مي', password: hash123456, role: 'employee', active: true, createdAt: now, employeeId: 'mai' },
     { username: 'monica', name: 'مونيكا', password: hash123456, role: 'employee', active: true, createdAt: now, employeeId: 'monica' },
@@ -431,5 +436,17 @@ AUTH_CURRENT_USER = authGetSession();
     existing.push(employees[0]); // boles is index 0
   }
 
-  localStorage.setItem('lotus_employees', JSON.stringify(existing));
+  // Comprehensive deduplication: keep only the first occurrence of each username
+  try {
+    var _empsAll = JSON.parse(localStorage.getItem('lotus_employees') || '[]');
+    var seen = {};
+    var uniq = _empsAll.filter(function(e){
+      if (seen[e.username]) return false;
+      seen[e.username] = true;
+      return true;
+    });
+    if (uniq.length !== _empsAll.length) {
+      localStorage.setItem('lotus_employees', JSON.stringify(uniq));
+    }
+  } catch(e) {}
 })();
