@@ -22,31 +22,70 @@ const WITHDRAWAL_FIREBASE_CONFIG = {
   appId: "1:416163754700:web:dec496619e3e6fff3e0869"
 };
 
-let AUTH_DB = null, WITHDRAWAL_DB = null, AUTH_IS_OFFLINE = false;
+let AUTH_DB = null, WITHDRAWAL_DB = null, SRC_DB = null, AUTH_IS_OFFLINE = false;
 try {
   if (typeof firebase !== 'undefined') {
-    // 1. Initialize auth app
+    // 1. SOURCE app = old main project (loutsresults) — used only to read/migrate old data
+    let srcApp = null;
+    try { srcApp = firebase.app('_lotus_src'); } catch (e) {}
+    if (!srcApp) {
+      srcApp = firebase.initializeApp(AUTH_FIREBASE_CONFIG, '_lotus_src');
+    }
+    if (srcApp.auth) {
+      srcApp.auth().signInAnonymously().catch(e => {});
+    }
+    SRC_DB = firebase.database(srcApp);
+
+    // 2. UNIFIED live app = dent-35a17 (open/writable, already holds withdrawal data)
     let authApp = null;
     try { authApp = firebase.app('_lotus_auth'); } catch (e) {}
     if (!authApp) {
-      authApp = firebase.initializeApp(AUTH_FIREBASE_CONFIG, '_lotus_auth');
+      authApp = firebase.initializeApp(WITHDRAWAL_FIREBASE_CONFIG, '_lotus_auth');
     }
     if (authApp.auth) {
       authApp.auth().signInAnonymously().catch(e => {});
     }
     AUTH_DB = firebase.database(authApp);
-
-    // 2. Initialize withdrawal app
-    let withdrawalApp = null;
-    try { withdrawalApp = firebase.app('_lotus_withdrawal'); } catch (e) {}
-    if (!withdrawalApp) {
-      withdrawalApp = firebase.initializeApp(WITHDRAWAL_FIREBASE_CONFIG, '_lotus_withdrawal');
-    }
-    WITHDRAWAL_DB = firebase.database(withdrawalApp);
+    WITHDRAWAL_DB = AUTH_DB; // same unified database
   } else {
     AUTH_IS_OFFLINE = true;
   }
 } catch (e) { AUTH_IS_OFFLINE = true; }
+
+// ===== One-time migration: copy old data (students/employees/certs/activity)
+// from the previous main project (loutsresults = SRC_DB) into the unified
+// project (dent-35a17 = AUTH_DB) so the WHOLE system uses ONE Firebase. =====
+window.migrateToUnified = async function () {
+  if (!SRC_DB || !AUTH_DB) return;
+  try {
+    const flagSnap = await AUTH_DB.ref('__migrated_v1').once('value');
+    if (flagSnap.exists()) return; // already migrated
+
+    const paths = ['employees', 'students', 'activityLog', 'certificateRecords', 'settings'];
+    for (const p of paths) {
+      const srcSnap = await SRC_DB.ref(p === 'settings' ? 'settings/config' : p).once('value');
+      if (!srcSnap.exists()) continue;
+      const src = srcSnap.val();
+      const tgtSnap = await AUTH_DB.ref(p === 'settings' ? 'settings/config' : p).once('value');
+      const tgt = tgtSnap.exists() ? tgtSnap.val() : null;
+      // merge: keep target keys, fill missing from source
+      const merged = tgt ? Object.assign({}, src, tgt) : src;
+      await AUTH_DB.ref(p === 'settings' ? 'settings/config' : p).set(merged);
+    }
+    await AUTH_DB.ref('__migrated_v1').set(true);
+    console.log('[migrate] old data unified into dent-35a17');
+    if (window.authLogActivity) {
+      window.authLogActivity('migrate', 'system', '', '', 'ترحيل بيانات النظام القديمة إلى قاعدة موحدة (dent-35a17)', 'النظام');
+    }
+  } catch (err) {
+    console.error('[migrate] error:', err);
+  }
+};
+
+// kick off migration at startup (best-effort, non-blocking)
+if (typeof window.migrateToUnified === 'function') {
+  window.migrateToUnified();
+}
 
 function withTimeout(promise, ms) {
   return Promise.race([
@@ -118,6 +157,9 @@ function authSaveLocalEmployees(emps) {
 }
 
 async function authGetAllEmployees() {
+  if (typeof window.migrateToUnified === 'function') {
+    try { await window.migrateToUnified(); } catch (e) {}
+  }
   const list = [];
   let fromFirebase = false;
   if (!AUTH_IS_OFFLINE && AUTH_DB) {
