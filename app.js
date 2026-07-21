@@ -1,11 +1,11 @@
 const firebaseConfig = {
-  apiKey: "AIzaSyAbYhhg5eL94AUE5BwV4xv6jbFU98QZbdQ",
-  authDomain: "loutsresults.firebaseapp.com",
-  projectId: "loutsresults",
-  storageBucket: "loutsresults.firebasestorage.app",
-  messagingSenderId: "801603969666",
-  appId: "1:801603969666:web:e6d45a7a6819022bc10a9b",
-  databaseURL: "https://loutsresults-default-rtdb.firebaseio.com"
+  apiKey: "AIzaSyBajCZMATK21mgaEFcccyhLne4pgdaxMfk",
+  authDomain: "dent-35a17.firebaseapp.com",
+  databaseURL: "https://dent-35a17-default-rtdb.firebaseio.com",
+  projectId: "dent-35a17",
+  storageBucket: "dent-35a17.firebasestorage.app",
+  messagingSenderId: "416163754700",
+  appId: "1:416163754700:web:dec496619e3e6fff3e0869"
 };
 
 let db = null, isOfflineMode = false;
@@ -16,7 +16,8 @@ if (typeof firebase !== 'undefined') {
   } catch (e) { isOfflineMode = true; }
 } else { isOfflineMode = true; }
 
-let globalConfig = {
+// القيم الافتراضية للإعدادات
+const DEFAULT_CONFIG = {
   globalAttachments: [
     { id: "national_id", name: "صورة بطاقة الرقم القومي", required: true },
     { id: "birth_cert", name: "شهادة الميلاد الأصلية", required: true },
@@ -43,6 +44,47 @@ let globalConfig = {
   universityName: "جامعة اللوتس",
   universityLogo: "https://i.ibb.co/kgfm88mq/logo.png"
 };
+
+// استرجاع الإعدادات من localStorage أو استخدام الافتراضية
+let globalConfig = loadConfigFromStorage();
+let settingsLoaded = false; // فلاج لتتبع تحميل الإعدادات
+
+function loadConfigFromStorage() {
+  try {
+    const saved = localStorage.getItem("lotus_config");
+    if (saved) {
+      const parsed = JSON.parse(saved);
+      // دمج القيم الافتراضية مع المحفوظة لضمان وجود كل الحقول
+      const merged = { ...DEFAULT_CONFIG };
+      // دمج المرفقات العامة مع الحفاظ على الترتيب من الإعدادات المحفوظة
+      if (parsed.globalAttachments && Array.isArray(parsed.globalAttachments)) {
+        merged.globalAttachments = parsed.globalAttachments;
+      }
+      if (parsed.customFieldsSchema && Array.isArray(parsed.customFieldsSchema)) {
+        merged.customFieldsSchema = parsed.customFieldsSchema;
+      }
+      if (parsed.colleges && Array.isArray(parsed.colleges)) {
+        merged.colleges = parsed.colleges;
+      }
+      if (parsed.levels && Array.isArray(parsed.levels)) {
+        merged.levels = parsed.levels;
+      }
+      if (parsed.whatsappPreamble) {
+        merged.whatsappPreamble = parsed.whatsappPreamble;
+      }
+      if (parsed.universityName) {
+        merged.universityName = parsed.universityName;
+      }
+      if (parsed.universityLogo) {
+        merged.universityLogo = parsed.universityLogo;
+      }
+      return merged;
+    }
+  } catch (e) {
+    console.error("خطأ في تحميل الإعدادات:", e);
+  }
+  return JSON.parse(JSON.stringify(DEFAULT_CONFIG)); // نسخة عميقة من الافتراضية
+}
 
 let studentsIndex = [], selectedStudent = null, currentScreen = "search", allStudentsList = [], bulkSelectedStudent = null;
 
@@ -106,10 +148,14 @@ document.addEventListener("DOMContentLoaded", async () => {
   const connIndicator = document.getElementById("connection-indicator");
   if (connIndicator) connIndicator.style.display = "none";
   
+  // ✅ تحميل الإعدادات من localStorage أولاً (تم بالفعل في loadConfigFromStorage)
+  renderSettingsControls();
+  
   if (isOfflineMode || !db) {
     initLocalDatabase(); updateModeUI(); renderSettingsControls(); renderAdminStudentsTable(); renderRegisteredStudentsTable(); renderReports();
   } else {
     try {
+      // تحميل الإعدادات من Firebase وتحديث localStorage
       await promiseWithTimeout(loadSettingsConfig(), 5000, "مهلة الاتصال");
       await promiseWithTimeout(loadSearchIndex(), 5000, "مهلة التحميل");
       updateModeUI();
@@ -178,15 +224,46 @@ function setupRealtimeListener() {
     if (snap.exists()) {
       const cfg = snap.val();
       if (cfg && typeof cfg === "object") {
-        globalConfig = cfg;
-        if (!globalConfig.globalAttachments) globalConfig.globalAttachments = [];
-        if (!globalConfig.customFieldsSchema) globalConfig.customFieldsSchema = [];
+        // ✅ تحديث الإعدادات من Firebase مع الحفاظ على القيم المحفوظة
+        updateGlobalConfig(cfg);
+        settingsLoaded = true;
       }
     }
     renderSettingsControls();
     renderDocReportOptions();
     if (currentScreen === "delivery" && selectedStudent) renderDeliveryReview(selectedStudent);
   });
+}
+
+/**
+ * تحديث الإعدادات العامة مع دمج القيم الجديدة
+ */
+function updateGlobalConfig(cfg) {
+  if (!cfg) return;
+  
+  // دمج المرفقات العامة
+  if (cfg.globalAttachments && Array.isArray(cfg.globalAttachments)) {
+    globalConfig.globalAttachments = cfg.globalAttachments;
+  }
+  // دمج الحقول المخصصة
+  if (cfg.customFieldsSchema && Array.isArray(cfg.customFieldsSchema)) {
+    globalConfig.customFieldsSchema = cfg.customFieldsSchema;
+  }
+  // دمج الكليات
+  if (cfg.colleges && Array.isArray(cfg.colleges)) {
+    globalConfig.colleges = cfg.colleges;
+  }
+  // دمج المستويات
+  if (cfg.levels && Array.isArray(cfg.levels)) {
+    globalConfig.levels = cfg.levels;
+  }
+  // تحديث النصوص
+  if (cfg.whatsappPreamble) globalConfig.whatsappPreamble = cfg.whatsappPreamble;
+  if (cfg.universityName) globalConfig.universityName = cfg.universityName;
+  if (cfg.universityLogo) globalConfig.universityLogo = cfg.universityLogo;
+  
+  // حفظ في localStorage
+  localStorage.setItem("lotus_config", JSON.stringify(globalConfig));
 }
 
 function rerenderActiveScreen() {
@@ -211,13 +288,9 @@ function stopRealtimeListener() {
 
 function initLocalDatabase() {
   isOfflineMode = true;
-  const cc = localStorage.getItem("lotus_config");
-  if (cc) try { 
-    const parsed = JSON.parse(cc); 
-    globalConfig = {...globalConfig, ...parsed};
-    if (!globalConfig.colleges) globalConfig.colleges = ["كلية الهندسة","كلية طب الفم والاسنان","كلية العلاج الطبيعي","كلية التمريض","كلية الحاسبات والمعلومات والذكاء الاصطناعي","كلية الادارة وال الاقتصاد والعلوم السياسية","كلية تكنولوجيا العلوم الصحية التطبيقية"];
-    if (!globalConfig.levels) globalConfig.levels = ["الفرقة الاولى","الفرقة الثانية","الفرقة الثالثة","الفرقة الرابعة","الفرقة الخامسة"];
-  } catch (e) {}
+  // ✅ إعادة تحميل الإعدادات من localStorage
+  globalConfig = loadConfigFromStorage();
+  
   const cs = localStorage.getItem("lotus_students");
   if (cs) try { studentsIndex = JSON.parse(cs); allStudentsList = [...studentsIndex]; } catch (e) { seedMockStudents(); }
   else seedMockStudents();
@@ -225,18 +298,48 @@ function initLocalDatabase() {
 
 async function loadSettingsConfig() {
   if (isOfflineMode || !db) throw new Error("Offline");
-  const snapshot = await db.ref("settings/config").once("value");
-  if (snapshot.exists()) { globalConfig = snapshot.val(); if (!globalConfig.globalAttachments) globalConfig.globalAttachments = []; if (!globalConfig.customFieldsSchema) globalConfig.customFieldsSchema = []; }
-  else await db.ref("settings/config").set(globalConfig);
-  localStorage.setItem("lotus_config", JSON.stringify(globalConfig));
+  
+  try {
+    const snapshot = await db.ref("settings/config").once("value");
+    if (snapshot.exists()) {
+      const cfg = snapshot.val();
+      updateGlobalConfig(cfg);
+      settingsLoaded = true;
+    } else {
+      // إذا لم تكن الإعدادات موجودة في Firebase، ارفع الإعدادات الحالية
+      await db.ref("settings/config").set(globalConfig);
+      settingsLoaded = true;
+    }
+  } catch (e) {
+    console.error("خطأ في تحميل الإعدادات:", e);
+    // استخدام الإعدادات المحلية
+    globalConfig = loadConfigFromStorage();
+  }
 }
 
 async function saveSettingsConfig() {
   if (!globalConfig.globalAttachments) globalConfig.globalAttachments = [];
   if (!globalConfig.customFieldsSchema) globalConfig.customFieldsSchema = [];
-  if (isOfflineMode || !db) { localStorage.setItem("lotus_config", JSON.stringify(globalConfig)); showToast("تم الحفظ محلياً!", "success"); renderSettingsControls(); if (selectedStudent) refreshSelectedStudentDetails(); return; }
-  try { await db.ref("settings/config").set(globalConfig); localStorage.setItem("lotus_config", JSON.stringify(globalConfig)); showToast("تم الحفظ!", "success"); renderSettingsControls(); if (selectedStudent) refreshSelectedStudentDetails(); }
-  catch (e) { showToast("خطأ: " + e.message, "error"); }
+  
+  // ✅ حفظ في localStorage أولاً
+  localStorage.setItem("lotus_config", JSON.stringify(globalConfig));
+  
+  if (isOfflineMode || !db) {
+    showToast("تم الحفظ محلياً!", "success");
+    renderSettingsControls();
+    if (selectedStudent) refreshSelectedStudentDetails();
+    return;
+  }
+  
+  try {
+    await db.ref("settings/config").set(globalConfig);
+    showToast("تم الحفظ في السحابة!", "success");
+  } catch (e) {
+    showToast("تم الحفظ محلياً فقط! خطأ: " + e.message, "warning");
+  }
+  
+  renderSettingsControls();
+  if (selectedStudent) refreshSelectedStudentDetails();
 }
 
 async function loadSearchIndex() {
@@ -303,11 +406,34 @@ function setupEventListeners() {
   const modeToggleBtn = document.getElementById("mode-toggle-btn");
   if (modeToggleBtn) modeToggleBtn.addEventListener("click", () => {
     isOfflineMode = !isOfflineMode;
-    if (isOfflineMode) { initLocalDatabase(); showToast("وضع محلي.", "info"); }
-    else if (typeof firebase !== 'undefined' && db) { isOfflineMode = false; showToast("جاري التحديث...", "info"); loadSearchIndex().then(() => showToast("تم التحديث.", "success")).catch(() => { showToast("فشل. العودة للوضع المحلي.", "warning"); initLocalDatabase(); }); }
-    else { showToast("Firebase غير محمل.", "warning"); isOfflineMode = true; }
-    updateModeUI(); renderSettingsControls(); renderAdminStudentsTable();
-    if (selectedStudent) { const u = studentsIndex.find(s => s.code === selectedStudent.code); if (u) selectedStudent = u; refreshSelectedStudentDetails(); }
+    if (isOfflineMode) { 
+      initLocalDatabase(); 
+      showToast("وضع محلي.", "info"); 
+    }
+    else if (typeof firebase !== 'undefined' && db) { 
+      isOfflineMode = false; 
+      showToast("جاري التحديث...", "info"); 
+      // ✅ إعادة تحميل الإعدادات من السحابة
+      loadSettingsConfig().then(() => {
+        showToast("تم التحديث.", "success");
+        renderSettingsControls();
+      }).catch(() => { 
+        showToast("فشل. العودة للوضع المحلي.", "warning"); 
+        initLocalDatabase(); 
+      }); 
+    }
+    else { 
+      showToast("Firebase غير محمل.", "warning"); 
+      isOfflineMode = true; 
+    }
+    updateModeUI(); 
+    renderSettingsControls(); 
+    renderAdminStudentsTable();
+    if (selectedStudent) { 
+      const u = studentsIndex.find(s => s.code === selectedStudent.code); 
+      if (u) selectedStudent = u; 
+      refreshSelectedStudentDetails(); 
+    }
   });
 
   let tabProcessing = false;
@@ -686,7 +812,7 @@ function showAttachmentPreview(e, url, isImage) {
 }
 function hideAttachmentPreview() { if (previewTooltip) { previewTooltip.remove(); previewTooltip = null; } }
 
-// Download all attachments to D:\ملفات الطلاب\{code}\
+// Download all attachments to zip
 async function downloadAllAttachments() {
   if (!selectedStudent || !selectedStudent.attachments) return;
   const files = Object.values(selectedStudent.attachments).filter(a => a && a.fileUrl);
@@ -949,7 +1075,8 @@ window.deleteStudentCompletely = async function() {
 // ==================== ADMIN ====================
 
 function renderSettingsControls() {
-  if (!globalConfig) globalConfig = {};
+  // ✅ التأكد من وجود الإعدادات
+  if (!globalConfig) globalConfig = loadConfigFromStorage();
   if (!globalConfig.globalAttachments) globalConfig.globalAttachments = [{ id: "national_id", name: "صورة بطاقة الرقم القومي", required: true }, { id: "birth_cert", name: "شهادة الميلاد الأصلية", required: true }, { id: "high_school", name: "شهادة الثانوية العامة", required: true }];
   if (!globalConfig.customFieldsSchema) globalConfig.customFieldsSchema = [];
   if (!globalConfig.colleges) globalConfig.colleges = ["كلية الهندسة","كلية طب الفم والاسنان","كلية العلاج الطبيعي","كلية التمريض","كلية الحاسبات والمعلومات والذكاء الاصطناعي","كلية الادارة والاقتصاد والعلوم السياسية","كلية تكنولوجيا العلوم الصحية التطبيقية"];
@@ -2201,257 +2328,7 @@ window.sendAllMissingViaWhatsapp = function() {
   });
 };
 
-window.exportEmployeeCertRecordsToExcel = function() {
-  if (typeof XLSX === 'undefined') { showToast("مكتبة Excel غير محملة", "error"); return; }
-  
-  // Get all certificate records from localStorage
-  let certRecords = [];
-  try {
-    certRecords = JSON.parse(localStorage.getItem('lotus_certificate_records') || '[]');
-  } catch(e) { console.error('خطأ في قراءة شهادات الموظفين:', e); return; }
-  
-  if (certRecords.length === 0) {
-    showToast("لا توجد شهادات محفوظة للموظفين للتصدير", "info");
-    return;
-  }
-  
-  // Filter records by employee certificates and organize by employee role
-  const employeeRecords = [];
-  const employeeCertificateTypes = {};
-  
-  certRecords.forEach(record => {
-    const email = record.employeeUsername || '';
-    const name = record.employeeName || '';
-    const role = record.employeeRole || '';
-    const timestamp = record.createdAt || record.updatedAt || '';
-    
-    const recordData = {
-      "اسم الموظف": name,
-      "اسم المستخدم": email,
-      "الدور": role,
-      "الشرطة": record.studentName || '',
-      "نوع الشهادة": record.certificateLabel || record.certificateType || '',
-      "المجموع": record.totalScore || record.totalPercentage || 0,
-      "المجموع المكافئ": record.equivalentScore || 0,
-      "النسبة": record.totalPercentage || 0,
-      "تاريخ الدخول": new Date(timestamp).toLocaleDateString('ar-EG'),
-      "تاريخ الانتهاء": new Date(timestamp).toLocaleTimeString('ar-EG'),
-      "تاريخ الإنشاء": new Date(timestamp).toLocaleString('ar-EG'),
-      "نوع الشهادة الخام": record.certificateType || '',
-      "تمت بواسطة": record.employeeUsername || record.employeeName || ''
-    };
-    
-    employeeRecords.push(recordData);
-    
-    // Track certificate types for grouping
-    const certType = record.certificateLabel || record.certificateType || '';
-    if (!employeeCertificateTypes[certType]) {
-      employeeCertificateTypes[certType] = 0;
-    }
-    employeeCertificateTypes[certType]++;
-  });
-  
-  // Create main data sheet
-  let excelData = [];
-  const currentDate = new Date().toLocaleDateString('ar-EG');
-  const currentTime = new Date().toLocaleTimeString('ar-EG');
-  
-  // Title row
-  excelData.push({
-    "عنوان التقرير": "سجلات شهادات الموظفين",
-    "": "",
-    "الموقع": "جامعه اللوتس",
-    "التاريخ": currentDate,
-    "الوقت": currentTime,
-    "إجمالي السجلات": certRecords.length
-  });
-  
-  excelData.push({
-    "": "",
-    "": "",
-    "": "",
-    "": ""
-  });
-  
-  // Summary statistics
-  const summaryRows = [
-    { "الفئة": "إجمالي السجلات", "القيمة": certRecords.length },
-    { "الفئة": "الموظفين المتميزين", "القيمة": new Set(certRecords.map(r => r.employeeUsername)).size },
-    { "الفئة": "أنواع الشهادات المختلفة", "القيمة": new Set(certRecords.map(r => r.certificateLabel || r.certificateType)).size },
-    { "الفئة": "الطلاب المتفردين", "القيمة": new Set(certRecords.map(r => r.studentName)).size },
-    { "الفئة": "متوسط النسبة", "القيمة": (certRecords.reduce((sum, r) => sum + (r.totalPercentage || 0), 0) / certRecords.length).toFixed(1) + "%" },
-    { "الفئة": "أعلى نسبة", "القيمة": Math.max(...certRecords.map(r => r.totalPercentage || 0)).toFixed(1) + "%" },
-    { "الفئة": "أقل نسبة", "القيمة": Math.min(...certRecords.map(r => r.totalPercentage || 0)).toFixed(1) + "%" }
-  ];
-  
-  excelData = excelData.concat(summaryRows);
-  
-  excelData.push({
-    "": ""
-  });
-  
-  // Main data table
-  excelData.push({
-    "اسم الموظف": "اسم الموظف",
-    "اسم المستخدم": "اسم المستخدم",
-    "الدور": "الدور",
-    "الشرطة": "اسم الطالب",
-    "نوع الشهادة": "نوع الشهادة",
-    "المجموع": "المجموع",
-    "المجموع المكافئ": "المجموع المكافئ",
-    "النسبة": "النسبة",
-    "تاريخ الدخول": "التاريخ",
-    "تاريخ الانتهاء": "الوقت",
-    "تاريخ الإنشاء": "تاريخ الإنشاء",
-    "نوع الشهادة الخام": "النوع الخام",
-    "تمت بواسطة": "تمت بواسطة"
-  });
-  
-  employeeRecords.forEach(record => {
-    excelData.push(record);
-  });
-  
-  // Add certificate type breakdown
-  excelData.push({
-    "": ""
-  });
-  
-  excelData.push({
-    "نوع الشهادة": "نوع الشهادة",
-    "العدد": "العدد",
-    "النسبة": "النسبة %"
-  });
-  
-  Object.entries(employeeCertificateTypes).forEach(([certType, count]) => {
-    const percentage = ((count / certRecords.length) * 100).toFixed(1);
-    excelData.push({
-      "نوع الشهادة": certType,
-      "العدد": count.toString(),
-      "النسبة": percentage + "%"
-    });
-  });
-  
-  // Add detailed employee performance info
-  excelData.push({
-    "": ""
-  });
-  
-  excelData.push({
-    "اسم الموظف": "اسم الموظف",
-    "اسم المستخدم": "اسم المستخدم",
-    "الدور": "الدور",
-    "أنواع الشهادات": "أنواع الشهادات",
-    "عدد الشهادات": "عدد الشهادات",
-    "متوسط النسبة": "متوسط النسبة"
-  });
-  
-  // Group by employee
-  const employeeStats = {};
-  certRecords.forEach(record => {
-    const email = record.employeeUsername || '';
-    const name = record.employeeName || '';
-    const role = record.role || '';
-    
-    if (!employeeStats[email]) {
-      employeeStats[email] = {
-        name: name,
-        role: role,
-        certTypes: new Set(),
-        certCount: 0,
-        totalScore: 0,
-        avgPercentage: 0
-      };
-    }
-    
-    employeeStats[email].certTypes.add(record.certificateLabel || record.certificateType);
-    employeeStats[email].certCount++;
-    employeeStats[email].totalScore += (record.totalScore || record.totalPercentage || 0);
-  });
-  
-   // Calculate averages
-   Object.values(employeeStats).forEach(stats => {
-     stats.avgPercentage = (stats.totalScore / stats.certCount).toFixed(1);
-   });
-  
-  // Add employee rows
-  Object.values(employeeStats).forEach(stats => {
-    excelData.push({
-      "اسم الموظف": stats.name,
-      "اسم المستخدم": stats.name.includes('@') ? stats.name : (stats.name + '@lotus.edu'),
-      "الدور": stats.role,
-      "أنواع الشهادات": Array.from(stats.certTypes).join('، '),
-      "عدد الشهادات": stats.certCount.toString(),
-      "متوسط النسبة": stats.avgPercentage + "%"
-    });
-  });
-  
-  // Add footer
-  excelData.push({
-    "": ""
-  });
-  
-  excelData.push({
-    "الملاحظات": "بيانات شهادات الموظفين من نظام حساب شهادات جامعة اللوتس",
-    "المحلل": "النظام",
-    "بتاريخ": currentDate
-  });
-  
-  // Export with appropriate styling for employee certificates
-  try {
-    const ws = XLSX.utils.json_to_sheet(excelData, { header: true, skipHeader: false });
-    
-    // Set column widths for better readability
-    ws['!cols'] = [
-      { wch: 25 }, // اسم الموظف
-      { wch: 20 }, // اسم المستخدم
-      { wch: 15 }, // الدور
-      { wch: 20 }, // الشرطة
-      { wch: 20 }, // نوع الشهادة
-      { wch: 15 }, // المجموع
-      { wch: 15 }, // المجموع المكافئ
-      { wch: 12 }, // النسبة
-      { wch: 15 }, // التاريخ
-      { wch: 12 }, // الوقت
-      { wch: 20 }  // تاريخ الإنشاء
-    ];
-    
-    const wb = XLSX.utils.book_new();
-    XLSX.utils.book_append_sheet(wb, ws, "شهادات_الموظفين");
-    
-    // Add color styling for headers and sections
-    ws['A1'].s = {
-      font: { bold: true, sz: 18, color: { rgb: 'FFFFFFFF' } },
-      fill: { patternType: 'solid', fgColor: { rgb: 'FF2563EB' } },
-      alignment: { horizontal: 'center', vertical: 'center' }
-    };
-    
-    // Add summary section styling
-    const summaryStartRow = 5;
-    for (let i = summaryStartRow; i < summaryRows.length + summaryStartRow; i++) {
-      const row = XLSX.utils.encode_row(i);
-      ws[`${row}A`].s = {
-        font: { bold: true, color: { rgb: 'FF1E40AF' } },
-        fill: { patternType: 'solid', fgColor: { rgb: 'FFE3F2FD' } }
-      };
-    }
-    
-    const wbout = XLSX.write(wb, { bookType: "xlsx", type: "array" });
-    const blob = new Blob([wbout], { type: "application/octet-stream" });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement("a");
-    a.href = url;
-    a.download = `شهادات_الموظفين_${currentDate.replace(/\//g, '_')}.xlsx`;
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
-    URL.revokeObjectURL(url);
-    
-    showToast("تم تصدير شهادات الموظفين بنجاح إلى Excel", "success");
-  } catch (e) {
-    console.error("خطأ في تصدير شهادات الموظفين:", e);
-    showToast("خطأ في تصدير البيانات: " + e.message, "error");
-  }
-};
+// ==================== EXPORT FUNCTIONS ====================
 
 function exportToExcel(data, fileName, sheetName = "جدول البيانات") {
   if (typeof XLSX === 'undefined') {
@@ -2459,153 +2336,8 @@ function exportToExcel(data, fileName, sheetName = "جدول البيانات") 
     return;
   }
   const ws = XLSX.utils.json_to_sheet(data, { header: true, skipHeader: false });
-  
-  // Apply formatting based on fileName to different sheets
   const wb = XLSX.utils.book_new();
   XLSX.utils.book_append_sheet(wb, ws, sheetName);
-  
-  // Set column widths based on content and purpose
-  if (sheetName.includes("المصرية") || sheetName.includes("الثانوية")) {
-    ws['!cols'] = [
-      { wch: 4 },   // رقم
-      { wch: 25 },  // الاسم
-      { wch: 12 },  // الكود
-      { wch: 20 },  // الكلية
-      { wch: 10 },  // الفرقة
-      { wch: 15 },  // المجموع
-      { wch: 12 },  // النسبة
-      { wch: 15 }   // تاريخ الدخول
-    ];
-  } else if (sheetName.includes("الازهرية") || sheetName.includes("الأزهرية")) {
-    ws['!cols'] = [
-      { wch: 4 },   // رقم
-      { wch: 25 },  // الاسم
-      { wch: 12 },  // الكود
-      { wch: 20 },  // الكلية
-      { wch: 10 },  // مجموع اللغة العربية
-      { wch: 10 },  // مجموع المواد الثقافية
-      { wch: 12 },  // النسبة
-      { wch: 15 }   // تاريخ الدخول
-    ];
-  } else if (sheetName.includes("السعودية") || sheetName.includes("السعودية")) {
-    ws['!cols'] = [
-      { wch: 4 },   // رقم
-      { wch: 25 },  // الاسم
-      { wch: 12 },  // الكود
-      { wch: 20 },  // الكلية
-      { wch: 12 },  // متوسط المدرسة
-      { wch: 12 },  // القدرات
-      { wch: 10 },  // النسبة
-      { wch: 15 }   // تاريخ الدخول
-    ];
-  } else if (sheetName.includes("الخليج") || sheetName.includes("الخليج")) {
-    ws['!cols'] = [
-      { wch: 4 },   // رقم
-      { wch: 25 },  // الاسم
-      { wch: 12 },  // الكود
-      { wch: 20 },  // الكلية
-      { wch: 15 },  // الدرجات (7 مواد)
-      { wch: 10 },  // النسبة
-      { wch: 15 }   // تاريخ الدخول
-    ];
-  } else if (sheetName.includes("الأردن") || sheetName.includes("الأردن")) {
-    ws['!cols'] = [
-      { wch: 4 },   // رقم
-      { wch: 25 },  // الاسم
-      { wch: 12 },  // الكود
-      { wch: 20 },  // الكلية
-      { wch: 15 },  // الدرجات (7 مواد)
-      { wch: 10 },  // النسبة
-      { wch: 15 }   // تاريخ الدخول
-    ];
-  } else if (sheetName.includes("ليبيا") || sheetName.includes("ليبيا")) {
-    ws['!cols'] = [
-      { wch: 4 },   // رقم
-      { wch: 25 },  // الاسم
-      { wch: 12 },  // الكود
-      { wch: 20 },  // الكلية
-      { wch: 15 },  // الدرجات (8 مواد)
-      { wch: 10 },  // النسبة
-      { wch: 15 }   // تاريخ الدخول
-    ];
-  } else if (sheetName.includes("الكويت") || sheetName.includes("الكويت")) {
-    ws['!cols'] = [
-      { wch: 4 },   // رقم
-      { wch: 25 },  // الاسم
-      { wch: 12 },  // الكود
-      { wch: 20 },  // الكلية
-      { wch: 12 },  // المرحلة 10
-      { wch: 12 },  // المرحلة 11
-      { wch: 12 },  // المرحلة 12
-      { wch: 10 },  // النسبة الإجمالية
-      { wch: 15 }   // تاريخ الدخول
-    ];
-  } else if (sheetName.includes("البحرين") || sheetName.includes("البحرين")) {
-    ws['!cols'] = [
-      { wch: 4 },   // رقم
-      { wch: 25 },  // الاسم
-      { wch: 12 },  // الكود
-      { wch: 20 },  // الكلية
-      { wch: 15 },  // المتوسط المرجح (3 مراحل)
-      { wch: 10 },  // النسبة
-      { wch: 15 }   // تاريخ الدخول
-    ];
-  } else if (sheetName.includes("STEM") || sheetName.includes("STEM")) {
-    ws['!cols'] = [
-      { wch: 4 },   // رقم
-      { wch: 25 },  // الاسم
-      { wch: 12 },  // الكود
-      { wch: 20 },  // الكلية
-      { wch: 15 },  // الدرجات
-      { wch: 10 },  // النسبة
-      { wch: 15 }   // تاريخ الدخول
-    ];
-  } else if (sheetName.includes("امريكان") || sheetName.includes("أمريكان دبلومة")) {
-    ws['!cols'] = [
-      { wch: 4 },   // رقم
-      { wch: 25 },  // الاسم
-      { wch: 12 },  // الكود
-      { wch: 20 },  // الكلية
-      { wch: 10 },  // Est1
-      { wch: 10 },  // Est2
-      { wch: 10 },  // GPA
-      { wch: 10 },  // النسبة الإجمالية
-      { wch: 15 }   // تاريخ الدخول
-    ];
-  }
-  
-  // Apply large Excel format for certificate records
-  ws['A1'].s = {
-    font: { bold: true, sz: 14, color: { rgb: 'FF2563EB' } },
-    fill: { patternType: 'solid', fgColor: { rgb: 'FFEBF5FF' } },
-    alignment: { horizontal: 'center', vertical: 'center' }
-  };
-  
-  if (sheetName.includes("المصرية") || sheetName.includes("الثانوية")) {
-    ws['A1'].s.fill.fgColor.rgb = 'FFEBF5FF';
-    ws['A1'].s.font.color.rgb = 'FF1E40AF';
-  } else if (sheetName.includes("الازهرية") || sheetName.includes("الأزهرية")) {
-    ws['A1'].s.fill.fgColor.rgb = 'FFFCE4EC';
-    ws['A1'].s.font.color.rgb = 'FFC2187F';
-  } else if (sheetName.includes("السعودية") || sheetName.includes("السعودية")) {
-    ws['A1'].s.fill.fgColor.rgb = 'FFD1FAE5';
-    ws['A1'].s.font.color.rgb = 'FF065F46';
-  } else if (sheetName.includes("الخليج") || sheetName.includes("الخليج")) {
-    ws['A1'].s.fill.fgColor.rgb = 'FEF3C7';
-    ws['A1'].s.font.color.rgb = 'DC2626';
-  } else if (sheetName.includes("الأردن") || sheetName.includes("الأردن")) {
-    ws['A1'].s.fill.fgColor.rgb = 'EDE9FE';
-    ws['A1'].s.font.color.rgb = '7C3AED';
-  } else if (sheetName.includes("ليبيا") || sheetName.includes("ليبيا")) {
-    ws['A1'].s.fill.fgColor.rgb = 'FFE0E5';
-    ws['A1'].s.font.color.rgb = 'BE185D';
-  } else if (sheetName.includes("الكويت") || sheetName.includes("الكويت")) {
-    ws['A1'].s.fill.fgColor.rgb = 'FFECF2FF';
-    ws['A1'].s.font.color.rgb = '1E40AF';
-  } else if (sheetName.includes("البحرين") || sheetName.includes("البحرين")) {
-    ws['A1'].s.fill.fgColor.rgb = 'FFE8E5';
-    ws['A1'].s.font.color.rgb = '9F1239';
-  }
   
   const wbout = XLSX.write(wb, { bookType: "xlsx", type: "array" });
   const blob = new Blob([wbout], { type: "application/octet-stream" });
@@ -2614,7 +2346,7 @@ function exportToExcel(data, fileName, sheetName = "جدول البيانات") 
   a.href = url; a.download = fileName + ".xlsx";
   document.body.appendChild(a); a.click(); document.body.removeChild(a);
   URL.revokeObjectURL(url);
-  showToast("تم تصدير الشهادات بنجاح", "success");
+  showToast("تم التصدير بنجاح", "success");
 }
 
 function printGeneric(title, bodyHtml) {

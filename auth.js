@@ -1,18 +1,12 @@
 // ============================
-// SYSTEM AUTH - Shared Module
+// SYSTEM AUTH - Shared Module (FINAL FIXED)
 // ============================
+// Main DB (dent-35a17): employees, activityLog, all data
+// Permissions DB (loutsresults): list of available systems
+// Fix: Permissions save and checkboxes persist after refresh & save
+// Feature: Password change for employee & admin
 
-const AUTH_FIREBASE_CONFIG = {
-  apiKey: "AIzaSyAbYhhg5eL94AUE5BwV4xv6jbFU98QZbdQ",
-  authDomain: "loutsresults.firebaseapp.com",
-  projectId: "loutsresults",
-  storageBucket: "loutsresults.firebasestorage.app",
-  messagingSenderId: "801603969666",
-  appId: "1:801603969666:web:e6d45a7a6819022bc10a9b",
-  databaseURL: "https://loutsresults-default-rtdb.firebaseio.com"
-};
-
-const WITHDRAWAL_FIREBASE_CONFIG = {
+const MAIN_FIREBASE_CONFIG = {
   apiKey: "AIzaSyBajCZMATK21mgaEFcccyhLne4pgdaxMfk",
   authDomain: "dent-35a17.firebaseapp.com",
   databaseURL: "https://dent-35a17-default-rtdb.firebaseio.com",
@@ -22,71 +16,95 @@ const WITHDRAWAL_FIREBASE_CONFIG = {
   appId: "1:416163754700:web:dec496619e3e6fff3e0869"
 };
 
-let AUTH_DB = null, WITHDRAWAL_DB = null, SRC_DB = null, AUTH_IS_OFFLINE = false;
-try {
-  if (typeof firebase !== 'undefined') {
-    // 1. SOURCE app = old main project (loutsresults) — used only to read/migrate old data
-    let srcApp = null;
-    try { srcApp = firebase.app('_lotus_src'); } catch (e) {}
-    if (!srcApp) {
-      srcApp = firebase.initializeApp(AUTH_FIREBASE_CONFIG, '_lotus_src');
-    }
-    if (srcApp.auth) {
-      srcApp.auth().signInAnonymously().catch(e => {});
-    }
-    SRC_DB = firebase.database(srcApp);
-
-    // 2. UNIFIED live app = dent-35a17 (open/writable, already holds withdrawal data)
-    let authApp = null;
-    try { authApp = firebase.app('_lotus_auth'); } catch (e) {}
-    if (!authApp) {
-      authApp = firebase.initializeApp(WITHDRAWAL_FIREBASE_CONFIG, '_lotus_auth');
-    }
-    if (authApp.auth) {
-      authApp.auth().signInAnonymously().catch(e => {});
-    }
-    AUTH_DB = firebase.database(authApp);
-    WITHDRAWAL_DB = AUTH_DB; // same unified database
-  } else {
-    AUTH_IS_OFFLINE = true;
-  }
-} catch (e) { AUTH_IS_OFFLINE = true; }
-
-// ===== One-time migration: copy old data (students/employees/certs/activity)
-// from the previous main project (loutsresults = SRC_DB) into the unified
-// project (dent-35a17 = AUTH_DB) so the WHOLE system uses ONE Firebase. =====
-window.migrateToUnified = async function () {
-  if (!SRC_DB || !AUTH_DB) return;
-  try {
-    const flagSnap = await AUTH_DB.ref('__migrated_v1').once('value');
-    if (flagSnap.exists()) return; // already migrated
-
-    const paths = ['employees', 'students', 'activityLog', 'certificateRecords', 'settings'];
-    for (const p of paths) {
-      const srcSnap = await SRC_DB.ref(p === 'settings' ? 'settings/config' : p).once('value');
-      if (!srcSnap.exists()) continue;
-      const src = srcSnap.val();
-      const tgtSnap = await AUTH_DB.ref(p === 'settings' ? 'settings/config' : p).once('value');
-      const tgt = tgtSnap.exists() ? tgtSnap.val() : null;
-      // merge: keep target keys, fill missing from source
-      const merged = tgt ? Object.assign({}, src, tgt) : src;
-      await AUTH_DB.ref(p === 'settings' ? 'settings/config' : p).set(merged);
-    }
-    await AUTH_DB.ref('__migrated_v1').set(true);
-    console.log('[migrate] old data unified into dent-35a17');
-    if (window.authLogActivity) {
-      window.authLogActivity('migrate', 'system', '', '', 'ترحيل بيانات النظام القديمة إلى قاعدة موحدة (dent-35a17)', 'النظام');
-    }
-  } catch (err) {
-    console.error('[migrate] error:', err);
-  }
+const PERMISSIONS_FIREBASE_CONFIG = {
+  apiKey: "AIzaSyAbYhhg5eL94AUE5BwV4xv6jbFU98QZbdQ",
+  authDomain: "loutsresults.firebaseapp.com",
+  databaseURL: "https://loutsresults-default-rtdb.firebaseio.com",
+  projectId: "loutsresults",
+  storageBucket: "loutsresults.firebasestorage.app",
+  messagingSenderId: "801603969666",
+  appId: "1:801603969666:web:e6d45a7a6819022bc10a9b"
 };
 
-// kick off migration at startup (best-effort, non-blocking)
-if (typeof window.migrateToUnified === 'function') {
-  window.migrateToUnified();
+let AUTH_DB = null, WITHDRAWAL_DB = null, SRC_DB = null, PERMISSIONS_DB = null, AUTH_IS_OFFLINE = false;
+
+try {
+  if (typeof firebase !== 'undefined') {
+    // Main app (dent-35a17) for employees and data
+    let mainApp = null;
+    try { mainApp = firebase.app(); } catch (e) {}
+    if (!mainApp) mainApp = firebase.initializeApp(MAIN_FIREBASE_CONFIG);
+    if (mainApp.auth) mainApp.auth().signInAnonymously().catch(() => {});
+    AUTH_DB = firebase.database(mainApp);
+    WITHDRAWAL_DB = AUTH_DB;
+    SRC_DB = AUTH_DB;
+
+    // Permissions app (loutsresults) for system access list only
+    let permApp = null;
+    try { permApp = firebase.app('permissionsApp'); } catch (e) {}
+    if (!permApp) permApp = firebase.initializeApp(PERMISSIONS_FIREBASE_CONFIG, 'permissionsApp');
+    PERMISSIONS_DB = firebase.database(permApp);
+
+    console.log('[AUTH] Dual Firebase ready (Main: dent-35a17 | Permissions: loutsresults)');
+  } else {
+    AUTH_IS_OFFLINE = true;
+    console.warn('[AUTH] Firebase SDK not loaded. Running offline.');
+  }
+} catch (e) {
+  AUTH_IS_OFFLINE = true;
+  console.error('[AUTH] Init error:', e.message);
 }
 
+// ========== Permissions Definitions ==========
+window.SYSTEM_ACCESS_PERMISSIONS = [
+  { id: 'access_file_management', name: 'نظام إدارة الملفات', icon: 'fa-folder-open', color: 'var(--accent-emerald)' },
+  { id: 'access_withdrawal', name: 'نظام السحب والإيداع', icon: 'fa-exchange-alt', color: 'var(--accent-blue)' },
+  { id: 'access_certificate', name: 'نظام حساب الشهادات', icon: 'fa-certificate', color: 'var(--accent-purple)' },
+  { id: 'access_desk_services', name: 'الخدمات المكتبية والمعاملات', icon: 'fa-print', color: 'var(--accent-cyan)' }
+];
+
+window.FUNCTIONAL_PERMISSIONS = [
+  { id: 'view', name: 'عرض البيانات الأساسية' },
+  { id: 'create', name: 'إنشاء/إضافة بيانات' },
+  { id: 'edit', name: 'تعديل البيانات' },
+  { id: 'delete', name: 'حذف البيانات' },
+  { id: 'manage_employees', name: 'إدارة الموظفين' },
+  { id: 'manage_settings', name: 'إدارة إعدادات النظام' },
+  { id: 'view_logs', name: 'استعراض السجلات' },
+  { id: 'manage_delivery', name: 'إدارة التسليمات (سحب/إيداع)' },
+  { id: 'upload_files', name: 'رفع الملفات المجمعة' }
+];
+
+window.ALL_PERMISSIONS = window.FUNCTIONAL_PERMISSIONS.concat(window.SYSTEM_ACCESS_PERMISSIONS);
+
+window.DEFAULT_EMPLOYEE_PERMISSIONS = [
+  'view','create','edit','delete','view_logs','manage_delivery','upload_files',
+  'access_file_management','access_withdrawal','access_certificate','access_desk_services'
+];
+
+window.ADMIN_FIXED_PERMISSIONS = [
+  'view','create','edit','delete','manage_employees','manage_settings','view_logs',
+  'manage_delivery','upload_files',
+  'access_file_management','access_withdrawal','access_certificate','access_desk_services'
+];
+
+// ========== Auth Constants ==========
+const AUTH_SESSION_KEY = 'lotus_auth_session';
+let AUTH_CURRENT_USER = null;
+
+const AUTH_ROLE_NAMES = {
+  'admin': 'مدير النظام',
+  'employee': 'موظف',
+  'viewer': 'مشاهد'
+};
+
+const AUTH_ROLE_PERMISSIONS = {
+  'admin': [...window.ADMIN_FIXED_PERMISSIONS],
+  'employee': [...window.DEFAULT_EMPLOYEE_PERMISSIONS],
+  'viewer': ['view', 'view_logs']
+};
+
+// ========== Helper: Timeout ==========
 function withTimeout(promise, ms) {
   return Promise.race([
     promise,
@@ -94,37 +112,49 @@ function withTimeout(promise, ms) {
   ]);
 }
 
-let AUTH_CURRENT_USER = null;
-const AUTH_SESSION_KEY = 'lotus_session';
-const AUTH_ROLE_NAMES = { admin: 'مدير', supervisor: 'مشرف', employee: 'موظف', viewer: 'مشاهد' };
-const AUTH_ROLE_PERMISSIONS = {
-  admin: ['view','create','edit','delete','manage_employees','manage_settings','view_logs','manage_delivery','upload_files'],
-  supervisor: ['view','create','edit','delete','manage_settings','view_logs','manage_delivery','upload_files'],
-  employee: ['view','upload_files','manage_delivery'],
-  viewer: ['view']
-};
-
+// ========== Password Hash ==========
 function authHashPassword(pw) {
   if (!pw) return '';
   let hash = 0;
-  for (let i = 0; i < pw.length; i++) { hash = ((hash << 5) - hash) + pw.charCodeAt(i); hash = hash & hash; }
+  for (let i = 0; i < pw.length; i++) {
+    hash = ((hash << 5) - hash) + pw.charCodeAt(i);
+    hash = hash & hash;
+  }
   return 'h' + Math.abs(hash).toString(36);
 }
 
+// ========== Session Management ==========
 function authGetSession() {
   try {
     const raw = localStorage.getItem(AUTH_SESSION_KEY);
     if (!raw) return null;
     const s = JSON.parse(raw);
     if (!s || !s.username || !s.role) return null;
-    if (Date.now() - (s.loginTime || 0) > 28800000) { authClearSession(); return null; }
+    if (Date.now() - (s.loginTime || 0) > 28800000) {
+      authClearSession();
+      return null;
+    }
+    if (s.username === 'boles') {
+      s.role = 'admin';
+      s.permissions = [...window.ADMIN_FIXED_PERMISSIONS];
+    }
     return s;
-  } catch { return null; }
+  } catch (e) { return null; }
 }
 
 function authSetSession(user) {
-  const session = { username: user.username, name: user.name, role: user.role, loginTime: Date.now(), employeeId: user.employeeId || user.username };
-  if (user.permissions) session.permissions = user.permissions;
+  const session = {
+    username: user.username,
+    name: user.name,
+    role: user.role,
+    loginTime: Date.now(),
+    employeeId: user.employeeId || user.username
+  };
+  if (user.permissions !== undefined && user.permissions !== null) {
+    session.permissions = Array.isArray(user.permissions) ? [...user.permissions] : authNormalizePermissions(user.permissions);
+  } else {
+    session.permissions = [...(AUTH_ROLE_PERMISSIONS[user.role] || [])];
+  }
   localStorage.setItem(AUTH_SESSION_KEY, JSON.stringify(session));
   AUTH_CURRENT_USER = session;
 }
@@ -134,111 +164,267 @@ function authClearSession() {
   AUTH_CURRENT_USER = null;
 }
 
+// ========== Permission Normalization (always returns clean array) ==========
+function authNormalizePermissions(perms) {
+  if (!perms) return [];
+  if (Array.isArray(perms)) {
+    return perms.filter(p => typeof p === 'string' && p.length > 0);
+  }
+  if (typeof perms === 'object') {
+    // case: {0: "view", 1: "create"}
+    const arr = Object.values(perms).filter(v => typeof v === 'string' && v.length > 0);
+    if (arr.length > 0) return arr;
+    // case: {view: true, create: false}
+    const boolArr = [];
+    for (const key of Object.keys(perms)) {
+      if (perms[key] === true || perms[key] === 'true') boolArr.push(key);
+    }
+    return boolArr;
+  }
+  return [];
+}
+
 function authHasPermission(action) {
   const user = AUTH_CURRENT_USER || authGetSession();
   if (!user) return false;
-  
-  // also make sure AUTH_CURRENT_USER is set for future checks
   AUTH_CURRENT_USER = user;
-
+  if (user.username === 'boles' || user.role === 'admin') return true;
   if (user.permissions && Array.isArray(user.permissions)) {
     return user.permissions.includes(action);
   }
+  const norm = authNormalizePermissions(user.permissions);
+  if (norm.length > 0) return norm.includes(action);
   const perms = AUTH_ROLE_PERMISSIONS[user.role];
-  return perms && perms.includes(action);
+  return perms ? perms.includes(action) : false;
 }
 
-function authGetLocalEmployees() {
-  try { return JSON.parse(localStorage.getItem('lotus_employees') || '[]'); } catch { return []; }
+// ========== Local Employees (fallback) ==========
+function authDeduplicateLocalEmployees() {
+  try {
+    const raw = localStorage.getItem('lotus_employees');
+    if (!raw) return [];
+    let list = JSON.parse(raw);
+    if (!Array.isArray(list)) return [];
+    const seen = new Set();
+    const deduped = [];
+    for (const emp of list) {
+      if (!emp || !emp.username) continue;
+      const uKey = emp.username.trim().toLowerCase();
+      if (seen.has(uKey)) continue;
+      seen.add(uKey);
+      emp.username = uKey;
+      if (emp.username === 'boles') {
+        emp.role = 'admin';
+        emp.permissions = [...window.ADMIN_FIXED_PERMISSIONS];
+        emp.active = true;
+      }
+      deduped.push(emp);
+    }
+    if (deduped.length !== list.length) localStorage.setItem('lotus_employees', JSON.stringify(deduped));
+    return deduped;
+  } catch (e) { return []; }
 }
 
 function authSaveLocalEmployees(emps) {
-  localStorage.setItem('lotus_employees', JSON.stringify(emps));
+  const seen = new Set();
+  const deduped = [];
+  for (const emp of emps) {
+    if (!emp || !emp.username) continue;
+    const uKey = emp.username.trim().toLowerCase();
+    if (seen.has(uKey)) continue;
+    seen.add(uKey);
+    emp.username = uKey;
+    if (emp.username === 'boles') {
+      emp.role = 'admin';
+      emp.permissions = [...window.ADMIN_FIXED_PERMISSIONS];
+      emp.active = true;
+    }
+    deduped.push(emp);
+  }
+  localStorage.setItem('lotus_employees', JSON.stringify(deduped));
+}
+
+// ========== Firebase Employees (main DB) ==========
+async function authLoadEmployeesFromFirebase() {
+  if (AUTH_IS_OFFLINE || !AUTH_DB) return null;
+  try {
+    const snap = await withTimeout(AUTH_DB.ref('employees').once('value'), 5000);
+    if (!snap.exists()) return null;
+    const data = snap.val();
+    if (!data || typeof data !== 'object') return null;
+
+    const firebaseEmployees = [];
+    for (const k of Object.keys(data)) {
+      const d = data[k];
+      if (!d || !d.username) continue;
+      const uKey = d.username.trim().toLowerCase();
+      let perms = authNormalizePermissions(d.permissions);
+      if (perms.length === 0 && d.role) perms = [...(AUTH_ROLE_PERMISSIONS[d.role] || [])];
+      const emp = {
+        username: uKey,
+        name: d.name || '',
+        password: d.password || '',
+        role: d.role || 'employee',
+        active: d.active !== false,
+        permissions: perms,   // clean array
+        employeeId: d.employeeId || uKey,
+        createdAt: d.createdAt || new Date().toISOString(),
+        plainPassword: d.plainPassword || ''
+      };
+      if (emp.username === 'boles') {
+        emp.role = 'admin';
+        emp.permissions = [...window.ADMIN_FIXED_PERMISSIONS];
+        emp.active = true;
+      }
+      firebaseEmployees.push(emp);
+    }
+    if (firebaseEmployees.length > 0) authSaveLocalEmployees(firebaseEmployees);
+    return firebaseEmployees;
+  } catch (e) {
+    console.warn('[AUTH] Load employees error:', e.message);
+    return null;
+  }
 }
 
 async function authGetAllEmployees() {
-  if (typeof window.migrateToUnified === 'function') {
-    try { await window.migrateToUnified(); } catch (e) {}
-  }
-  const list = [];
-  let fromFirebase = false;
+  let list = [];
   if (!AUTH_IS_OFFLINE && AUTH_DB) {
-    try {
-      const snap = await withTimeout(AUTH_DB.ref('employees').once('value'), 1500);
-      if (snap.exists()) {
-        const data = snap.val();
-        Object.keys(data).forEach(k => { list.push({ username: k, ...data[k] }); });
-        fromFirebase = true;
-      }
-    } catch (e) { /* Firebase not available, fall back to local */ }
+    const fb = await authLoadEmployeesFromFirebase();
+    if (fb && fb.length > 0) list = fb;
   }
-  const local = authGetLocalEmployees();
-  local.forEach(e => { 
-    const idx = list.findIndex(x => x.username === e.username);
-    if (idx >= 0) {
-      list[idx] = e;
-    }
-    else list.push(e); 
-  });
+  if (list.length === 0) list = authDeduplicateLocalEmployees();
 
-  // De-duplicate by username (safety against double-listing)
-  const seen = {};
+  const seen = new Set();
   const deduped = [];
-  list.forEach(e => { if (e && e.username && !seen[e.username]) { seen[e.username] = true; deduped.push(e); } });
-
-  const deleted = JSON.parse(localStorage.getItem('lotus_deleted_employees') || '[]');
+  for (const emp of list) {
+    if (!emp || !emp.username) continue;
+    const uKey = emp.username.trim().toLowerCase();
+    if (seen.has(uKey)) continue;
+    seen.add(uKey);
+    emp.username = uKey;
+    if (emp.username === 'boles') {
+      emp.role = 'admin';
+      emp.permissions = [...window.ADMIN_FIXED_PERMISSIONS];
+      emp.active = true;
+    }
+    deduped.push(emp);
+  }
+  const deleted = JSON.parse(localStorage.getItem('lotus_deleted_employees') || '[]')
+    .map(x => (x || '').trim().toLowerCase());
   return deduped.filter(e => !deleted.includes(e.username));
 }
 
-async function authCheckHasAnyEmployee() {
-  const list = await authGetAllEmployees();
-  return list.length > 0;
-}
-
+// ========== Save / Delete Employee ==========
 async function authSaveEmployeeToDb(emp) {
+  if (!emp || !emp.username) return;
   const key = emp.username.replace(/[.#$\/\[\]]/g, '_');
+  if (emp.username === 'boles') {
+    emp.role = 'admin';
+    emp.permissions = [...window.ADMIN_FIXED_PERMISSIONS];
+    emp.active = true;
+  }
+  // Always normalize to clean array
+  let perms = [];
+  if (emp.permissions !== undefined && emp.permissions !== null) {
+    perms = authNormalizePermissions(emp.permissions);
+  }
+  if (perms.length === 0 && emp.role) {
+    perms = [...(AUTH_ROLE_PERMISSIONS[emp.role] || [])];
+  }
   const empData = {
-    name: emp.name, password: emp.password, role: emp.role || 'employee',
-    active: emp.active !== false, createdAt: emp.createdAt || new Date().toISOString(),
-    employeeId: emp.employeeId || emp.username
+    username: emp.username,
+    name: emp.name || '',
+    password: emp.password || '',
+    role: emp.role || 'employee',
+    active: emp.active !== false,
+    permissions: perms,
+    employeeId: emp.employeeId || emp.username,
+    createdAt: emp.createdAt || new Date().toISOString()
   };
   if (emp.plainPassword) empData.plainPassword = emp.plainPassword;
-  if (emp.permissions) empData.permissions = emp.permissions;
+
+  // Save to main Firebase
   if (!AUTH_IS_OFFLINE && AUTH_DB) {
-    try { await withTimeout(AUTH_DB.ref('employees/' + key).update(empData), 1000); } catch (e) { /* save locally only */ }
+    try {
+      await withTimeout(AUTH_DB.ref('employees/' + key).set(empData), 5000);
+    } catch (e) {
+      console.warn('[AUTH] Save to main DB failed:', e.message);
+    }
   }
-  const local = authGetLocalEmployees();
+
+  // Update local copy
+  let local = authDeduplicateLocalEmployees();
   const idx = local.findIndex(e => e.username === emp.username);
   if (idx >= 0) local[idx] = { ...local[idx], ...empData };
   else local.push(empData);
   authSaveLocalEmployees(local);
-  localStorage.setItem('lotus_system_modified', 'true');
 
+  // Update active session if same user
+  const curSession = authGetSession();
+  if (curSession && curSession.username === emp.username) {
+    authSetSession({ ...curSession, ...empData });
+  }
+
+  // Remove from deleted list if present
   const deleted = JSON.parse(localStorage.getItem('lotus_deleted_employees') || '[]');
   const dIdx = deleted.indexOf(emp.username);
-  if (dIdx >= 0) {
-    deleted.splice(dIdx, 1);
-    localStorage.setItem('lotus_deleted_employees', JSON.stringify(deleted));
-  }
+  if (dIdx >= 0) deleted.splice(dIdx, 1);
+  localStorage.setItem('lotus_deleted_employees', JSON.stringify(deleted));
+  localStorage.setItem('lotus_system_modified', 'true');
+
+  // Dispatch event to notify UI about permission update
+  window.dispatchEvent(new CustomEvent('permissionsUpdated', { detail: { username: emp.username, permissions: perms } }));
+  return true;
 }
 
 async function authDeleteEmployeeFromDb(username) {
+  if (!username || username === 'boles') return;
   const key = username.replace(/[.#$\/\[\]]/g, '_');
   if (!AUTH_IS_OFFLINE && AUTH_DB) {
-    try { await withTimeout(AUTH_DB.ref('employees/' + key).remove(), 1000); } catch (e) { }
+    try { await withTimeout(AUTH_DB.ref('employees/' + key).remove(), 3000); } catch (e) {}
   }
-  const local = authGetLocalEmployees();
-  const filtered = local.filter(e => e.username !== username);
-  authSaveLocalEmployees(filtered);
-  
+  const local = authDeduplicateLocalEmployees();
+  authSaveLocalEmployees(local.filter(e => e.username !== username));
   const deleted = JSON.parse(localStorage.getItem('lotus_deleted_employees') || '[]');
-  if (!deleted.includes(username)) {
-    deleted.push(username);
-    localStorage.setItem('lotus_deleted_employees', JSON.stringify(deleted));
-  }
+  if (!deleted.includes(username)) deleted.push(username);
+  localStorage.setItem('lotus_deleted_employees', JSON.stringify(deleted));
   localStorage.setItem('lotus_system_modified', 'true');
 }
 
+// ========== Password Change ==========
+window.changeMyPassword = async function (oldPassword, newPassword) {
+  const user = AUTH_CURRENT_USER || authGetSession();
+  if (!user) throw new Error('لم يتم تسجيل الدخول');
+  const employees = await authGetAllEmployees();
+  const emp = employees.find(e => e.username === user.username);
+  if (!emp) throw new Error('المستخدم غير موجود');
+  if (emp.password !== authHashPassword(oldPassword)) throw new Error('كلمة المرور القديمة غير صحيحة');
+
+  emp.password = authHashPassword(newPassword);
+  emp.plainPassword = newPassword;
+  await authSaveEmployeeToDb(emp);
+  // Update session
+  user.password = emp.password;
+  authSetSession(user);
+  await authLogActivity('change_password', 'user', user.username, user.name, 'تم تغيير كلمة المرور', authDetectSystem());
+  return true;
+};
+
+window.adminChangePassword = async function (username, newPassword) {
+  const user = AUTH_CURRENT_USER || authGetSession();
+  if (!user || user.role !== 'admin') throw new Error('صلاحيات غير كافية');
+  const employees = await authGetAllEmployees();
+  const emp = employees.find(e => e.username === username);
+  if (!emp) throw new Error('الموظف غير موجود');
+
+  emp.password = authHashPassword(newPassword);
+  emp.plainPassword = newPassword;
+  await authSaveEmployeeToDb(emp);
+  await authLogActivity('admin_change_password', 'employee', username, emp.name, 'قام المسؤول بتغيير كلمة المرور', authDetectSystem());
+  return true;
+};
+
+// ========== Activity Log ==========
 function authDetectSystem() {
   try {
     const path = window.location.pathname;
@@ -255,34 +441,88 @@ async function authLogActivity(action, targetType, targetId, targetName, details
     const user = AUTH_CURRENT_USER || authGetSession();
     if (user) AUTH_CURRENT_USER = user;
     const entry = {
-      action, targetType: targetType || 'unknown', targetId: targetId || '',
-      targetName: targetName || '', details: details || '',
+      action,
+      targetType: targetType || 'unknown',
+      targetId: targetId || '',
+      targetName: targetName || '',
+      details: details || '',
       system: system || authDetectSystem(),
       employeeUsername: AUTH_CURRENT_USER ? AUTH_CURRENT_USER.username : 'unknown',
       employeeName: AUTH_CURRENT_USER ? AUTH_CURRENT_USER.name : 'غير معروف',
       timestamp: new Date().toISOString()
     };
     if (!AUTH_IS_OFFLINE && AUTH_DB) {
-      try { await AUTH_DB.ref('activityLog').push(entry); } catch (e) { }
+      try { await AUTH_DB.ref('activityLog').push(entry); } catch (e) {}
     }
     const local = JSON.parse(localStorage.getItem('lotus_activity_log') || '[]');
     local.unshift(entry);
     if (local.length > 1000) local.length = 1000;
     localStorage.setItem('lotus_activity_log', JSON.stringify(local));
-
     if (action !== 'login' && action !== 'logout' && action !== 'access') {
       localStorage.setItem('lotus_system_modified', 'true');
     }
   } catch (e) { console.error('authLogActivity error:', e); }
 }
 
-// ============================
-// SYSTEM-WIDE AUTH FUNCTIONS
-// ============================
+// ==================== SYSTEM ACCESS PERMISSIONS (loutsresults) ====================
+window.loadSystemPermissions = async function () {
+  if (!PERMISSIONS_DB) return false;
+  try {
+    const snap = await withTimeout(PERMISSIONS_DB.ref('systemAccessPermissions').once('value'), 3000);
+    if (!snap.exists()) return false;
+    const data = snap.val();
+    if (!data || !data.data || !Array.isArray(data.data)) return false;
+    window.SYSTEM_ACCESS_PERMISSIONS = data.data;
+    window.ALL_PERMISSIONS = window.FUNCTIONAL_PERMISSIONS.concat(window.SYSTEM_ACCESS_PERMISSIONS);
+    window.dispatchEvent(new CustomEvent('systemPermissionsLoaded', { detail: window.SYSTEM_ACCESS_PERMISSIONS }));
+    return true;
+  } catch (e) { return false; }
+};
 
+window.saveSystemAccessPermissions = async function () {
+  if (!PERMISSIONS_DB) return false;
+  try {
+    await withTimeout(PERMISSIONS_DB.ref('systemAccessPermissions').set({
+      version: Date.now(),
+      lastModified: new Date().toISOString(),
+      updatedBy: 'system',
+      data: window.SYSTEM_ACCESS_PERMISSIONS
+    }), 3000);
+    return true;
+  } catch (e) { return false; }
+};
+
+window.addSystemAccessPermission = async function (id, name, icon, color) {
+  if (window.SYSTEM_ACCESS_PERMISSIONS.some(p => p.id === id)) return false;
+  window.SYSTEM_ACCESS_PERMISSIONS.push({ id, name, icon, color });
+  window.ALL_PERMISSIONS = window.FUNCTIONAL_PERMISSIONS.concat(window.SYSTEM_ACCESS_PERMISSIONS);
+  await window.saveSystemAccessPermissions();
+  return true;
+};
+
+window.removeSystemAccessPermission = async function (id) {
+  window.SYSTEM_ACCESS_PERMISSIONS = window.SYSTEM_ACCESS_PERMISSIONS.filter(p => p.id !== id);
+  window.ALL_PERMISSIONS = window.FUNCTIONAL_PERMISSIONS.concat(window.SYSTEM_ACCESS_PERMISSIONS);
+  await window.saveSystemAccessPermissions();
+  return true;
+};
+
+// ========== UI Helper: Set checkboxes for an employee (call this whenever you load an employee) ==========
+window.renderEmployeePermissions = function (employee) {
+  if (!employee) return;
+  const perms = authNormalizePermissions(employee.permissions);
+  document.querySelectorAll('.emp-perm-checkbox').forEach(cb => {
+    const permId = cb.getAttribute('data-perm-id');
+    if (permId) {
+      cb.checked = perms.includes(permId);
+    }
+  });
+};
+
+// ========== LOGIN MODAL ==========
 window.LOGIN_MODAL_OPEN = false;
 
-window.openLoginModal = function() {
+window.openLoginModal = function () {
   const errEl = document.getElementById('login-error');
   if (errEl) errEl.style.display = 'none';
   const u = document.getElementById('login-username');
@@ -295,158 +535,147 @@ window.openLoginModal = function() {
   setTimeout(() => { if (u) u.focus(); }, 100);
 };
 
-window.closeLoginModal = function() {
+window.closeLoginModal = function () {
   const modal = document.getElementById('login-modal');
   if (modal) modal.classList.remove('active');
   window.LOGIN_MODAL_OPEN = false;
 };
 
-window.submitLogin = async function() {
-  const username = document.getElementById('login-username').value.trim();
-  const passwordInput = document.getElementById('login-password');
-  const password = passwordInput ? passwordInput.value.trim() : '';
+window.submitLogin = async function () {
+  const usernameEl = document.getElementById('login-username');
+  const passwordEl = document.getElementById('login-password');
+  const username = usernameEl ? usernameEl.value.trim() : '';
+  const password = passwordEl ? passwordEl.value.trim() : '';
   const errEl = document.getElementById('login-error');
+
   if (!username || !password) {
     if (errEl) { errEl.textContent = 'يرجى إدخال اسم المستخدم وكلمة المرور'; errEl.style.display = 'block'; }
     return;
   }
   if (errEl) errEl.style.display = 'none';
-  
+
   try {
     let emp = null;
-    let fromFirebase = false;
+    const hashedInput = authHashPassword(password);
 
-    // First try Firebase for the latest data (including updated permissions/password)
+    // Try main Firebase
     if (!AUTH_IS_OFFLINE && AUTH_DB) {
       try {
-        const snap = await withTimeout(AUTH_DB.ref('employees/' + username.replace(/[.#$\/\[\]]/g, '_')).once('value'), 1500);
+        const snap = await withTimeout(AUTH_DB.ref('employees/' + username.replace(/[.#$\/\[\]]/g, '_')).once('value'), 5000);
         if (snap.exists()) {
           const data = snap.val();
-          if (data.password === authHashPassword(password) && data.active !== false) {
-            emp = { username, name: data.name, role: data.role, employeeId: data.employeeId || username, permissions: data.permissions };
-            fromFirebase = true;
-            // Sync local storage with latest data
-            const local = authGetLocalEmployees();
-            const idx = local.findIndex(e => e.username === username);
-            if (idx >= 0) local[idx] = { ...local[idx], ...data };
-            else local.push({ username, ...data });
-            authSaveLocalEmployees(local);
+          if (data.password === hashedInput && data.active !== false) {
+            let perms = authNormalizePermissions(data.permissions);
+            if (perms.length === 0 && data.role) perms = [...(AUTH_ROLE_PERMISSIONS[data.role] || [])];
+            emp = { username, name: data.name, role: data.role, employeeId: data.employeeId || username, permissions: perms };
           }
         }
-      } catch (fbErr) { /* fallback to local */ }
+      } catch (fbErr) {}
     }
-    
-    // If Firebase offline/failed, fallback to localStorage
-    if (!emp && !fromFirebase) {
-      const local = authGetLocalEmployees();
-      const localData = local.find(e => e.username === username && e.password === authHashPassword(password) && e.active !== false);
-      if (localData) {
-        emp = { username: localData.username, name: localData.name, role: localData.role, employeeId: localData.employeeId || localData.username, permissions: localData.permissions };
+
+    // Fallback local
+    if (!emp) {
+      const local = authDeduplicateLocalEmployees();
+      const match = local.find(e => e.username === username && e.password === hashedInput && e.active !== false);
+      if (match) {
+        let perms = authNormalizePermissions(match.permissions);
+        if (perms.length === 0 && match.role) perms = [...(AUTH_ROLE_PERMISSIONS[match.role] || [])];
+        emp = { username: match.username, name: match.name, role: match.role, employeeId: match.employeeId || match.username, permissions: perms };
       }
     }
-    
-// // First-time setup: default admin
-// if (!emp) {
-//   const hasEmps = await authCheckHasAnyEmployee();
-//   if (!hasEmps && username === 'admin' && password === 'admin') {
-//     emp = { username: 'admin', name: 'مدير النظام', role: 'admin', employeeId: 'admin' };
-//     await authSaveEmployeeToDb({ username: 'admin', name: 'مدير النظام', password: authHashPassword('admin'), role: 'admin', active: true, createdAt: new Date().toISOString(), employeeId: 'admin' });
-//   }
-// }
-    
+
     if (emp) {
+      if (emp.username === 'boles') { emp.role = 'admin'; emp.permissions = [...window.ADMIN_FIXED_PERMISSIONS]; }
       authSetSession(emp);
       await authLogActivity('login', 'system', emp.username, emp.name, '');
       window.closeLoginModal();
       if (window.AUTH_ON_LOGIN_CALLBACK) window.AUTH_ON_LOGIN_CALLBACK(emp);
     } else {
       if (errEl) { errEl.textContent = 'اسم المستخدم أو كلمة المرور غير صحيحة'; errEl.style.display = 'block'; }
-      if (passwordInput) {
-        passwordInput.value = '';
-        passwordInput.focus();
-      }
+      if (passwordEl) { passwordEl.value = ''; passwordEl.focus(); }
     }
   } catch (e) {
     if (errEl) { errEl.textContent = 'خطأ: ' + e.message; errEl.style.display = 'block'; }
-    if (passwordInput) {
-      passwordInput.value = '';
-      passwordInput.focus();
-    }
+    if (passwordEl) { passwordEl.value = ''; passwordEl.focus(); }
   }
 };
 
-window.logoutUser = function() {
-  if (AUTH_CURRENT_USER) {
-    authLogActivity('logout', 'system', AUTH_CURRENT_USER.username, AUTH_CURRENT_USER.name, '');
-  }
+window.logoutUser = function () {
+  if (AUTH_CURRENT_USER) authLogActivity('logout', 'system', AUTH_CURRENT_USER.username, AUTH_CURRENT_USER.name, '');
   authClearSession();
   if (window.AUTH_ON_LOGOUT_CALLBACK) window.AUTH_ON_LOGOUT_CALLBACK();
 };
 
-window.getCurrentUser = function() { return AUTH_CURRENT_USER || authGetSession(); };
+// ========== Expose Globals ==========
+window.getCurrentUser = () => AUTH_CURRENT_USER || authGetSession();
 window.hasPermission = authHasPermission;
+window.authNormalizePermissions = authNormalizePermissions;
 window.authGetAllEmployees = authGetAllEmployees;
 window.authSaveEmployeeToDb = authSaveEmployeeToDb;
 window.authDeleteEmployeeFromDb = authDeleteEmployeeFromDb;
 window.authHashPassword = authHashPassword;
+window.authLogActivity = authLogActivity;
+window.AUTH_ROLE_NAMES = AUTH_ROLE_NAMES;
 window.AUTH_ROLE_PERMISSIONS = AUTH_ROLE_PERMISSIONS;
 window.AUTH_DB = AUTH_DB;
 window.WITHDRAWAL_DB = WITHDRAWAL_DB;
 window.AUTH_IS_OFFLINE = AUTH_IS_OFFLINE;
+window.PERMISSIONS_DB = PERMISSIONS_DB;
 
-// Initialize session on script load
+// ========== Session Init ==========
 AUTH_CURRENT_USER = authGetSession();
 
-// ============================
-// AUTO-SEED EMPLOYEES
-// ============================
-(function() {
-  var hash8520 = (function(){ let h=0; '8520'.split('').forEach(function(c){h=((h<<5)-h)+c.charCodeAt(0);h=h&h;}); return 'h'+Math.abs(h).toString(36); })();
-  var hash123456 = (function(){ let h=0; '123456'.split('').forEach(function(c){h=((h<<5)-h)+c.charCodeAt(0);h=h&h;}); return 'h'+Math.abs(h).toString(36); })();
-  var now = new Date().toISOString();
-  var allPerms = ['view','create','edit','delete','manage_employees','manage_settings','view_logs','manage_delivery','upload_files'];
-  var employees = [
-    { username: 'boles', name: 'مهندس بولس سمير', password: hash8520, role: 'admin', permissions: allPerms, active: true, createdAt: now, employeeId: 'boles' },
-
-    { username: 'safy', name: 'صفاء', password: hash123456, role: 'employee', active: true, createdAt: now, employeeId: 'safy' },
-    { username: 'mai', name: 'مي', password: hash123456, role: 'employee', active: true, createdAt: now, employeeId: 'mai' },
-    { username: 'monica', name: 'مونيكا', password: hash123456, role: 'employee', active: true, createdAt: now, employeeId: 'monica' },
-    { username: 'ahmed', name: 'أحمد', password: hash123456, role: 'employee', active: true, createdAt: now, employeeId: 'ahmed' },
-    { username: 'mahmod', name: 'محمود', password: hash123456, role: 'employee', active: true, createdAt: now, employeeId: 'mahmod' },
-    { username: 'peter', name: 'بيتر', password: hash123456, role: 'employee', active: true, createdAt: now, employeeId: 'peter' }
-  ];
-  // Only override if not exists or if we need to ensure these are present
-  var existingStr = localStorage.getItem('lotus_employees');
-  var existing = existingStr ? JSON.parse(existingStr) : [];
-  var seeded = localStorage.getItem('lotus_seed_done');
-  
-  if (!seeded) {
-    employees.forEach(function(emp) {
-      var ex = existing.find(function(e) { return e.username === emp.username; });
-      if (!ex) {
-        existing.push(emp);
-      }
-    });
-    localStorage.setItem('lotus_seed_done', 'true');
-  }
-
-  // Ensure boles exists (so the admin isn't permanently deleted)
-  var bolesEx = existing.find(function(e) { return e.username === 'boles'; });
-  if (!bolesEx) {
-    existing.push(employees[0]); // boles is index 0
-  }
-
-  // Comprehensive deduplication: keep only the first occurrence of each username
+// ========== One-time Seed (if main DB empty) ==========
+let _seedDone = false;
+(async function seedIfEmpty() {
+  if (_seedDone || AUTH_IS_OFFLINE || !AUTH_DB) return;
   try {
-    var _empsAll = JSON.parse(localStorage.getItem('lotus_employees') || '[]');
-    var seen = {};
-    var uniq = _empsAll.filter(function(e){
-      if (seen[e.username]) return false;
-      seen[e.username] = true;
-      return true;
-    });
-    if (uniq.length !== _empsAll.length) {
-      localStorage.setItem('lotus_employees', JSON.stringify(uniq));
+    const snap = await withTimeout(AUTH_DB.ref('employees').once('value'), 5000).catch(() => null);
+    if (snap && snap.exists() && snap.val() && Object.keys(snap.val()).length > 0) {
+      _seedDone = true;
+      return;
     }
-  } catch(e) {}
+    const hash8520 = authHashPassword('8520');
+    const hash123456 = authHashPassword('123456');
+    const now = new Date().toISOString();
+    const seedData = {
+      boles: { username:'boles', name:'مهندس بولس سمير', password:hash8520, role:'admin', permissions:[...window.ADMIN_FIXED_PERMISSIONS], active:true, createdAt:now, employeeId:'boles' },
+      somya: { username:'somya', name:'سمية', password:hash123456, role:'admin', permissions:[...window.ADMIN_FIXED_PERMISSIONS], active:true, createdAt:now, employeeId:'somya' },
+      safy: { username:'safy', name:'صفاء', password:hash123456, role:'employee', permissions:[...window.DEFAULT_EMPLOYEE_PERMISSIONS], active:true, createdAt:now, employeeId:'safy' },
+      mai: { username:'mai', name:'مي', password:hash123456, role:'employee', permissions:[...window.DEFAULT_EMPLOYEE_PERMISSIONS], active:true, createdAt:now, employeeId:'mai' },
+      monica: { username:'monica', name:'مونيكا', password:hash123456, role:'employee', permissions:[...window.DEFAULT_EMPLOYEE_PERMISSIONS], active:true, createdAt:now, employeeId:'monica' },
+      ahmed: { username:'ahmed', name:'أحمد', password:hash123456, role:'employee', permissions:[...window.DEFAULT_EMPLOYEE_PERMISSIONS], active:true, createdAt:now, employeeId:'ahmed' },
+      mahmod: { username:'mahmod', name:'محمود', password:hash123456, role:'employee', permissions:[...window.DEFAULT_EMPLOYEE_PERMISSIONS], active:true, createdAt:now, employeeId:'mahmod' },
+      peter: { username:'peter', name:'بيتر', password:hash123456, role:'employee', permissions:[...window.DEFAULT_EMPLOYEE_PERMISSIONS], active:true, createdAt:now, employeeId:'peter' },
+      omar: { username:'omar', name:'عمر', password:hash123456, role:'employee', permissions:['view','access_certificate'], active:true, createdAt:now, employeeId:'omar' }
+    };
+    await AUTH_DB.ref('employees').set(seedData);
+    authSaveLocalEmployees(Object.values(seedData));
+    console.log('[AUTH] Seed completed');
+    _seedDone = true;
+  } catch (e) { console.warn('[AUTH] Seed skipped:', e.message); }
 })();
+
+// Auto-load system permissions from loutsresults
+if (!AUTH_IS_OFFLINE && PERMISSIONS_DB) window.loadSystemPermissions();
+
+console.log('[AUTH] ✅ Module fully loaded and ready');
+
+/*
+   ================== USAGE INSTRUCTIONS ==================
+   1. Include this script before any other app logic.
+   2. To edit employee permissions:
+      a. Fetch employee: const emp = (await authGetAllEmployees()).find(e => e.username === username);
+      b. Render checkboxes: window.renderEmployeePermissions(emp);
+         (Make sure checkboxes have class "emp-perm-checkbox" and attribute "data-perm-id" with the permission id.)
+      c. When saving, gather checked ids:
+         const selected = [];
+         document.querySelectorAll('.emp-perm-checkbox:checked').forEach(cb => selected.push(cb.dataset.permId));
+         emp.permissions = selected;
+         await authSaveEmployeeToDb(emp);
+      d. Checkboxes will stay checked because renderEmployeePermissions sets them from emp.permissions.
+   3. Password change:
+      - Employee self: await changeMyPassword(oldPass, newPass);
+      - Admin resets: await adminChangePassword(targetUsername, newPass);
+   4. System permissions list (admin side) is automatically loaded from loutsresults.
+*/

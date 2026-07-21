@@ -222,8 +222,20 @@
             border: 1px solid rgba(139,92,246,0.3);
         }
 
+        /* Card 4 – الخدمات المكتبية (Cyan) */
+        .system-card.card-cyan {
+            background: linear-gradient(145deg, #1a1d2e 0%, #102e3a 100%);
+            border: 1px solid rgba(6,182,212,0.25);
+            box-shadow: 0 4px 20px rgba(6,182,212,0.08);
+        }
+        .card-cyan .card-icon { background: rgba(6,182,212,0.15); color: var(--accent-cyan); }
+        .card-cyan .card-badge {
+            background: rgba(6,182,212,0.12); color: var(--accent-cyan);
+            border: 1px solid rgba(6,182,212,0.3);
+        }
+
         /* Floating glow per card */
-        .card-blue::after, .card-emerald::after, .card-violet::after {
+        .card-blue::after, .card-emerald::after, .card-violet::after, .card-cyan::after {
             content: '';
             position: absolute;
             width: 200px; height: 200px;
@@ -236,6 +248,7 @@
         .card-blue::after { background: radial-gradient(circle, rgba(59,130,246,0.12), transparent 70%); }
         .card-emerald::after { background: radial-gradient(circle, rgba(16,185,129,0.12), transparent 70%); }
         .card-violet::after { background: radial-gradient(circle, rgba(139,92,246,0.12), transparent 70%); }
+        .card-cyan::after { background: radial-gradient(circle, rgba(6,182,212,0.12), transparent 70%); }
         .system-card:hover::after { opacity: 1; }
 
         .system-card:hover {
@@ -245,6 +258,7 @@
         .card-blue:hover { border-color: rgba(59,130,246,0.5); box-shadow: 0 20px 50px rgba(59,130,246,0.15); }
         .card-emerald:hover { border-color: rgba(16,185,129,0.5); box-shadow: 0 20px 50px rgba(16,185,129,0.15); }
         .card-violet:hover { border-color: rgba(139,92,246,0.5); box-shadow: 0 20px 50px rgba(139,92,246,0.15); }
+        .card-cyan:hover { border-color: rgba(6,182,212,0.5); box-shadow: 0 20px 50px rgba(6,182,212,0.15); }
 
         .system-card:active { transform: translateY(-3px) scale(0.99); }
 
@@ -299,6 +313,7 @@
         .card-blue::before { --shine-color: rgba(59,130,246,0.5); }
         .card-emerald::before { --shine-color: rgba(16,185,129,0.5); }
         .card-violet::before { --shine-color: rgba(139,92,246,0.5); }
+        .card-cyan::before { --shine-color: rgba(6,182,212,0.5); }
         @keyframes shimmerMove {
             0% { background-position: 200% 50%; }
             100% { background-position: -200% 50%; }
@@ -495,7 +510,7 @@
         </div>
 
         <div class="systems-grid">
-            <a href="#" class="system-card card-blue" onclick="requireAuthAndNavigate(event, 'systems/file-management/index.html')">
+            <a href="#" class="system-card card-blue" id="file-mgmt-card" style="display:none;" onclick="requireAuthAndNavigate(event, 'systems/file-management/index.html')">
                 <div class="card-icon"><i class="fas fa-folder-tree"></i></div>
                 <h3 class="card-title-text">إدارة ملفات الطلاب</h3>
                 <p class="card-desc">بحث، مراجعة تسليم المستندات، تقارير النواقص، رفع مجمع للملفات، وإدارة كاملة لبيانات الطلاب.</p>
@@ -505,7 +520,7 @@
                 </div>
             </a>
 
-            <a href="#" class="system-card card-emerald" onclick="requireAuthAndNavigate(event, 'systems/file-withdrawal/index.html')">
+            <a href="#" class="system-card card-emerald" id="file-withdrawal-card" style="display:none;" onclick="requireAuthAndNavigate(event, 'systems/file-withdrawal/index.html')">
                 <div class="card-icon"><i class="fas fa-file-export"></i></div>
                 <h3 class="card-title-text">إدارة سحب الملفات</h3>
                 <p class="card-desc">تسجيل طلبات سحب الملفات، متابعة الدفع، تقارير واستعلامات، وإدارة كليات الجامعة.</p>
@@ -515,12 +530,22 @@
                 </div>
             </a>
 
-            <a href="#" class="system-card card-violet" onclick="localStorage.removeItem('cert_last_student'); requireAuthAndNavigate(event, 'systems/certificate-calc/index.html')">
+            <a href="#" class="system-card card-violet" id="cert-calc-card" style="display:none;" onclick="localStorage.removeItem('cert_last_student'); requireAuthAndNavigate(event, 'systems/certificate-calc/index.html')">
                 <div class="card-icon"><i class="fas fa-calculator"></i></div>
                 <h3 class="card-title-text">حساب الشهادات</h3>
                 <p class="card-desc">حساب النسبة المئوية للشهادات الأمريكية، الثانوية، الخليج، ليبيا، الأردن، والأزهرية.</p>
                 <div class="card-footer-row">
                     <span class="card-badge"><i class="fas fa-percentage me-1"></i> حساب معادلة</span>
+                    <span class="card-arrow"><i class="fas fa-arrow-left"></i></span>
+                </div>
+            </a>
+
+            <a href="#" class="system-card card-cyan" id="desk-services-card" style="display:none;" onclick="requireAuthAndNavigate(event, 'systems/desk-services/index.html')">
+                <div class="card-icon"><i class="fas fa-user-graduate"></i></div>
+                <h3 class="card-title-text">الخدمات الطلابية</h3>
+                <p class="card-desc">تصفح وإدارة كافة الخدمات الطلابية، طباعة النماذج والمستندات الورقية، وتحميل الأوراق مباشرة.</p>
+                <div class="card-footer-row" id="desk-services-footer-row">
+                    <span class="card-badge"><i class="fas fa-user-graduate me-1"></i> الخدمات الطلابية</span>
                     <span class="card-arrow"><i class="fas fa-arrow-left"></i></span>
                 </div>
             </a>
@@ -605,25 +630,71 @@
 <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
 <script src="auth.js"></script>
 <script>
+    function applySystemCardPermissions(user) {
+        if (!user) return;
+        const isBoles = user.username === 'boles' || user.role === 'admin';
+
+        const cardMgmt = document.getElementById('file-mgmt-card');
+        if (cardMgmt) {
+            cardMgmt.style.display = (isBoles || (window.hasPermission && window.hasPermission('access_file_management'))) ? 'block' : 'none';
+        }
+
+        const cardWithdrawal = document.getElementById('file-withdrawal-card');
+        if (cardWithdrawal) {
+            cardWithdrawal.style.display = (isBoles || (window.hasPermission && window.hasPermission('access_withdrawal'))) ? 'block' : 'none';
+        }
+
+        const cardCert = document.getElementById('cert-calc-card');
+        if (cardCert) {
+            cardCert.style.display = (isBoles || (window.hasPermission && window.hasPermission('access_certificate'))) ? 'block' : 'none';
+        }
+
+        const cardDesk = document.getElementById('desk-services-card');
+        if (cardDesk) {
+            cardDesk.style.display = (isBoles || (window.hasPermission && window.hasPermission('access_desk_services'))) ? 'block' : 'none';
+        }
+
+        const cardPerm = document.getElementById('permissions-card');
+        if (cardPerm) {
+            cardPerm.style.display = (user.username === 'boles') ? 'block' : 'none';
+        }
+    }
+
     function requireAuthAndNavigate(event, url) {
         event.preventDefault();
         const user = window.getCurrentUser();
-        if (user) {
-            let systemName = 'نظام غير معروف';
-            if (url.indexOf('file-management') !== -1) systemName = 'نظام الملفات';
-            else if (url.indexOf('file-withdrawal') !== -1) systemName = 'نظام السحب';
-            else if (url.indexOf('certificate-calc') !== -1) systemName = 'حساب الشهادات';
-            else if (url.indexOf('permissions') !== -1) systemName = 'نظام الصلاحيات';
-
-            if (window.authLogActivity) {
-                window.authLogActivity('access', systemName, '', '', `فتح ${systemName}`, systemName);
-            }
-            setTimeout(() => {
-                window.location.href = url;
-            }, 100);
-        } else {
+        if (!user) {
             openLoginModal();
+            return;
         }
+
+        const isBoles = user.username === 'boles' || user.role === 'admin';
+        let permNeeded = null;
+        let systemName = 'نظام غير معروف';
+
+        if (url.indexOf('file-management') !== -1) { permNeeded = 'access_file_management'; systemName = 'نظام الملفات'; }
+        else if (url.indexOf('file-withdrawal') !== -1) { permNeeded = 'access_withdrawal'; systemName = 'نظام السحب والإيداع'; }
+        else if (url.indexOf('certificate-calc') !== -1) { permNeeded = 'access_certificate'; systemName = 'حساب الشهادات'; }
+        else if (url.indexOf('desk-services') !== -1) { permNeeded = 'access_desk_services'; systemName = 'الخدمات المكتبية'; }
+        else if (url.indexOf('permissions') !== -1) {
+            if (user.username !== 'boles') {
+                alert('🔒 هذه الصفحة مخصصة لمدير النظام الأساسي (boles) فقط.');
+                return;
+            }
+            systemName = 'إدارة الصلاحيات والسجل';
+        }
+
+        if (!isBoles && permNeeded && window.hasPermission && !window.hasPermission(permNeeded)) {
+            alert('🔒 ليس لديك صلاحية للدخول إلى (' + systemName + '). يرجى مراجعة مدير النظام.');
+            return;
+        }
+
+        if (window.authLogActivity) {
+            window.authLogActivity('access', systemName, '', '', `فتح ${systemName}`, systemName);
+        }
+        setTimeout(() => {
+            window.location.href = url;
+        }, 100);
     }
 
     window.AUTH_ON_LOGIN_CALLBACK = function(user) {
@@ -636,11 +707,8 @@
         document.getElementById('user-name').textContent = user.name;
         document.getElementById('user-role').textContent = window.AUTH_ROLE_NAMES ? AUTH_ROLE_NAMES[user.role] : user.role;
         
-        if (user && user.username === 'boles') {
-            document.getElementById('permissions-card').style.display = 'block';
-        } else {
-            document.getElementById('permissions-card').style.display = 'none';
-        }
+        applySystemCardPermissions(user);
+        setTimeout(() => { checkDeskServicesUpdates(); }, 1000);
     };
 
     window.AUTH_ON_LOGOUT_CALLBACK = function() {
@@ -668,9 +736,8 @@
             document.getElementById('login-prompt').style.display = 'none';
             document.getElementById('user-name').textContent = session.name;
             document.getElementById('user-role').textContent = AUTH_ROLE_NAMES[session.role] || session.role;
-            if (session && session.username === 'boles') {
-                document.getElementById('permissions-card').style.display = 'block';
-            }
+            applySystemCardPermissions(session);
+            setTimeout(() => { checkDeskServicesUpdates(); }, 1500);
         } else {
             document.getElementById('login-overlay').style.display = 'flex';
             document.getElementById('systems-container').style.display = 'none';
@@ -678,6 +745,81 @@
             if (floatBtn) floatBtn.style.display = 'none';
         }
     });
+
+    function checkDeskServicesUpdates() {
+        const db = window.AUTH_DB;
+        if (!db) return;
+        db.ref('deskServices').on('value', snap => {
+            const services = snap.val();
+            if (!services) return;
+            const user = window.getCurrentUser();
+            const username = user ? user.username : 'guest';
+            const seenKey = 'lotus_seen_updates_' + username;
+            let seenUpdates = {};
+            try { seenUpdates = JSON.parse(localStorage.getItem(seenKey) || '{}'); } catch(e) {}
+            // Clean old entries (> 7 days)
+            const now = Date.now();
+            Object.keys(seenUpdates).forEach(k => { if (now - seenUpdates[k] > 7 * 24 * 60 * 60 * 1000) delete seenUpdates[k]; });
+
+            let recentUpdate = null;
+            let maxTime = 0;
+            Object.keys(services).forEach(key => {
+                const s = services[key];
+                if (s.lastUpdated) {
+                    const t = new Date(s.lastUpdated).getTime();
+                    const diff = now - t;
+                    if (diff < 48 * 60 * 60 * 1000 && t > maxTime) {
+                        maxTime = t;
+                        recentUpdate = s;
+                    }
+                }
+            });
+
+            let badgeContainer = document.getElementById('desk-services-recent-update-badge');
+            if (recentUpdate) {
+                const updateId = recentUpdate.id + '_' + recentUpdate.lastUpdated;
+                const alreadySeen = seenUpdates[updateId];
+
+                if (!alreadySeen) {
+                    if (!document.getElementById('pulse-badge-style')) {
+                        const style = document.createElement('style');
+                        style.id = 'pulse-badge-style';
+                        style.textContent = `
+                            @keyframes pulseBadge {
+                                0% { transform: scale(1); opacity: 1; }
+                                50% { transform: scale(1.03); opacity: 0.95; box-shadow: 0 4px 15px rgba(244, 63, 94, 0.4); }
+                                100% { transform: scale(1); opacity: 1; }
+                            }
+                        `;
+                        document.head.appendChild(style);
+                    }
+
+                    const text = `تعديل جديد: تم تحديث ${recentUpdate.updatedPart || 'الخدمة'} في (${recentUpdate.name})`;
+                    if (!badgeContainer) {
+                        badgeContainer = document.createElement('div');
+                        badgeContainer.id = 'desk-services-recent-update-badge';
+                        badgeContainer.style.cssText = 'background: linear-gradient(135deg, var(--accent-rose), var(--accent-amber)); color: #fff; padding: 6px 12px; border-radius: 8px; font-size: 0.72rem; font-weight: 800; margin-top: 12px; display: inline-flex; align-items: center; gap: 6px; box-shadow: 0 4px 12px rgba(244, 63, 94, 0.25); animation: pulseBadge 2s infinite; font-family: "Tajawal", sans-serif; transition: all 0.3s;';
+                        
+                        const card = document.getElementById('desk-services-card');
+                        if (card) {
+                            const desc = card.querySelector('.card-desc');
+                            if (desc) desc.parentNode.insertBefore(badgeContainer, desc.nextSibling);
+                        }
+                    }
+                    badgeContainer.innerHTML = `<i class="fas fa-bolt" style="color:#fff;"></i> ${text}`;
+                    badgeContainer.style.display = 'inline-flex';
+
+                    // Mark as seen for this user
+                    seenUpdates[updateId] = now;
+                    try { localStorage.setItem(seenKey, JSON.stringify(seenUpdates)); } catch(e) {}
+                } else {
+                    if (badgeContainer) badgeContainer.style.display = 'none';
+                }
+            } else {
+                if (badgeContainer) badgeContainer.style.display = 'none';
+            }
+        });
+    }
 
 </script>
 
@@ -992,6 +1134,64 @@ async function closeAndBackup() {
             };
         });
 
+        function isStaffEmployee(name) {
+            if (!name) return false;
+            const str = String(name).trim();
+            if (!str) return false;
+            if (str === 'مدير النظام' || str === 'المدير العام' || str.toLowerCase() === 'admin' || str.toLowerCase() === 'boles' || str === 'Super Admin') {
+                return false;
+            }
+            return true;
+        }
+
+        function findWithdrawalStaff(w, logs) {
+            let candidates = [
+                w.staffName,
+                w.processedBy,
+                w.createdBy,
+                w.employeeName,
+                w.employeeUsername,
+                w.user,
+                w.staff
+            ];
+
+            for (let c of candidates) {
+                if (isStaffEmployee(c)) return c;
+            }
+
+            const wCode = String(w.studentCode || '').trim();
+            const wName = String(w.studentName || '').trim();
+            const wFile = String(w.fileNumber || '').trim();
+
+            if (Array.isArray(logs)) {
+                const match = logs.find(log => {
+                    const emp = log.employeeName || log.employeeUsername;
+                    if (!isStaffEmployee(emp)) return false;
+
+                    const sys = String(log.system || '').toLowerCase();
+                    const act = String(log.action || '').toLowerCase();
+                    const det = String(log.details || '').toLowerCase();
+                    const target = String(log.targetName || '').toLowerCase();
+
+                    const isWithdrawalLog = sys.includes('withdrawal') || sys.includes('سحب') || act.includes('withdrawal') || act.includes('سحب') || det.includes('سحب');
+                    if (!isWithdrawalLog) return false;
+
+                    const nameMatch = wName && (target.includes(wName.toLowerCase()) || det.includes(wName.toLowerCase()));
+                    const codeMatch = wCode && (target.includes(wCode.toLowerCase()) || det.includes(wCode.toLowerCase()));
+                    const fileMatch = wFile && det.includes(wFile.toLowerCase());
+
+                    return nameMatch || codeMatch || fileMatch;
+                });
+
+                if (match) {
+                    const emp = match.employeeName || match.employeeUsername;
+                    if (isStaffEmployee(emp)) return emp;
+                }
+            }
+
+            return '';
+        }
+
         const wSheet = withdrawalArr.map(w => ({
             'رقم الملف': w.fileNumber || '',
             'كود الطالب': w.studentCode || '',
@@ -1007,6 +1207,7 @@ async function closeAndBackup() {
                 if (c === '26') return 'الفرقة الأولى';
                 return 'غير محدد';
             })() || '',
+            'الموظف المختص بالسحب': findWithdrawalStaff(w, logArr),
             'تاريخ السحب': w.withdrawalDate || '',
             'العام الجامعي': w.academicYear || '',
             'موقف الدفع': w.paymentStatus || '',
@@ -1208,6 +1409,43 @@ async function closeAndBackup() {
             combinedSheet.push(entry);
         });
 
+        // Fetch Desk Services & Student Requests
+        let deskServicesArr = [];
+        let deskRequestsArr = [];
+        try {
+            if (typeof db !== 'undefined' && db) {
+                const dsSnap = await db.ref('deskServices').once('value');
+                if (dsSnap.exists()) deskServicesArr = Object.values(dsSnap.val());
+                const drSnap = await db.ref('deskServicesStudentRequests').once('value');
+                if (drSnap.exists()) deskRequestsArr = Object.values(drSnap.val());
+            }
+        } catch(e) {}
+
+        if (!deskServicesArr.length) {
+            try { deskServicesArr = JSON.parse(localStorage.getItem('deskServices') || '[]'); } catch(e) {}
+        }
+        if (!deskRequestsArr.length) {
+            try { deskRequestsArr = JSON.parse(localStorage.getItem('deskServicesStudentRequests') || '[]'); } catch(e) {}
+        }
+
+        const deskServicesSheet = deskRequestsArr.map((r, idx) => {
+            return {
+                'مسلسل': idx + 1,
+                'رقم الطلب': r.requestNumber || '—',
+                'كود الطالب': r.studentCode || '—',
+                'الرقم القومي': r.nationalId || '—',
+                'اسم الطالب': r.studentName || '—',
+                'الخدمة المطلوبة': r.serviceName || '—',
+                'الكلية': r.college || '—',
+                'الفرقة/المستوى': r.grade || '—',
+                'اسم الموظف': r.staffName || r.createdBy || '—',
+                'تاريخ الطلب': r.requestDate || '—',
+                'حالة الطلب': r.status || '—',
+                'تاريخ التسليم': r.deliveredAt || r.deliveryDate || (r.status === 'تم التسليم' ? r.requestDate : '—'),
+                'سبب الرفض / ملاحظات': r.notes || '—'
+            };
+        });
+
         const session = window.getCurrentUser();
         const isAdmin = session && (session.role === 'admin' || session.username === 'boles');
 
@@ -1216,11 +1454,13 @@ async function closeAndBackup() {
             XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(sSheet), 'إدارة الملفات');
             XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(wSheet), 'سحب الملفات');
             XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(certSheet), 'سجل حساب الشهادات');
+            XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(deskServicesSheet), 'الخدمات الورقية');
             XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(logSheet), 'سجل النشاطات');
         } else {
             XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(sSheet), 'إدارة الملفات');
             XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(wSheet), 'سحب الملفات');
             XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(certSheet), 'سجل حساب الشهادات');
+            XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(deskServicesSheet), 'الخدمات الورقية');
         }
 
         setStatus(85, 'جاري تحضير ملف النسخة الاحتياطية JSON...');
@@ -1235,7 +1475,9 @@ async function closeAndBackup() {
                 employees: employeesArr,
                 activityLog: logArr,
                 colleges: collegesArr,
-                config: configObj
+                config: configObj,
+                deskServices: deskServicesArr,
+                deskServicesStudentRequests: deskRequestsArr
             }
         }, null, 2);
 
@@ -1252,7 +1494,7 @@ async function closeAndBackup() {
         const wbout_raw = XLSX.write(wb, { bookType: 'xlsx', type: 'array' });
         let wbout = wbout_raw;
         try {
-            const sheetColors = isAdmin ? ['3B82F6', '10B981', '8B5CF6', 'F59E0B'] : ['3B82F6', '10B981', '8B5CF6'];
+            const sheetColors = isAdmin ? ['3B82F6', '10B981', '8B5CF6', '06B6D4', 'F59E0B'] : ['3B82F6', '10B981', '8B5CF6', '06B6D4'];
             wbout = await colorWorksheetTabs(wbout_raw, sheetColors);
         } catch(colorErr) {
             console.error('Error applying sheet tab colors:', colorErr);
