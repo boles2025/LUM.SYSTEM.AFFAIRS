@@ -1207,7 +1207,7 @@
 (function() {
     var session = (function(){ try { return JSON.parse(localStorage.getItem('lotus_session')); } catch(e) { return null; } })();
     if (session && session.username && session.loginTime && Date.now() - session.loginTime < 28800000) {
-        var canView = session.username === 'boles' || session.role === 'admin' || (session.permissions && session.permissions.includes('view_certificate'));
+        var canView = session.username === 'boles' || session.role === 'admin' || (window.hasPermission ? window.hasPermission('access_certificate') : (session.permissions && session.permissions.includes('access_certificate')));
         if (!canView) {
             alert('ليس لديك صلاحية لعرض صفحة حساب الشهادات');
             window.location.href = '../../index.html';

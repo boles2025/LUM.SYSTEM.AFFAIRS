@@ -402,6 +402,7 @@
   <div class="tabs" id="tabNav">
     <button class="tab active" data-pane="add"><i class="fas fa-plus-circle"></i> تسجيل طلب سحب</button>
     <button class="tab" data-pane="records"><i class="fas fa-database"></i> السجلات</button>
+    <button class="tab" id="admin-registry-tab" data-pane="withdrawal-registry" style="display:none;"><i class="fas fa-file-signature text-warning"></i> سجل السحب (الأدمن)</button>
     <button class="tab" data-pane="reports"><i class="fas fa-chart-bar"></i> التقارير</button>
     <button class="tab" data-pane="settings"><i class="fas fa-cog"></i> الإعدادات</button>
   </div>
@@ -492,6 +493,56 @@
       </div>
       <!-- Print area for records -->
       <div class="print-area" id="printAreaRecords" style="display:none;"></div>
+    </div>
+
+    <!-- سجل السحب (الأدمن) -->
+    <div class="pane" id="withdrawal-registry">
+      <div class="card no-print">
+        <div class="card-title d-flex justify-content-between align-items-center flex-wrap gap-2">
+          <span><i class="fas fa-file-signature text-warning me-2"></i> سجل سحب الطلاب الشامل (خاص بالأدمن)</span>
+          <button class="btn btn-accent btn-sm font-weight-bold" onclick="exportToExcel(getRegFiltered())"><i class="fas fa-file-excel me-1"></i> تصدير إلى Excel</button>
+        </div>
+
+        <div class="filter-bar">
+          <input type="text" id="regSearchInput" placeholder="🔍 بحث بالاسم، الكود، الرقم القومي..." style="flex:1; min-width:200px;">
+          <select id="regFilterCollege"><option value="">كل الكليات</option></select>
+          <select id="regFilterYear"><option value="">كل الأعوام</option></select>
+          <select id="regFilterPayment"><option value="">كل الحالات</option><option value="مسدد">مسدد</option><option value="غير مسدد">غير مسدد</option></select>
+          <select id="regFilterGrade"><option value="">كل الفرق</option><option value="الفرقة الأولى">الفرقة الأولى</option><option value="الفرقة الثانية">الفرقة الثانية</option><option value="الفرقة الثالثة">الفرقة الثالثة</option><option value="الفرقة الرابعة">الفرقة الرابعة</option><option value="الفرقة الخامسة">الفرقة الخامسة</option><option value="الفرقة السادسة">الفرقة السادسة</option></select>
+          <input type="date" id="regFilterDateFrom" title="من تاريخ">
+          <input type="date" id="regFilterDateTo" title="إلى تاريخ">
+          <button class="btn btn-ghost btn-sm" id="regResetFilters" title="إعادة تصفية"><i class="fas fa-redo"></i></button>
+          <span class="filter-count" id="regFilterCount">0 سجل</span>
+        </div>
+
+        <div class="table-container">
+          <table class="table">
+            <thead>
+              <tr>
+                <th>رقم الملف</th>
+                <th>الكود</th>
+                <th>اسم الطالب</th>
+                <th>الرقم القومي</th>
+                <th>الكلية</th>
+                <th>الفرقة</th>
+                <th>التاريخ</th>
+                <th>العام</th>
+                <th>الدفع</th>
+                <th>الجامعة</th>
+                <th style="color:var(--accent-amber); font-weight:800;">الموظف المختص بالسحب</th>
+                <th>التليفون</th>
+                <th>ملاحظات</th>
+              </tr>
+            </thead>
+            <tbody id="regRecordsBody"></tbody>
+          </table>
+        </div>
+
+        <div class="pagination-bar no-print">
+          <span class="page-info" id="regPageInfo">عرض 0 من 0</span>
+          <div class="page-btns" id="regPageBtns"></div>
+        </div>
+      </div>
     </div>
 
     <!-- التقارير -->
@@ -734,6 +785,7 @@
         document.querySelectorAll('.pane').forEach(p => p.classList.remove('active'));
         document.getElementById(pane).classList.add('active');
         if (pane === 'records') renderTable();
+        else if (pane === 'withdrawal-registry') renderRegTable();
         else if (pane === 'reports') runReport();
         else if (pane === 'settings') { renderCollegeList(); renderSettingsRecords(); renderEmps(); }
       });
@@ -743,9 +795,9 @@
     function populateYears() {
       const y = new Date().getFullYear(), years = [];
       for (let i = 2024; i <= y + 2; i++) years.push(`${i}-${i + 1}`);
-      ['acYear', 'filterYear', 'editYear'].forEach(id => {
+      ['acYear', 'filterYear', 'editYear', 'regFilterYear'].forEach(id => {
         const sel = document.getElementById(id); if (!sel) return;
-        sel.innerHTML = `<option value="">${id === 'filterYear' ? 'كل الأعوام' : 'اختر العام'}</option>` + years.map(yr => `<option value="${yr}">${yr}</option>`).join('');
+        sel.innerHTML = `<option value="">${id.includes('filter') || id.includes('Filter') ? 'كل الأعوام' : 'اختر العام'}</option>` + years.map(yr => `<option value="${yr}">${yr}</option>`).join('');
       });
     }
     function parseYearFromStr(d) {
@@ -859,6 +911,8 @@
       document.getElementById('editCollege').innerHTML = opts;
       document.getElementById('filterCollege').innerHTML = fo;
       document.getElementById('rptCollege').innerHTML = fo;
+      var rfo = document.getElementById('regFilterCollege');
+      if (rfo) rfo.innerHTML = fo;
     }
     function renderCollegeList() {
       var fromRecords = [...new Set(allRecords.map(function(r){ return r.college; }).filter(Boolean))];
@@ -930,12 +984,33 @@
       toast('تم التعديل');
     };
 
+    // Activity Logs Listener for retroactive staff lookup
+    window._cachedLogs = [];
+    try {
+      db.ref('activityLogs').on('value', snap => {
+        window._cachedLogs = [];
+        if (snap.exists()) {
+          snap.forEach(ch => { window._cachedLogs.push(ch.val()); });
+        }
+        renderRegTable();
+      });
+    } catch(e) {}
+
     // Records
     requestsRef.on('value', snap => {
       allRecords = []; snap.forEach(function(ch) { allRecords.push(Object.assign({ id: ch.key }, ch.val())); });
       console.log('Records loaded:', allRecords.length);
-      allRecords.sort(function(a, b) { return (b.createdAt || 0) - (a.createdAt || 0); });
-      currentPage = 1; renderTable(); renderCollegeSelects(); renderCollegeList(); renderSettingsRecords();
+      allRecords.sort(function(a, b) {
+        var ta = toComparable(a.withdrawalDate) || (a.createdAt ? new Date(a.createdAt).getTime() : 0);
+        var tb = toComparable(b.withdrawalDate) || (b.createdAt ? new Date(b.createdAt).getTime() : 0);
+        return tb - ta;
+      });
+      currentPage = 1;
+      renderTable();
+      renderRegTable();
+      renderCollegeSelects();
+      renderCollegeList();
+      renderSettingsRecords();
       var fixUpdates = {};
       allRecords.forEach(function(r) {
         if (!r.academicYear || r.academicYear.indexOf('1969') > -1 || r.academicYear.indexOf('1970-') === 0) {
@@ -948,10 +1023,11 @@
     });
 
     function toComparable(d) {
-      if (!d) return '';
-      if (/^\d{2}-\d{2}-\d{4}$/.test(d)) { var p = d.split('-'); return p[2]+p[1]+p[0]; }
-      if (/^\d{4}-\d{2}-\d{2}$/.test(d)) return d.replace(/-/g,'');
-      return d;
+      if (!d) return 0;
+      if (/^\d{2}-\d{2}-\d{4}$/.test(d)) { var p = d.split('-'); return parseInt(p[2]+p[1]+p[0], 10); }
+      if (/^\d{4}-\d{2}-\d{2}$/.test(d)) return parseInt(d.replace(/-/g,''), 10);
+      var dt = new Date(d).getTime();
+      return isNaN(dt) ? 0 : dt;
     }
     function getGrade(code) {
       var c = String(code || '').substring(0, 2);
@@ -1016,7 +1092,7 @@
       const g = document.getElementById('filterGrade').value;
       const df = document.getElementById('filterDateFrom').value;
       const dt = document.getElementById('filterDateTo').value;
-      return allRecords.filter(r => {
+      const filtered = allRecords.filter(r => {
         if (s) {
           var code = String(r.studentCode || '').toLowerCase();
           var name = String(r.studentName || '').toLowerCase();
@@ -1034,6 +1110,15 @@
         if (cdt && rd > cdt) return false;
         return true;
       });
+
+      // Sort Newest to Oldest (الأحدث إلى الأقدم)
+      filtered.sort((a, b) => {
+        var ta = toComparable(a.withdrawalDate) || (a.createdAt ? new Date(a.createdAt).getTime() : 0);
+        var tb = toComparable(b.withdrawalDate) || (b.createdAt ? new Date(b.createdAt).getTime() : 0);
+        return tb - ta;
+      });
+
+      return filtered;
     }
 
     function renderTable() {
@@ -1075,6 +1160,130 @@
       document.getElementById('pageBtns').innerHTML = ph;
     }
     window.goPage = p => { currentPage = p; renderTable(); };
+
+    // ===== Admin Withdrawal Registry (سجل السحب المتقدم للأدمن) =====
+    let regCurrentPage = 1;
+
+    function getRegFiltered() {
+      const s = (document.getElementById('regSearchInput') ? document.getElementById('regSearchInput').value : '').trim().toLowerCase();
+      const c = document.getElementById('regFilterCollege') ? document.getElementById('regFilterCollege').value : '';
+      const y = document.getElementById('regFilterYear') ? document.getElementById('regFilterYear').value : '';
+      const p = document.getElementById('regFilterPayment') ? document.getElementById('regFilterPayment').value : '';
+      const g = document.getElementById('regFilterGrade') ? document.getElementById('regFilterGrade').value : '';
+      const df = document.getElementById('regFilterDateFrom') ? document.getElementById('regFilterDateFrom').value : '';
+      const dt = document.getElementById('regFilterDateTo') ? document.getElementById('regFilterDateTo').value : '';
+
+      const res = allRecords.filter(r => {
+        if (s) {
+          var code = String(r.studentCode || '').toLowerCase();
+          var name = String(r.studentName || '').toLowerCase();
+          var nid = String(r.nationalId || '');
+          if (!(code.includes(s) || name.includes(s) || nid.includes(s))) return false;
+        }
+        if (c && r.college !== c) return false;
+        if (y && r.academicYear !== y) return false;
+        if (p && r.paymentStatus !== p) return false;
+        if (g && getGrade(r.studentCode) !== g) return false;
+        var rd = toComparable(r.withdrawalDate);
+        var cdf = toComparable(df);
+        var cdt = toComparable(dt);
+        if (cdf && rd < cdf) return false;
+        if (cdt && rd > cdt) return false;
+        return true;
+      });
+
+      // Sort Newest to Oldest (من الأحدث إلى الأقدم)
+      res.sort((a, b) => {
+        var ta = toComparable(a.withdrawalDate) || (a.createdAt ? new Date(a.createdAt).getTime() : 0);
+        var tb = toComparable(b.withdrawalDate) || (b.createdAt ? new Date(b.createdAt).getTime() : 0);
+        return tb - ta;
+      });
+
+      return res;
+    }
+
+    function renderRegTable() {
+      const filtered = getRegFiltered(), total = filtered.length;
+      const tp = Math.ceil(total / perPage) || 1;
+      if (regCurrentPage > tp) regCurrentPage = tp;
+      if (regCurrentPage < 1) regCurrentPage = 1;
+
+      const start = (regCurrentPage - 1) * perPage, page = filtered.slice(start, start + perPage);
+      const countEl = document.getElementById('regFilterCount');
+      if (countEl) countEl.textContent = total + ' سجل';
+
+      const tbody = document.getElementById('regRecordsBody');
+      if (!tbody) return;
+
+      if (!page.length) {
+        tbody.innerHTML = '<tr><td colspan="13"><div class="empty-state"><i class="fas fa-inbox"></i><p>لا توجد سجلات</p></div></td></tr>';
+      } else {
+        var _stuList = []; try { _stuList = JSON.parse(localStorage.getItem('lotus_students') || '[]'); } catch(e) {}
+        function _getLevel(code) {
+          var _s = _stuList.find(function(x) { return x.studentCode === code || x.code === code; });
+          if (_s && _s.level) return _s.level;
+          return getGrade(code);
+        }
+
+        var rows = '';
+        page.forEach(function(r, i) {
+          var staff = _getWithdrawalStaff(r);
+          rows += `<tr>
+            <td><strong class="text-warning">${r.fileNumber || '-'}</strong></td>
+            <td><code>${r.studentCode || ''}</code></td>
+            <td style="font-weight:700;">${r.studentName || ''}</td>
+            <td>${r.nationalId || ''}</td>
+            <td><span class="badge" style="background:rgba(6,182,212,0.15);color:var(--accent-cyan);padding:4px 8px;border-radius:6px;">${r.college || ''}</span></td>
+            <td>${_getLevel(r.studentCode)}</td>
+            <td>${fmtDate(r.withdrawalDate)}</td>
+            <td>${r.academicYear || ''}</td>
+            <td><span class="badge-status ${r.paymentStatus === 'مسدد' ? 'badge-paid' : 'badge-unpaid'}">${r.paymentStatus || ''}</span></td>
+            <td>${r.transferUniversity || '-'}</td>
+            <td><span class="badge" style="background:rgba(245,158,11,0.15);color:var(--accent-amber);font-size:0.8rem;font-weight:700;padding:4px 8px;border-radius:6px;"><i class="fas fa-user-check me-1"></i>${staff || '—'}</span></td>
+            <td>${r.phone || '-'}</td>
+            <td>${r.notes || '-'}</td>
+          </tr>`;
+        });
+        tbody.innerHTML = rows;
+      }
+
+      const pageInfo = document.getElementById('regPageInfo');
+      if (pageInfo) pageInfo.textContent = `عرض ${total > 0 ? (start + 1) : 0} إلى ${Math.min(start + perPage, total)} من ${total}`;
+
+      let ph = '';
+      if (tp > 1) {
+        ph += `<button class="page-btn" onclick="regGoPage(${regCurrentPage - 1})" ${regCurrentPage === 1 ? 'disabled' : ''}><i class="fas fa-chevron-right"></i></button>`;
+        for (let i = 1; i <= tp; i++) {
+          if (i === 1 || i === tp || (i >= regCurrentPage - 2 && i <= regCurrentPage + 2)) ph += `<button class="page-btn ${i === regCurrentPage ? 'active' : ''}" onclick="regGoPage(${i})">${i}</button>`;
+          else if (i === regCurrentPage - 3 || i === regCurrentPage + 3) ph += `<button class="page-btn" disabled>...</button>`;
+        }
+        ph += `<button class="page-btn" onclick="regGoPage(${regCurrentPage + 1})" ${regCurrentPage === tp ? 'disabled' : ''}><i class="fas fa-chevron-left"></i></button>`;
+      }
+      const pageBtns = document.getElementById('regPageBtns');
+      if (pageBtns) pageBtns.innerHTML = ph;
+    }
+    window.regGoPage = p => { regCurrentPage = p; renderRegTable(); };
+
+    ['regSearchInput', 'regFilterCollege', 'regFilterYear', 'regFilterPayment', 'regFilterGrade', 'regFilterDateFrom', 'regFilterDateTo'].forEach(id => {
+      const el = document.getElementById(id);
+      if (el) {
+        el.addEventListener('input', () => { regCurrentPage = 1; renderRegTable(); });
+        el.addEventListener('change', () => { regCurrentPage = 1; renderRegTable(); });
+      }
+    });
+    const regResetBtn = document.getElementById('regResetFilters');
+    if (regResetBtn) {
+      regResetBtn.addEventListener('click', () => {
+        ['regSearchInput', 'regFilterCollege', 'regFilterYear', 'regFilterPayment', 'regFilterGrade', 'regFilterDateFrom', 'regFilterDateTo'].forEach(id => {
+          var el = document.getElementById(id);
+          if (el) {
+            if (el._flatpickr) el._flatpickr.clear();
+            else el.value = '';
+          }
+        });
+        regCurrentPage = 1; renderRegTable();
+      });
+    }
 
     ['searchInput', 'filterCollege', 'filterYear', 'filterPayment', 'filterGrade', 'filterDateFrom', 'filterDateTo'].forEach(id => {
       document.getElementById(id).addEventListener('input', () => { currentPage = 1; renderTable(); });
@@ -1313,6 +1522,53 @@
 
     function exportToExcel(data) {
       var _stuList = []; try { _stuList = JSON.parse(localStorage.getItem('lotus_students') || '[]'); } catch(e) {}
+      var _logsList = []; try { _logsList = JSON.parse(localStorage.getItem('lotus_activity_logs') || '[]'); } catch(e) {}
+
+      function _isStaffEmp(n) {
+        if (!n) return false;
+        var s = String(n).trim();
+        if (!s || s === 'مدير النظام' || s === 'المدير العام' || s.toLowerCase() === 'admin' || s.toLowerCase() === 'boles' || s === 'Super Admin') return false;
+        return true;
+      }
+
+      function _getWithdrawalStaff(r) {
+        var candidates = [r.staffName, r.processedBy, r.createdBy, r.employeeName, r.employeeUsername, r.user, r.staff];
+        for (var i = 0; i < candidates.length; i++) {
+          if (_isStaffEmp(candidates[i])) return candidates[i];
+        }
+
+        var wCode = String(r.studentCode || '').trim().toLowerCase();
+        var wName = String(r.studentName || '').trim().toLowerCase();
+        var wFile = String(r.fileNumber || '').trim().toLowerCase();
+
+        if (Array.isArray(_logsList)) {
+          var match = _logsList.find(function(log) {
+            var emp = log.employeeName || log.employeeUsername;
+            if (!_isStaffEmp(emp)) return false;
+
+            var sys = String(log.system || '').toLowerCase();
+            var act = String(log.action || '').toLowerCase();
+            var det = String(log.details || '').toLowerCase();
+            var target = String(log.targetName || '').toLowerCase();
+
+            var isWLog = sys.includes('withdrawal') || sys.includes('سحب') || act.includes('withdrawal') || act.includes('سحب') || det.includes('سحب');
+            if (!isWLog) return false;
+
+            var nameMatch = wName && (target.includes(wName) || det.includes(wName));
+            var codeMatch = wCode && (target.includes(wCode) || det.includes(wCode));
+            var fileMatch = wFile && det.includes(fileMatch);
+
+            return nameMatch || codeMatch || fileMatch;
+          });
+
+          if (match) {
+            var emp = match.employeeName || match.employeeUsername;
+            if (_isStaffEmp(emp)) return emp;
+          }
+        }
+        return '';
+      }
+
       function _getLevel(code) {
         var _s = _stuList.find(function(x) { return x.studentCode === code || x.code === code; });
         if (_s && _s.level) return _s.level;
@@ -1321,7 +1577,7 @@
       const rows = data.map((r, i) => ({
         'رقم الملف': r.fileNumber || '', 'كود الطالب': r.studentCode, 'اسم الطالب': r.studentName, 'الرقم القومي': r.nationalId,
         'الكلية': r.college, 'الفرقة': _getLevel(r.studentCode), 'تاريخ السحب': fmtDate(r.withdrawalDate), 'العام الجامعي': r.academicYear,
-        'موقف الدفع': r.paymentStatus, 'الجامعة المحول إليها': r.transferUniversity || '', 'التليفون': r.phone || '', 'ملاحظات': r.notes || ''
+        'موقف الدفع': r.paymentStatus, 'الجامعة المحول إليها': r.transferUniversity || '', 'الموظف المختص بالسحب': _getWithdrawalStaff(r), 'التليفون': r.phone || '', 'ملاحظات': r.notes || ''
       }));
       const ws = XLSX.utils.json_to_sheet(rows);
       const colWidths = Object.keys(rows[0] || {}).map((k, i) => ({ wch: k.length > 6 ? 20 : 12 }));
@@ -1663,11 +1919,33 @@ document.addEventListener('DOMContentLoaded', function() {
     if (badge) { badge.textContent = s.role || 'employee'; badge.className = 'role-badge ' + (s.role || 'employee'); }
     var ec = document.getElementById('employees-card');
     if (ec && s.role === 'admin') ec.style.display = '';
+
+    // Show Admin Registry Tab for Admin accounts only
+    var regTab = document.getElementById('admin-registry-tab');
+    if (regTab) {
+      var isAdmin = s && (s.role === 'admin' || s.username === 'boles' || s.username === 'admin');
+      regTab.style.display = isAdmin ? 'inline-flex' : 'none';
+      
+      // Initialize admin registry table if tab exists
+      if (isAdmin && regTab.style.display === 'inline-flex') {
+        // Wait a bit for data to be loaded into allRecords
+        setTimeout(function() {
+          if (typeof renderRegTable === 'function') {
+            renderRegTable();
+          }
+        }, 100);
+      }
+    }
   }
 
   // Check existing session
   var session = window.getCurrentUser ? window.getCurrentUser() : (function(){ try { return JSON.parse(localStorage.getItem('lotus_session')); } catch(e) { return null; } })();
   if (session && session.username && session.loginTime && Date.now() - session.loginTime < 28800000) {
+    if (session.username !== 'boles' && session.role !== 'admin' && window.hasPermission && !window.hasPermission('access_withdrawal')) {
+      alert('🔒 ليس لديك صلاحية للدخول إلى نظام السحب والإيداع.');
+      window.location.href = '../../index.html';
+      return;
+    }
     showUserMenu(session);
     renderEmps();
   } else {
@@ -1725,6 +2003,13 @@ document.addEventListener('DOMContentLoaded', function() {
     if (dd && avatar && !avatar.contains(e.target) && !dd.contains(e.target)) dd.classList.remove('show');
   });
 })();
+
+// Initialize admin withdrawal registry
+document.addEventListener('DOMContentLoaded', function() {
+  if (document.getElementById('withdrawal-registry')) {
+    renderRegTable();
+  }
+});
 
 // Employee management
 var editingEmp = '';

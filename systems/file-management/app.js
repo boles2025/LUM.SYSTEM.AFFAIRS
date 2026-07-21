@@ -1,11 +1,11 @@
 const firebaseConfig = {
-  apiKey: "AIzaSyAbYhhg5eL94AUE5BwV4xv6jbFU98QZbdQ",
-  authDomain: "loutsresults.firebaseapp.com",
-  projectId: "loutsresults",
-  storageBucket: "loutsresults.firebasestorage.app",
-  messagingSenderId: "801603969666",
-  appId: "1:801603969666:web:e6d45a7a6819022bc10a9b",
-  databaseURL: "https://loutsresults-default-rtdb.firebaseio.com"
+  apiKey: "AIzaSyBajCZMATK21mgaEFcccyhLne4pgdaxMfk",
+  authDomain: "dent-35a17.firebaseapp.com",
+  databaseURL: "https://dent-35a17-default-rtdb.firebaseio.com",
+  projectId: "dent-35a17",
+  storageBucket: "dent-35a17.firebasestorage.app",
+  messagingSenderId: "416163754700",
+  appId: "1:416163754700:web:dec496619e3e6fff3e0869"
 };
 
 let db = null, auth = null, isOfflineMode = false;
@@ -115,6 +115,13 @@ document.addEventListener("DOMContentLoaded", async () => {
   // Check saved session (try shared auth first, then local)
   const sharedUser = window.getCurrentUser ? window.getCurrentUser() : null;
   currentUser = sharedUser || getSession();
+  if (currentUser && currentUser.username !== 'boles' && currentUser.role !== 'admin') {
+    if (window.hasPermission && !window.hasPermission('access_file_management')) {
+      alert('🔒 ليس لديك صلاحية للدخول إلى نظام إدارة الملفات.');
+      window.location.href = '../../index.html';
+      return;
+    }
+  }
   updateUIBasedOnAuth();
   
   // If no session at all, redirect to main login
