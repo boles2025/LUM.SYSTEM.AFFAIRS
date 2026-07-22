@@ -126,7 +126,7 @@ function authHashPassword(pw) {
 // ========== Session Management ==========
 function authGetSession() {
   try {
-    const raw = localStorage.getItem(AUTH_SESSION_KEY);
+    const raw = localStorage.getItem(AUTH_SESSION_KEY) || localStorage.getItem('lotus_session') || localStorage.getItem('auth_session');
     if (!raw) return null;
     const s = JSON.parse(raw);
     if (!s || !s.username || !s.role) return null;
@@ -138,6 +138,12 @@ function authGetSession() {
       s.role = 'admin';
       s.permissions = [...window.ADMIN_FIXED_PERMISSIONS];
     }
+    try {
+      const jsonStr = JSON.stringify(s);
+      localStorage.setItem(AUTH_SESSION_KEY, jsonStr);
+      localStorage.setItem('lotus_session', jsonStr);
+      localStorage.setItem('auth_session', jsonStr);
+    } catch(e) {}
     return s;
   } catch (e) { return null; }
 }
@@ -155,12 +161,17 @@ function authSetSession(user) {
   } else {
     session.permissions = [...(AUTH_ROLE_PERMISSIONS[user.role] || [])];
   }
-  localStorage.setItem(AUTH_SESSION_KEY, JSON.stringify(session));
+  const jsonStr = JSON.stringify(session);
+  localStorage.setItem(AUTH_SESSION_KEY, jsonStr);
+  localStorage.setItem('lotus_session', jsonStr);
+  localStorage.setItem('auth_session', jsonStr);
   AUTH_CURRENT_USER = session;
 }
 
 function authClearSession() {
   localStorage.removeItem(AUTH_SESSION_KEY);
+  localStorage.removeItem('lotus_session');
+  localStorage.removeItem('auth_session');
   AUTH_CURRENT_USER = null;
 }
 
@@ -244,11 +255,13 @@ function authSaveLocalEmployees(emps) {
   localStorage.setItem('lotus_employees', JSON.stringify(deduped));
 }
 
-// ========== Firebase Employees (main DB) ==========
+// ========== Firebase Employees (loutsresults PERMISSIONS_DB) ==========
 async function authLoadEmployeesFromFirebase() {
-  if (AUTH_IS_OFFLINE || !AUTH_DB) return null;
+  if (AUTH_IS_OFFLINE) return null;
+  const targetDb = PERMISSIONS_DB || AUTH_DB;
+  if (!targetDb) return null;
   try {
-    const snap = await withTimeout(AUTH_DB.ref('employees').once('value'), 5000);
+    const snap = await withTimeout(targetDb.ref('employees').once('value'), 5000);
     if (!snap.exists()) return null;
     const data = snap.val();
     if (!data || typeof data !== 'object') return null;
@@ -258,18 +271,20 @@ async function authLoadEmployeesFromFirebase() {
       const d = data[k];
       if (!d || !d.username) continue;
       const uKey = d.username.trim().toLowerCase();
-      let perms = authNormalizePermissions(d.permissions);
-      if (perms.length === 0 && d.role) perms = [...(AUTH_ROLE_PERMISSIONS[d.role] || [])];
+      let perms = d.permissions !== undefined && d.permissions !== null
+        ? authNormalizePermissions(d.permissions)
+        : [...(AUTH_ROLE_PERMISSIONS[d.role || 'employee'] || [])];
+      
       const emp = {
         username: uKey,
         name: d.name || '',
         password: d.password || '',
+        plainPassword: d.plainPassword || '',
         role: d.role || 'employee',
         active: d.active !== false,
         permissions: perms,   // clean array
         employeeId: d.employeeId || uKey,
-        createdAt: d.createdAt || new Date().toISOString(),
-        plainPassword: d.plainPassword || ''
+        createdAt: d.createdAt || new Date().toISOString()
       };
       if (emp.username === 'boles') {
         emp.role = 'admin';
@@ -288,7 +303,7 @@ async function authLoadEmployeesFromFirebase() {
 
 async function authGetAllEmployees() {
   let list = [];
-  if (!AUTH_IS_OFFLINE && AUTH_DB) {
+  if (!AUTH_IS_OFFLINE) {
     const fb = await authLoadEmployeesFromFirebase();
     if (fb && fb.length > 0) list = fb;
   }
@@ -314,7 +329,7 @@ async function authGetAllEmployees() {
   return deduped.filter(e => !deleted.includes(e.username));
 }
 
-// ========== Save / Delete Employee ==========
+// ========== Save / Delete Employee (Primary: PERMISSIONS_DB) ==========
 async function authSaveEmployeeToDb(emp) {
   if (!emp || !emp.username) return;
   const key = emp.username.replace(/[.#$\/\[\]]/g, '_');
@@ -323,7 +338,6 @@ async function authSaveEmployeeToDb(emp) {
     emp.permissions = [...window.ADMIN_FIXED_PERMISSIONS];
     emp.active = true;
   }
-  // Always normalize to clean array
   let perms = [];
   if (emp.permissions !== undefined && emp.permissions !== null) {
     perms = authNormalizePermissions(emp.permissions);
@@ -335,21 +349,28 @@ async function authSaveEmployeeToDb(emp) {
     username: emp.username,
     name: emp.name || '',
     password: emp.password || '',
+    plainPassword: emp.plainPassword || '',
     role: emp.role || 'employee',
     active: emp.active !== false,
     permissions: perms,
     employeeId: emp.employeeId || emp.username,
-    createdAt: emp.createdAt || new Date().toISOString()
+    createdAt: emp.createdAt || new Date().toISOString(),
+    updatedAt: new Date().toISOString()
   };
-  if (emp.plainPassword) empData.plainPassword = emp.plainPassword;
 
-  // Save to main Firebase
-  if (!AUTH_IS_OFFLINE && AUTH_DB) {
+  // 1. Save to PERMISSIONS_DB (loutsresults)
+  if (!AUTH_IS_OFFLINE && PERMISSIONS_DB) {
+    try {
+      await withTimeout(PERMISSIONS_DB.ref('employees/' + key).set(empData), 5000);
+    } catch (e) {
+      console.warn('[AUTH] Save to PERMISSIONS_DB failed:', e.message);
+    }
+  }
+  // 2. Save to AUTH_DB (dent-35a17) as secondary backup
+  if (!AUTH_IS_OFFLINE && AUTH_DB && AUTH_DB !== PERMISSIONS_DB) {
     try {
       await withTimeout(AUTH_DB.ref('employees/' + key).set(empData), 5000);
-    } catch (e) {
-      console.warn('[AUTH] Save to main DB failed:', e.message);
-    }
+    } catch (e) {}
   }
 
   // Update local copy
@@ -380,7 +401,10 @@ async function authSaveEmployeeToDb(emp) {
 async function authDeleteEmployeeFromDb(username) {
   if (!username || username === 'boles') return;
   const key = username.replace(/[.#$\/\[\]]/g, '_');
-  if (!AUTH_IS_OFFLINE && AUTH_DB) {
+  if (!AUTH_IS_OFFLINE && PERMISSIONS_DB) {
+    try { await withTimeout(PERMISSIONS_DB.ref('employees/' + key).remove(), 3000); } catch (e) {}
+  }
+  if (!AUTH_IS_OFFLINE && AUTH_DB && AUTH_DB !== PERMISSIONS_DB) {
     try { await withTimeout(AUTH_DB.ref('employees/' + key).remove(), 3000); } catch (e) {}
   }
   const local = authDeduplicateLocalEmployees();
@@ -398,13 +422,16 @@ window.changeMyPassword = async function (oldPassword, newPassword) {
   const employees = await authGetAllEmployees();
   const emp = employees.find(e => e.username === user.username);
   if (!emp) throw new Error('المستخدم غير موجود');
-  if (emp.password !== authHashPassword(oldPassword)) throw new Error('كلمة المرور القديمة غير صحيحة');
+  if (emp.password && emp.password !== authHashPassword(oldPassword) && emp.plainPassword !== oldPassword) {
+    throw new Error('كلمة المرور القديمة غير صحيحة');
+  }
 
   emp.password = authHashPassword(newPassword);
   emp.plainPassword = newPassword;
   await authSaveEmployeeToDb(emp);
   // Update session
   user.password = emp.password;
+  user.plainPassword = newPassword;
   authSetSession(user);
   await authLogActivity('change_password', 'user', user.username, user.name, 'تم تغيير كلمة المرور', authDetectSystem());
   return true;
@@ -451,7 +478,10 @@ async function authLogActivity(action, targetType, targetId, targetName, details
       employeeName: AUTH_CURRENT_USER ? AUTH_CURRENT_USER.name : 'غير معروف',
       timestamp: new Date().toISOString()
     };
-    if (!AUTH_IS_OFFLINE && AUTH_DB) {
+    if (!AUTH_IS_OFFLINE && PERMISSIONS_DB) {
+      try { await PERMISSIONS_DB.ref('activityLog').push(entry); } catch (e) {}
+    }
+    if (!AUTH_IS_OFFLINE && AUTH_DB && AUTH_DB !== PERMISSIONS_DB) {
       try { await AUTH_DB.ref('activityLog').push(entry); } catch (e) {}
     }
     const local = JSON.parse(localStorage.getItem('lotus_activity_log') || '[]');
@@ -557,17 +587,18 @@ window.submitLogin = async function () {
   try {
     let emp = null;
     const hashedInput = authHashPassword(password);
+    const primaryDb = PERMISSIONS_DB || AUTH_DB;
 
-    // Try main Firebase
-    if (!AUTH_IS_OFFLINE && AUTH_DB) {
+    // Try PERMISSIONS_DB
+    if (!AUTH_IS_OFFLINE && primaryDb) {
       try {
-        const snap = await withTimeout(AUTH_DB.ref('employees/' + username.replace(/[.#$\/\[\]]/g, '_')).once('value'), 5000);
+        const snap = await withTimeout(primaryDb.ref('employees/' + username.replace(/[.#$\/\[\]]/g, '_')).once('value'), 5000);
         if (snap.exists()) {
           const data = snap.val();
-          if (data.password === hashedInput && data.active !== false) {
+          if ((data.password === hashedInput || data.plainPassword === password) && data.active !== false) {
             let perms = authNormalizePermissions(data.permissions);
             if (perms.length === 0 && data.role) perms = [...(AUTH_ROLE_PERMISSIONS[data.role] || [])];
-            emp = { username, name: data.name, role: data.role, employeeId: data.employeeId || username, permissions: perms };
+            emp = { username, name: data.name, role: data.role, employeeId: data.employeeId || username, permissions: perms, password: data.password, plainPassword: data.plainPassword || password };
           }
         }
       } catch (fbErr) {}
@@ -576,11 +607,11 @@ window.submitLogin = async function () {
     // Fallback local
     if (!emp) {
       const local = authDeduplicateLocalEmployees();
-      const match = local.find(e => e.username === username && e.password === hashedInput && e.active !== false);
+      const match = local.find(e => e.username === username && (e.password === hashedInput || e.plainPassword === password) && e.active !== false);
       if (match) {
         let perms = authNormalizePermissions(match.permissions);
         if (perms.length === 0 && match.role) perms = [...(AUTH_ROLE_PERMISSIONS[match.role] || [])];
-        emp = { username: match.username, name: match.name, role: match.role, employeeId: match.employeeId || match.username, permissions: perms };
+        emp = { username: match.username, name: match.name, role: match.role, employeeId: match.employeeId || match.username, permissions: perms, password: match.password, plainPassword: match.plainPassword || password };
       }
     }
 
@@ -625,12 +656,14 @@ window.PERMISSIONS_DB = PERMISSIONS_DB;
 // ========== Session Init ==========
 AUTH_CURRENT_USER = authGetSession();
 
-// ========== One-time Seed (if main DB empty) ==========
+// ========== One-time Seed (Primary: PERMISSIONS_DB) ==========
 let _seedDone = false;
 (async function seedIfEmpty() {
-  if (_seedDone || AUTH_IS_OFFLINE || !AUTH_DB) return;
+  if (_seedDone || AUTH_IS_OFFLINE) return;
+  const targetDb = PERMISSIONS_DB || AUTH_DB;
+  if (!targetDb) return;
   try {
-    const snap = await withTimeout(AUTH_DB.ref('employees').once('value'), 5000).catch(() => null);
+    const snap = await withTimeout(targetDb.ref('employees').once('value'), 5000).catch(() => null);
     if (snap && snap.exists() && snap.val() && Object.keys(snap.val()).length > 0) {
       _seedDone = true;
       return;
@@ -639,19 +672,22 @@ let _seedDone = false;
     const hash123456 = authHashPassword('123456');
     const now = new Date().toISOString();
     const seedData = {
-      boles: { username:'boles', name:'مهندس بولس سمير', password:hash8520, role:'admin', permissions:[...window.ADMIN_FIXED_PERMISSIONS], active:true, createdAt:now, employeeId:'boles' },
-      somya: { username:'somya', name:'سمية', password:hash123456, role:'admin', permissions:[...window.ADMIN_FIXED_PERMISSIONS], active:true, createdAt:now, employeeId:'somya' },
-      safy: { username:'safy', name:'صفاء', password:hash123456, role:'employee', permissions:[...window.DEFAULT_EMPLOYEE_PERMISSIONS], active:true, createdAt:now, employeeId:'safy' },
-      mai: { username:'mai', name:'مي', password:hash123456, role:'employee', permissions:[...window.DEFAULT_EMPLOYEE_PERMISSIONS], active:true, createdAt:now, employeeId:'mai' },
-      monica: { username:'monica', name:'مونيكا', password:hash123456, role:'employee', permissions:[...window.DEFAULT_EMPLOYEE_PERMISSIONS], active:true, createdAt:now, employeeId:'monica' },
-      ahmed: { username:'ahmed', name:'أحمد', password:hash123456, role:'employee', permissions:[...window.DEFAULT_EMPLOYEE_PERMISSIONS], active:true, createdAt:now, employeeId:'ahmed' },
-      mahmod: { username:'mahmod', name:'محمود', password:hash123456, role:'employee', permissions:[...window.DEFAULT_EMPLOYEE_PERMISSIONS], active:true, createdAt:now, employeeId:'mahmod' },
-      peter: { username:'peter', name:'بيتر', password:hash123456, role:'employee', permissions:[...window.DEFAULT_EMPLOYEE_PERMISSIONS], active:true, createdAt:now, employeeId:'peter' },
-      omar: { username:'omar', name:'عمر', password:hash123456, role:'employee', permissions:['view','access_certificate'], active:true, createdAt:now, employeeId:'omar' }
+      boles: { username:'boles', name:'مهندس بولس سمير', password:hash8520, plainPassword:'8520', role:'admin', permissions:[...window.ADMIN_FIXED_PERMISSIONS], active:true, createdAt:now, employeeId:'boles' },
+      somya: { username:'somya', name:'سمية', password:hash123456, plainPassword:'123456', role:'admin', permissions:[...window.ADMIN_FIXED_PERMISSIONS], active:true, createdAt:now, employeeId:'somya' },
+      safy: { username:'safy', name:'صفاء', password:hash123456, plainPassword:'123456', role:'employee', permissions:[...window.DEFAULT_EMPLOYEE_PERMISSIONS], active:true, createdAt:now, employeeId:'safy' },
+      mai: { username:'mai', name:'مي', password:hash123456, plainPassword:'123456', role:'employee', permissions:[...window.DEFAULT_EMPLOYEE_PERMISSIONS], active:true, createdAt:now, employeeId:'mai' },
+      monica: { username:'monica', name:'مونيكا', password:hash123456, plainPassword:'123456', role:'employee', permissions:[...window.DEFAULT_EMPLOYEE_PERMISSIONS], active:true, createdAt:now, employeeId:'monica' },
+      ahmed: { username:'ahmed', name:'أحمد', password:hash123456, plainPassword:'123456', role:'employee', permissions:[...window.DEFAULT_EMPLOYEE_PERMISSIONS], active:true, createdAt:now, employeeId:'ahmed' },
+      mahmod: { username:'mahmod', name:'محمود', password:hash123456, plainPassword:'123456', role:'employee', permissions:[...window.DEFAULT_EMPLOYEE_PERMISSIONS], active:true, createdAt:now, employeeId:'mahmod' },
+      peter: { username:'peter', name:'بيتر', password:hash123456, plainPassword:'123456', role:'employee', permissions:[...window.DEFAULT_EMPLOYEE_PERMISSIONS], active:true, createdAt:now, employeeId:'peter' },
+      omar: { username:'omar', name:'عمر', password:hash123456, plainPassword:'123456', role:'employee', permissions:['view','access_certificate'], active:true, createdAt:now, employeeId:'omar' }
     };
-    await AUTH_DB.ref('employees').set(seedData);
+    await targetDb.ref('employees').set(seedData);
+    if (AUTH_DB && AUTH_DB !== targetDb) {
+      try { await AUTH_DB.ref('employees').set(seedData); } catch(e) {}
+    }
     authSaveLocalEmployees(Object.values(seedData));
-    console.log('[AUTH] Seed completed');
+    console.log('[AUTH] Seed completed on PERMISSIONS_DB (loutsresults)');
     _seedDone = true;
   } catch (e) { console.warn('[AUTH] Seed skipped:', e.message); }
 })();
