@@ -1,0 +1,2349 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>نظام حساب الشهادات | جامعة اللوتس</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.rtl.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700;800;900&family=Changa:wght@500;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg-main: #0f1119;
+            --bg-card: #1a1d2e;
+            --bg-card-alt: #1e2135;
+            --bg-input: #141725;
+            --bg-collapse-header: rgba(255,255,255,0.02);
+            --bg-collapse-header-hover: rgba(255,255,255,0.04);
+            --text-primary: #e8eaf0;
+            --text-secondary: #9ca3b8;
+            --text-muted: #6b7280;
+            --text-label: #ffffff;
+            --border: #2a2d3e;
+            --border-light: #323550;
+            --border-hover: #3a3d50;
+            --shadow-sm: 0 1px 3px rgba(0,0,0,0.2);
+            --shadow: 0 4px 6px rgba(0,0,0,0.2);
+            --shadow-lg: 0 10px 25px rgba(0,0,0,0.3);
+            --shadow-xl: 0 20px 50px rgba(0,0,0,0.4);
+            --accent-blue: #3b82f6;
+            --accent-cyan: #06b6d4;
+            --accent-emerald: #10b981;
+            --accent-amber: #f59e0b;
+            --accent-rose: #f43f5e;
+            --accent-violet: #8b5cf6;
+            --accent-pink: #ec4899;
+            --accent-gold: #eab308;
+            --glow-blue: 0 0 25px rgba(59,130,246,0.3);
+            --glow-cyan: 0 0 25px rgba(6,182,212,0.3);
+            --glow-amber: 0 0 25px rgba(245,158,11,0.3);
+            --glow-rose: 0 0 25px rgba(244,63,94,0.3);
+            --glow-violet: 0 0 25px rgba(139,92,246,0.3);
+            --glow-pink: 0 0 25px rgba(236,72,153,0.3);
+            --toggle-bg: #1a1d2e;
+            --toggle-icon: #fbbf24;
+            --header-gradient-line: linear-gradient(90deg, transparent, #3b82f6, #06b6d4, #10b981, #f59e0b, #8b5cf6, transparent);
+            --btn-new-bg: linear-gradient(135deg, #1e293b, #0f172a);
+            --btn-new-border: #323550;
+            --btn-new-text: #e8eaf0;
+            --btn-new-shadow: 0 6px 20px rgba(0,0,0,0.3);
+            --btn-new-hover-shadow: 0 8px 30px rgba(59,130,246,0.4), 0 0 60px rgba(139,92,246,0.2);
+            --badge-bg: #141725;
+            --badge-text: #e2e8f0;
+            --badge-border: #3a3d50;
+            --total-bg: rgba(255,255,255,0.02);
+            --alert-bg: rgba(244,63,94,0.12);
+            --alert-border: rgba(244,63,94,0.3);
+            --tab-hover-bg: rgba(255,255,255,0.03);
+            --tab-hover-text: #e8eaf0;
+            --method-bg: rgba(251,191,36,0.06);
+            --method-border: rgba(251,191,36,0.25);
+            --method-header-bg: rgba(251,191,36,0.08);
+            --method-header-hover: rgba(251,191,36,0.14);
+            --method-accent: #fbbf24;
+            --method-text: #fef3c7;
+            --method-title-color: #fde68a;
+            --method-highlight-bg: rgba(251,191,36,0.2);
+            --method-highlight-text: #fbbf24;
+            --logo-ring-1: #3b82f6;
+            --logo-ring-2: #06b6d4;
+            --logo-ring-3: #8b5cf6;
+            --logo-shadow: 0 8px 30px rgba(59,130,246,0.35);
+            --logo-inner-bg: #1a1d2e;
+            --score-card-bg: #1a1d2e;
+            --score-card-border: #2a2d3e;
+            --score-value-blue: #3b82f6;
+            --score-value-emerald: #10b981;
+            --toggle-active-bg: linear-gradient(135deg, #3b82f6, #8b5cf6);
+            --radio-selected-bg: rgba(139,92,246,0.1);
+            --radio-selected-border: #8b5cf6;
+            --header-bg: #1a1d2e;
+            --header-border: #2a2d3e;
+            --text-muted-light: #6b7280;
+            --card-animation-bg: rgba(255,255,255,0.02);
+            --dev-badge-text: #fbbf24;
+            --dev-badge-bg: rgba(251,191,36,0.12);
+            --dev-badge-border: rgba(251,191,36,0.3);
+            --percent-badge-bg: rgba(59,130,246,0.12);
+            --percent-badge-text: #60a5fa;
+            --percent-badge-border: rgba(59,130,246,0.3);
+            --percent-gpa-bg: rgba(16,185,129,0.12);
+            --percent-gpa-text: #34d399;
+            --percent-gpa-border: rgba(16,185,129,0.3);
+        }
+
+        .subject-label { color: #ffffff !important; }
+        [data-theme="light"] {
+            --bg-main: #f8fafc;
+            --bg-card: #ffffff;
+            --bg-card-alt: #f1f5f9;
+            --bg-input: #f1f5f9;
+            --bg-collapse-header: #f8fafc;
+            --bg-collapse-header-hover: #f1f5f9;
+            --text-primary: #0f172a;
+            --text-secondary: #475569;
+            --text-muted: #94a3b8;
+            --text-label: #000000;
+            --border: #e2e8f0;
+            --border-light: #f1f5f9;
+            --border-hover: #cbd5e1;
+            --shadow-sm: 0 1px 3px rgba(0,0,0,0.06), 0 1px 2px rgba(0,0,0,0.04);
+            --shadow: 0 4px 6px rgba(0,0,0,0.05), 0 2px 4px rgba(0,0,0,0.03);
+            --shadow-lg: 0 10px 25px rgba(0,0,0,0.08);
+            --shadow-xl: 0 20px 50px rgba(0,0,0,0.12);
+            --accent-blue: #2563eb;
+            --accent-cyan: #0891b2;
+            --accent-emerald: #059669;
+            --accent-amber: #d97706;
+            --accent-rose: #e11d48;
+            --accent-violet: #7c3aed;
+            --accent-pink: #db2777;
+            --accent-gold: #ca8a04;
+            --glow-blue: 0 0 25px rgba(37,99,235,0.15);
+            --glow-cyan: 0 0 25px rgba(8,145,178,0.15);
+            --glow-amber: 0 0 25px rgba(217,119,6,0.15);
+            --glow-rose: 0 0 25px rgba(225,29,72,0.15);
+            --glow-violet: 0 0 25px rgba(124,58,237,0.15);
+            --glow-pink: 0 0 25px rgba(219,39,119,0.15);
+            --toggle-bg: #ffffff;
+            --toggle-icon: #f59e0b;
+            --header-gradient-line: linear-gradient(90deg, transparent, #2563eb, #0891b2, #059669, #d97706, #7c3aed, transparent);
+            --btn-new-bg: linear-gradient(135deg, #1e293b, #334155);
+            --btn-new-border: transparent;
+            --btn-new-text: #ffffff;
+            --btn-new-shadow: 0 6px 20px rgba(30,41,59,0.25);
+            --btn-new-hover-shadow: 0 10px 30px rgba(30,41,59,0.4);
+            --badge-bg: #f1f5f9;
+            --badge-text: #1e293b;
+            --badge-border: #e2e8f0;
+            --total-bg: #f8fafc;
+            --alert-bg: #fef2f2;
+            --alert-border: #fecaca;
+            --tab-hover-bg: #f1f5f9;
+            --tab-hover-text: #0f172a;
+            --method-bg: #fffbeb;
+            --method-border: #fde68a;
+            --method-header-bg: #fffbeb;
+            --method-header-hover: #fef3c7;
+            --method-accent: #f59e0b;
+            --method-text: #78350f;
+            --method-title-color: #92400e;
+            --method-highlight-bg: rgba(245,158,11,0.15);
+            --method-highlight-text: #b45309;
+            --logo-ring-1: #2563eb;
+            --logo-ring-2: #0891b2;
+            --logo-ring-3: #7c3aed;
+            --logo-shadow: 0 8px 30px rgba(37,99,235,0.2);
+            --logo-inner-bg: #ffffff;
+            --score-card-bg: #ffffff;
+            --score-card-border: #e2e8f0;
+            --score-value-blue: #2563eb;
+            --score-value-emerald: #059669;
+            --toggle-active-bg: linear-gradient(135deg, #2563eb, #7c3aed);
+            --radio-selected-bg: rgba(124,58,237,0.08);
+            --radio-selected-border: #7c3aed;
+            --header-bg: #ffffff;
+            --header-border: #e2e8f0;
+            --text-muted-light: #94a3b8;
+            --card-animation-bg: rgba(37,99,235,0.02);
+            --dev-badge-text: #92400e;
+            --dev-badge-bg: #fffbeb;
+            --dev-badge-border: #fde68a;
+            --percent-badge-bg: rgba(37,99,235,0.08);
+            --percent-badge-text: #2563eb;
+            --percent-badge-border: rgba(37,99,235,0.25);
+            --percent-gpa-bg: rgba(5,150,105,0.08);
+            --percent-gpa-text: #059669;
+            --percent-gpa-border: rgba(5,150,105,0.25);
+        }
+
+        * { font-family: 'Tajawal', 'Changa', sans-serif; box-sizing: border-box; }
+
+        html, body {
+            margin: 0; padding: 0;
+            width: 100%; min-height: 100%;
+            overflow-x: hidden;
+            scroll-behavior: smooth;
+        }
+
+        body {
+            background: var(--bg-main);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            transition: background 0.5s ease, color 0.5s ease;
+        }
+
+        .app-container {
+            width: 100%;
+            max-width: 100%;
+            margin: 0 auto;
+            padding: 0 8px;
+        }
+
+        @media (min-width: 768px) {
+            .app-container { max-width: 1200px; padding: 0 16px; }
+        }
+
+        .theme-toggle-wrapper {
+            position: fixed;
+            top: 12px;
+            left: 12px;
+            z-index: 9999;
+        }
+
+        .theme-toggle-btn {
+            width: 42px;
+            height: 42px;
+            border-radius: 50%;
+            background: var(--toggle-bg);
+            border: 2px solid var(--border);
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.1rem;
+            color: var(--toggle-icon);
+            transition: all 0.5s cubic-bezier(0.34, 1.56, 0.64, 1);
+            box-shadow: var(--shadow-lg);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .theme-toggle-btn:hover {
+            transform: scale(1.15) rotate(20deg);
+            box-shadow: 0 12px 35px rgba(245,158,11,0.4);
+            border-color: var(--accent-amber);
+        }
+
+        .theme-toggle-btn:active { transform: scale(0.9); }
+
+        .theme-toggle-btn .fa-sun { animation: sunSpin 0.7s ease; }
+        .theme-toggle-btn .fa-moon { animation: moonSlide 0.7s ease; }
+
+        @keyframes sunSpin {
+            from { transform: rotate(-180deg) scale(0); opacity: 0; }
+            to { transform: rotate(0deg) scale(1); opacity: 1; }
+        }
+
+        @keyframes moonSlide {
+            from { transform: translateY(-20px) scale(0); opacity: 0; }
+            to { transform: translateY(0) scale(1); opacity: 1; }
+        }
+
+        .header-main {
+            background: var(--header-bg);
+            border-bottom: 1px solid var(--header-border);
+            padding: 14px 16px;
+            position: relative;
+            overflow: hidden;
+            transition: all 0.5s ease;
+            box-shadow: var(--shadow-sm);
+        }
+        .header-inner {
+            display: flex; align-items: center; justify-content: center; gap: 20px;
+            max-width: 1000px; margin: 0 auto;
+        }
+
+        .header-main::before {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            height: 3px;
+            background: var(--header-gradient-line);
+            opacity: 0.9;
+        }
+
+        .logo-wrapper {
+            position: relative;
+            width: 64px;
+            height: 64px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+        }
+
+        @media (min-width: 768px) {
+            .logo-wrapper { width: 80px; height: 80px; }
+        }
+
+        .logo-ring {
+            position: absolute;
+            border-radius: 50%;
+            border: 2px solid transparent;
+            animation: ringRotate 8s linear infinite;
+        }
+
+        .logo-ring.ring-1 {
+            width: 64px; height: 64px;
+            border-top-color: var(--logo-ring-1);
+            border-right-color: var(--logo-ring-1);
+            animation-duration: 4s;
+        }
+
+        .logo-ring.ring-2 {
+            width: 56px; height: 56px;
+            border-bottom-color: var(--logo-ring-2);
+            border-left-color: var(--logo-ring-2);
+            animation-duration: 6s;
+            animation-direction: reverse;
+        }
+
+        .logo-ring.ring-3 {
+            width: 48px; height: 48px;
+            border-top-color: var(--logo-ring-3);
+            border-left-color: var(--logo-ring-3);
+            animation-duration: 5s;
+        }
+
+        @media (min-width: 768px) {
+            .logo-ring.ring-1 { width: 80px; height: 80px; }
+            .logo-ring.ring-2 { width: 70px; height: 70px; }
+            .logo-ring.ring-3 { width: 60px; height: 60px; }
+        }
+
+        @keyframes ringRotate {
+            from { transform: rotate(0deg); }
+            to { transform: rotate(360deg); }
+        }
+
+        .logo-inner {
+            width: 40px; height: 40px;
+            border-radius: 50%;
+            background: var(--logo-inner-bg);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 2;
+            box-shadow: var(--logo-shadow);
+            border: 1px solid var(--border);
+            overflow: hidden;
+            transition: all 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+        }
+
+        @media (min-width: 768px) {
+            .logo-inner { width: 52px; height: 52px; }
+        }
+
+        .logo-inner img {
+            width: 85%; height: 85%;
+            object-fit: contain;
+            position: relative;
+            z-index: 1;
+        }
+
+        .logo-inner-fallback {
+            display: none;
+            width: 40px; height: 40px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, var(--accent-blue), var(--accent-violet));
+            align-items: center;
+            justify-content: center;
+            font-size: 1.1rem;
+            color: white;
+        }
+
+        @media (min-width: 768px) {
+            .logo-inner-fallback { width: 52px; height: 52px; font-size: 1.4rem; }
+        }
+
+        .logo-wrapper:hover .logo-ring.ring-1 { animation-duration: 1.5s; }
+        .logo-wrapper:hover .logo-ring.ring-2 { animation-duration: 2.5s; }
+        .logo-wrapper:hover .logo-ring.ring-3 { animation-duration: 2s; }
+
+        .logo-wrapper:hover .logo-inner {
+            box-shadow: 0 15px 45px rgba(59,130,246,0.4);
+            transform: scale(1.06);
+        }
+
+        .title-main {
+            font-family: 'Changa', sans-serif;
+            font-size: 1.3rem;
+            font-weight: 800;
+            color: var(--text-primary);
+            line-height: 1.2;
+            margin: 0;
+            transition: color 0.5s ease;
+        }
+
+        @media (min-width: 768px) {
+            .title-main { font-size: 1.8rem; }
+        }
+
+        .title-gradient {
+            background: linear-gradient(135deg, var(--accent-cyan) 0%, var(--accent-blue) 50%, var(--accent-violet) 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .subtitle-muted {
+            font-size: 0.62rem;
+            text-transform: uppercase;
+            letter-spacing: 3px;
+            color: var(--text-muted);
+            font-weight: 600;
+            margin: 2px 0 0;
+            transition: color 0.5s ease;
+        }
+        .header-badges { margin-top: 4px; display: flex; gap: 6px; flex-wrap: wrap; }
+
+        @media (min-width: 768px) {
+            .subtitle-muted { font-size: 0.7rem; letter-spacing: 4px; }
+        }
+
+        .dev-badge {
+            background: var(--dev-badge-bg);
+            color: var(--dev-badge-text);
+            padding: 4px 14px;
+            border-radius: 50px;
+            font-size: 0.68rem;
+            font-weight: 700;
+            border: 1px solid var(--dev-badge-border);
+            white-space: nowrap;
+        }
+
+        @media (min-width: 768px) {
+            .dev-badge { padding: 6px 16px; font-size: 0.72rem; }
+        }
+        @media (max-width: 768px) {
+            .header-inner { gap: 12px; }
+            .title-main { font-size: 1rem; }
+            .subtitle-muted { font-size: 0.5rem; letter-spacing: 2px; }
+            .header-badges { gap: 4px; }
+            .dev-badge { font-size: 0.55rem; padding: 2px 8px; }
+        }
+
+        .score-row {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            margin-bottom: 14px;
+        }
+
+        @media (min-width: 768px) {
+            .score-row { gap: 12px; margin-bottom: 20px; }
+        }
+
+        .score-card {
+            flex: 1;
+            min-width: 100px;
+            background: var(--score-card-bg);
+            border: 1px solid var(--score-card-border);
+            border-radius: 16px;
+            padding: 14px 16px;
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+        }
+
+        @media (min-width: 768px) {
+            .score-card { min-width: 140px; padding: 20px 24px; border-radius: 20px; }
+        }
+
+        .score-card:hover {
+            border-color: var(--border-hover);
+            transform: translateY(-3px);
+            box-shadow: var(--shadow-xl);
+        }
+
+        .score-label {
+            font-size: 0.62rem;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            letter-spacing: 1.5px;
+            font-weight: 700;
+            margin-bottom: 4px;
+            position: relative;
+            z-index: 1;
+        }
+
+        @media (min-width: 768px) {
+            .score-label { font-size: 0.7rem; letter-spacing: 2px; margin-bottom: 6px; }
+        }
+
+        .score-value {
+            font-size: 1.6rem;
+            font-weight: 900;
+            color: var(--text-primary);
+            direction: ltr;
+            text-align: right;
+            font-family: 'Changa', sans-serif;
+            position: relative;
+            z-index: 1;
+            transition: color 0.5s ease;
+        }
+
+        @media (min-width: 768px) {
+            .score-value { font-size: 2.4rem; }
+        }
+
+        .score-value.blue { color: var(--score-value-blue); }
+        .score-value.emerald { color: var(--score-value-emerald); }
+
+        .percent-chip { display: inline-flex; align-items: center; gap: 4px; padding: 5px 12px; border-radius: 50px; font-weight: 700; font-size: 0.78rem; font-family: 'Changa', sans-serif; direction: ltr; transition: all 0.35s cubic-bezier(0.34, 1.56, 0.64, 1); animation: percentPop 0.4s ease; white-space: nowrap; }
+        @media (min-width: 768px) { .percent-chip { padding: 6px 14px; font-size: 0.85rem; } }
+        .percent-chip.est1 { background: var(--percent-badge-bg); color: var(--percent-badge-text); border: 1.5px solid var(--percent-badge-border); box-shadow: 0 0 15px rgba(59,130,246,0.15); }
+        .percent-chip.est2 { background: rgba(139,92,246,0.12); color: #a78bfa; border: 1.5px solid rgba(139,92,246,0.3); box-shadow: 0 0 15px rgba(139,92,246,0.15); }
+        .percent-chip.gpa { background: var(--percent-gpa-bg); color: var(--percent-gpa-text); border: 1.5px solid var(--percent-gpa-border); box-shadow: 0 0 15px rgba(16,185,129,0.15); }
+        [data-theme="light"] .percent-chip.est2 { background: rgba(124,58,237,0.08); color: #7c3aed; border: 1.5px solid rgba(124,58,237,0.25); box-shadow: 0 0 15px rgba(124,58,237,0.1); }
+        @keyframes percentPop { from { transform: scale(0.8); opacity: 0; } to { transform: scale(1); opacity: 1; } }
+        .section-header-row { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 8px; margin-bottom: 10px; }
+
+        .btn-new-cert {
+            background: var(--btn-new-bg);
+            border: 2px solid var(--btn-new-border);
+            color: var(--btn-new-text);
+            font-weight: 700;
+            padding: 12px 18px;
+            border-radius: 14px;
+            cursor: pointer;
+            transition: all 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+            white-space: nowrap;
+            font-size: 0.72rem;
+            align-self: center;
+            box-shadow: var(--btn-new-shadow);
+            letter-spacing: 1px;
+        }
+
+        @media (min-width: 768px) {
+            .btn-new-cert { padding: 16px 28px; border-radius: 18px; font-size: 0.82rem; }
+        }
+
+        .btn-new-cert:hover {
+            transform: translateY(-3px) scale(1.03);
+            box-shadow: var(--btn-new-hover-shadow);
+        }
+
+        .btn-new-cert:active { transform: scale(0.95); }
+
+        .tabs-wrapper {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 4px;
+            margin-bottom: 14px;
+            padding: 5px;
+            background: var(--bg-card);
+            border-radius: 16px;
+            border: 1px solid var(--border);
+            transition: all 0.5s ease;
+            box-shadow: var(--shadow-sm);
+        }
+
+        @media (min-width: 768px) {
+            .tabs-wrapper { gap: 8px; padding: 8px; border-radius: 20px; margin-bottom: 20px; }
+        }
+
+        .tab-glow {
+            padding: 8px 10px;
+            font-weight: 700;
+            font-size: 0.65rem;
+            background: transparent;
+            border: 2px solid transparent;
+            color: var(--text-secondary);
+            cursor: pointer;
+            transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+            border-radius: 12px;
+            white-space: nowrap;
+            position: relative;
+        }
+
+        @media (min-width: 768px) {
+            .tab-glow { padding: 12px 20px; font-size: 0.75rem; border-radius: 16px; }
+        }
+
+        .tab-glow:hover {
+            color: var(--tab-hover-text);
+            background: var(--tab-hover-bg);
+            transform: translateY(-2px);
+        }
+
+        .tab-glow.american-tab.active { background: rgba(59,130,246,0.12); border-color: rgba(59,130,246,0.5); color: var(--accent-blue); box-shadow: var(--glow-blue); }
+        .tab-glow.thanaweya-tab.active { background: rgba(6,182,212,0.12); border-color: rgba(6,182,212,0.5); color: var(--accent-cyan); box-shadow: var(--glow-cyan); }
+        .tab-glow.gulf-tab.active { background: rgba(245,158,11,0.12); border-color: rgba(245,158,11,0.5); color: var(--accent-amber); box-shadow: var(--glow-amber); }
+        .tab-glow.libya-tab.active { background: rgba(244,63,94,0.12); border-color: rgba(244,63,94,0.5); color: var(--accent-rose); box-shadow: var(--glow-rose); }
+        .tab-glow.jordan-tab.active { background: rgba(139,92,246,0.12); border-color: rgba(139,92,246,0.5); color: var(--accent-violet); box-shadow: var(--glow-violet); }
+        .tab-glow.azhar-tab.active { background: rgba(236,72,153,0.12); border-color: rgba(236,72,153,0.5); color: var(--accent-pink); box-shadow: var(--glow-pink); }
+.tab-glow.kuwait-tab.active { background: rgba(16,185,129,0.12); border-color: rgba(16,185,129,0.5); color: var(--accent-emerald); box-shadow: 0 0 25px rgba(16,185,129,0.3); }
+        .tab-glow.stem-tab.active { background: rgba(16,185,129,0.12); border-color: rgba(16,185,129,0.5); color: var(--accent-emerald); box-shadow: 0 0 25px rgba(16,185,129,0.3); }
+        .tab-glow.saudi-tab.active { background: rgba(6,182,212,0.12); border-color: rgba(6,182,212,0.5); color: var(--accent-cyan); box-shadow: var(--glow-cyan); }
+
+        .card-main {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 16px;
+            padding: 14px;
+            margin-bottom: 12px;
+            transition: all 0.3s ease;
+            animation: slideUp 0.5s ease-out backwards;
+        }
+
+        @media (min-width: 768px) {
+            .card-main { padding: 22px; border-radius: 20px; margin-bottom: 16px; }
+        }
+
+        @keyframes slideUp {
+            from { opacity: 0; transform: translateY(30px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .card-main:hover { border-color: var(--border-hover); box-shadow: var(--shadow-lg); }
+
+        .card-heading {
+            font-weight: 800;
+            font-size: 0.85rem;
+            color: var(--text-primary);
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        @media (min-width: 768px) {
+            .card-heading { font-size: 1rem; gap: 10px; }
+        }
+
+        .dot-accent {
+            width: 8px; height: 8px;
+            border-radius: 50%;
+            display: inline-block;
+            animation: dotPulse 2s infinite;
+        }
+
+        @media (min-width: 768px) {
+            .dot-accent { width: 10px; height: 10px; }
+        }
+
+        @keyframes dotPulse {
+            0%, 100% { box-shadow: 0 0 8px currentColor; }
+            50% { box-shadow: 0 0 20px currentColor, 0 0 30px currentColor; }
+        }
+
+        .method-collapse {
+            background: var(--method-bg);
+            border: 2px solid var(--method-border);
+            border-radius: 16px;
+            margin-bottom: 14px;
+            overflow: hidden;
+            box-shadow: 0 4px 20px rgba(245,158,11,0.08);
+            transition: all 0.4s ease;
+        }
+
+        @media (min-width: 768px) {
+            .method-collapse { border-radius: 20px; margin-bottom: 18px; }
+        }
+
+        .method-collapse:hover { box-shadow: 0 8px 35px rgba(245,158,11,0.15); }
+
+        .method-header {
+            padding: 12px 16px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            transition: all 0.3s ease;
+            user-select: none;
+            background: var(--method-header-bg);
+        }
+
+        @media (min-width: 768px) {
+            .method-header { padding: 16px 22px; }
+        }
+
+        .method-header:hover { background: var(--method-header-hover); }
+
+        .method-icon-wrapper {
+            width: 34px; height: 34px;
+            border-radius: 12px;
+            background: linear-gradient(135deg, rgba(245,158,11,0.2), rgba(251,191,36,0.1));
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.9rem;
+            color: var(--method-accent);
+            transition: all 0.3s ease;
+        }
+
+        @media (min-width: 768px) {
+            .method-icon-wrapper { width: 40px; height: 40px; border-radius: 14px; font-size: 1.1rem; }
+        }
+
+        .method-header:hover .method-icon-wrapper {
+            transform: rotate(-8deg) scale(1.08);
+        }
+
+        .method-title {
+            font-family: 'Changa', sans-serif;
+            font-size: 0.85rem;
+            font-weight: 700;
+            color: var(--method-title-color);
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        @media (min-width: 768px) {
+            .method-title { font-size: 1rem; gap: 10px; }
+        }
+
+        .method-arrow {
+            width: 28px; height: 28px;
+            border-radius: 50%;
+            background: rgba(245,158,11,0.15);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.7rem;
+            color: var(--method-accent);
+            transition: all 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+        }
+
+        @media (min-width: 768px) {
+            .method-arrow { width: 34px; height: 34px; font-size: 0.8rem; }
+        }
+
+        .method-header.open .method-arrow {
+            transform: rotate(180deg);
+            background: rgba(245,158,11,0.3);
+        }
+
+        .method-body {
+            max-height: 2000px;
+            overflow: hidden;
+            transition: max-height 0.5s ease;
+        }
+
+        .method-body.closed { max-height: 0; }
+
+        .method-content {
+            padding: 12px 16px;
+            color: var(--method-text);
+            line-height: 1.8;
+            font-size: 0.75rem;
+        }
+
+        @media (min-width: 768px) {
+            .method-content { padding: 18px 22px; font-size: 0.82rem; line-height: 1.9; }
+        }
+
+        .method-content li {
+            padding: 6px 0;
+            padding-right: 20px;
+            position: relative;
+            border-bottom: 1px solid rgba(245,158,11,0.12);
+        }
+
+        @media (min-width: 768px) {
+            .method-content li { padding: 7px 0; padding-right: 24px; }
+        }
+
+        .method-content li::before {
+            content: '';
+            position: absolute;
+            right: 0;
+            top: 13px;
+            width: 6px; height: 6px;
+            border-radius: 50%;
+            background: var(--method-accent);
+            box-shadow: 0 0 10px rgba(245,158,11,0.5);
+            animation: dotPulse 2s infinite;
+        }
+
+        @media (min-width: 768px) {
+            .method-content li::before { top: 14px; width: 7px; height: 7px; }
+        }
+
+        .method-highlight {
+            color: var(--method-highlight-text);
+            font-weight: 700;
+            background: var(--method-highlight-bg);
+            padding: 1px 6px;
+            border-radius: 5px;
+        }
+
+        @media (min-width: 768px) {
+            .method-highlight { padding: 2px 8px; border-radius: 6px; }
+        }
+
+        .input-main {
+            background: var(--bg-input);
+            border: 2px solid var(--border);
+            border-radius: 12px;
+            padding: 10px 14px;
+            color: var(--text-primary);
+            font-weight: 600;
+            font-size: 0.82rem;
+            transition: all 0.3s ease;
+            width: 100%;
+            outline: none;
+        }
+
+        @media (min-width: 768px) {
+            .input-main { padding: 12px 16px; font-size: 0.88rem; border-radius: 14px; }
+        }
+
+        .input-main:focus {
+            border-color: var(--accent-blue);
+            box-shadow: 0 0 0 5px rgba(59,130,246,0.1), 0 0 25px rgba(59,130,246,0.15);
+            background: var(--bg-card);
+        }
+
+        .input-main::placeholder { color: var(--text-muted-light); font-size: 0.72rem; }
+        .input-main:disabled { opacity: 0.35; cursor: not-allowed; }
+
+        @media (min-width: 768px) {
+            .input-main::placeholder { font-size: 0.78rem; }
+        }
+
+        .subject-label {
+            color: var(--text-label);
+            font-weight: 800;
+            font-size: 0.75rem;
+            transition: color 0.5s ease;
+        }
+
+        @media (min-width: 768px) {
+            .subject-label { font-size: 0.82rem; }
+        }
+
+        .toggle-btn {
+            padding: 8px 12px;
+            font-weight: 700;
+            font-size: 0.68rem;
+            background: var(--bg-input);
+            border: 2px solid var(--border);
+            color: var(--text-secondary);
+            cursor: pointer;
+            transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+            flex: 1;
+            text-align: center;
+            border-radius: 50px;
+        }
+
+        @media (min-width: 768px) {
+            .toggle-btn { padding: 10px 18px; font-size: 0.75rem; }
+        }
+
+        .toggle-btn.active {
+            background: var(--toggle-active-bg);
+            border-color: transparent;
+            color: white;
+            box-shadow: 0 6px 20px rgba(59,130,246,0.3);
+            transform: scale(1.03);
+        }
+
+        .toggle-btn:hover:not(.active) {
+            border-color: var(--accent-blue);
+            color: var(--accent-blue);
+            transform: translateY(-2px);
+        }
+
+        .radio-card {
+            padding: 10px 14px;
+            border: 2px solid var(--border);
+            border-radius: 12px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            flex: 1;
+            color: var(--text-secondary);
+            font-size: 0.75rem;
+            background: var(--bg-input);
+        }
+
+        @media (min-width: 768px) {
+            .radio-card { padding: 14px 18px; border-radius: 14px; gap: 10px; font-size: 0.82rem; }
+        }
+
+        .radio-card.selected {
+            border-color: var(--radio-selected-border);
+            background: var(--radio-selected-bg);
+            color: var(--accent-violet);
+            box-shadow: 0 0 25px rgba(139,92,246,0.2);
+        }
+
+        .radio-card input[type="radio"] { accent-color: var(--accent-violet); width: 1rem; height: 1rem; }
+
+        @media (min-width: 768px) {
+            .radio-card input[type="radio"] { width: 1.1rem; height: 1.1rem; }
+        }
+
+        .alert-inline {
+            padding: 4px 10px;
+            margin-top: 6px;
+            font-size: 0.62rem;
+            border-radius: 50px;
+            background: var(--alert-bg);
+            border: 1px solid var(--alert-border);
+            color: var(--accent-rose);
+            display: inline-block;
+            font-weight: 600;
+            animation: alertShake 0.5s ease;
+        }
+
+        @media (min-width: 768px) {
+            .alert-inline { padding: 5px 12px; margin-top: 8px; font-size: 0.7rem; }
+        }
+
+        @keyframes alertShake {
+            0%, 100% { transform: translateX(0); }
+            25% { transform: translateX(-4px); }
+            75% { transform: translateX(4px); }
+        }
+
+        .total-box {
+            background: var(--total-bg);
+            border: 1px solid var(--border);
+            border-radius: 14px;
+            padding: 11px 14px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            color: var(--text-primary);
+            font-size: 0.8rem;
+            font-weight: 600;
+        }
+
+        @media (min-width: 768px) {
+            .total-box { padding: 14px 20px; border-radius: 16px; font-size: 0.88rem; }
+        }
+
+        .total-highlight-num {
+            font-family: 'Changa', sans-serif;
+            font-size: 1.1rem;
+            font-weight: 800;
+            color: var(--accent-cyan);
+            direction: ltr;
+        }
+
+        @media (min-width: 768px) {
+            .total-highlight-num { font-size: 1.2rem; }
+        }
+
+        .divide-sign {
+            font-size: 1.1rem;
+            font-weight: 900;
+            color: var(--accent-amber);
+            margin: 0 4px;
+        }
+
+        @media (min-width: 768px) {
+            .divide-sign { font-size: 1.8rem; margin: 0 6px; }
+        }
+
+        .badge-accent-sm {
+            background: linear-gradient(135deg, var(--accent-blue), var(--accent-violet));
+            color: white;
+            padding: 3px 10px;
+            font-weight: 700;
+            font-size: 0.68rem;
+            border-radius: 50px;
+        }
+
+        @media (min-width: 768px) {
+            .badge-accent-sm { padding: 4px 12px; font-size: 0.72rem; }
+        }
+
+        .row.g-2 { --bs-gutter-y: 0.4rem; --bs-gutter-x: 0.4rem; }
+        .row.g-3 { --bs-gutter-y: 0.6rem; --bs-gutter-x: 0.6rem; }
+        .row.g-4 { --bs-gutter-y: 0.8rem; --bs-gutter-x: 0.8rem; }
+
+        @media (min-width: 768px) {
+            .row.g-2 { --bs-gutter-y: 0.5rem; --bs-gutter-x: 0.5rem; }
+            .row.g-3 { --bs-gutter-y: 0.75rem; --bs-gutter-x: 0.75rem; }
+            .row.g-4 { --bs-gutter-y: 1rem; --bs-gutter-x: 1rem; }
+        }
+        .footer-animated {
+            text-align: center; padding: 16px 20px;
+            font-size: 0.75rem; font-weight: 700;
+            border-top: 1px solid var(--border);
+            background: var(--bg-card);
+            animation: footerShimmer 4s ease infinite;
+            background-size: 200% 200%;
+        }
+        @keyframes footerShimmer {
+            0% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+            100% { background-position: 0% 50%; }
+        }
+        .footer-animated .ft-text {
+            background: linear-gradient(90deg, var(--accent-blue), var(--accent-cyan), var(--accent-emerald), var(--accent-amber), var(--accent-rose), var(--accent-violet), var(--accent-blue));
+            background-size: 300% 100%;
+            -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;
+            animation: rainbow 6s linear infinite;
+            font-family: 'Changa', sans-serif;
+            letter-spacing: 1px;
+        }
+        @keyframes rainbow {
+            0% { background-position: 0% 50%; }
+            100% { background-position: 300% 50%; }
+        }
+        .footer-animated .ft-icon { display: inline-block; animation: pulseHeart 1.5s ease infinite; }
+        @keyframes pulseHeart {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.15); }
+        }
+        @media (max-width: 768px) {
+            .score-card { padding: 10px 12px; }
+            .score-value { font-size: 1.2rem; }
+            .score-label { font-size: 0.55rem; }
+            .tab-glow { padding: 7px 8px; font-size: 0.58rem; }
+            .toggle-btn { padding: 6px 10px; font-size: 0.62rem; }
+            .input-main { padding: 8px 10px; font-size: 0.75rem; }
+            .section-header-row { flex-direction: column; align-items: stretch; }
+            .percent-chip { font-size: 0.68rem; padding: 4px 8px; }
+            .card-main { padding: 10px; }
+            .total-box { font-size: 0.75rem; padding: 8px 10px; }
+            .method-icon-wrapper { width: 40px; height: 40px; }
+            .method-arrow { width: 34px; height: 34px; }
+            .subject-label { font-size: 0.68rem; }
+        }
+        @media (max-width: 480px) {
+            .title-main { font-size: 0.85rem; }
+            .subtitle-muted { font-size: 0.45rem; letter-spacing: 1px; }
+            .logo-wrapper { width: 44px; height: 44px; }
+            .logo-ring.ring-1 { width: 44px; height: 44px; }
+            .logo-ring.ring-2 { width: 38px; height: 38px; }
+            .logo-ring.ring-3 { width: 32px; height: 32px; }
+            .logo-inner { width: 26px; height: 26px; }
+            .tab-glow { padding: 5px 6px; font-size: 0.52rem; }
+            .score-value { font-size: 1rem; }
+            .score-card { padding: 8px 10px; min-width: 70px; }
+            .toggle-btn { padding: 5px 8px; font-size: 0.55rem; }
+            .dash-btn, .theme-toggle-btn { width: 38px; height: 38px; font-size: 0.9rem; top: 8px; }
+            .theme-toggle-btn { left: 8px; }
+            .dash-btn { right: 8px; }
+        }
+      /* Auth UI */
+    .user-menu { position: fixed; top: 12px; left: 60px; z-index: 9999; display: flex; align-items: center; gap: 6px; }
+    .user-avatar { width: 36px; height: 36px; border-radius: 50%; background: var(--accent-blue); color: #fff; display: flex; align-items: center; justify-content: center; font-size: 0.75rem; font-weight: 700; cursor: pointer; border: 2px solid var(--border); box-shadow: var(--shadow-lg); transition: 0.2s; }
+    .user-avatar:hover { transform: scale(1.1); border-color: var(--accent-amber); }
+    .user-dropdown { position: absolute; top: 44px; left: 0; background: var(--bg-card); border: 1px solid var(--border); border-radius: 12px; box-shadow: var(--shadow-xl); min-width: 180px; display: none; z-index: 10000; overflow: hidden; }
+    .user-dropdown.show,
+    .user-dropdown.active { display: block; }
+    .user-dropdown-item { padding: 10px 14px; font-size: 0.8rem; color: var(--text-primary); cursor: pointer; display: flex; align-items: center; gap: 8px; transition: 0.15s; border-bottom: 1px solid var(--border); }
+    .user-dropdown-item:last-child { border-bottom: none; }
+    .user-dropdown-item:hover { background: var(--bg-card-alt); }
+    .user-dropdown-item i { width: 18px; color: var(--accent-amber); }
+    .user-dropdown-item.logout-item { color: var(--accent-rose); }
+    .role-badge { font-size: 0.6rem; padding: 2px 8px; border-radius: 50px; font-weight: 600; margin-right: 6px; }
+    .role-badge.admin { background: rgba(244,63,94,0.15); color: var(--accent-rose); }
+    .role-badge.supervisor { background: rgba(245,158,11,0.15); color: var(--accent-amber); }
+    .role-badge.employee { background: rgba(59,130,246,0.15); color: var(--accent-blue); }
+    .role-badge.viewer { background: rgba(107,114,128,0.15); color: var(--text-muted); }
+    .login-modal-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.6); z-index: 99999; justify-content: center; align-items: center; backdrop-filter: blur(4px); }
+    .login-modal-overlay.active,
+    .login-modal-overlay.show { display: flex; }
+    .login-modal-box { background: var(--bg-card); border-radius: 20px; padding: 28px 32px; width: 340px; max-width: 90vw; box-shadow: var(--shadow-xl); border: 1px solid var(--border); animation: loginPop 0.2s ease-out; }
+    @keyframes loginPop { from { opacity: 0; transform: scale(0.9); } to { opacity: 1; transform: scale(1); } }
+    .login-modal-box h3 { font-size: 1.1rem; font-weight: 800; color: var(--text-primary); margin-bottom: 4px; text-align: center; }
+    .login-modal-box .login-subtitle { font-size: 0.75rem; color: var(--text-muted); text-align: center; margin-bottom: 16px; }
+    .login-modal-box .form-group { margin-bottom: 12px; }
+    .login-modal-box .form-control { border-radius: 10px; padding: 10px 14px; font-size: 0.85rem; }
+    .login-modal-box .btn { width: 100%; justify-content: center; padding: 10px; }
+    .login-modal-box .login-error { color: var(--accent-rose); font-size: 0.75rem; margin-top: 8px; text-align: center; display: none; }
+    @media (max-width: 480px) {
+      .user-menu { left: 54px; top: 8px; }
+      .user-avatar { width: 32px; height: 32px; font-size: 0.65rem; }
+    }
+    @keyframes pointLeft {
+      0% { transform: translateX(0); }
+      100% { transform: translateX(-15px); }
+    }
+  </style>
+</head>
+<body data-theme="dark">
+
+<div class="theme-toggle-wrapper">
+    <a href="../../index.html" class="dash-btn" title="العودة للرئيسية"><i class="fas fa-home"></i></a>
+    <button class="theme-toggle-btn" onclick="toggleTheme()" title="تبديل الوضع" id="themeToggleBtn">
+        <i class="fas fa-sun"></i>
+    </button>
+</div>
+
+<style>
+@keyframes homeGlow { 0% { color:var(--accent-rose); text-shadow:0 0 12px rgba(244,63,94,0.6); } 25% { color:var(--accent-amber); text-shadow:0 0 12px rgba(245,158,11,0.6); } 50% { color:var(--accent-emerald); text-shadow:0 0 12px rgba(16,185,129,0.6); } 75% { color:var(--accent-blue); text-shadow:0 0 12px rgba(59,130,246,0.6); } 100% { color:var(--accent-rose); text-shadow:0 0 12px rgba(244,63,94,0.6); } }
+.dash-btn { width:42px; height:42px; border-radius:50%; background:var(--bg-card); border:2px solid var(--border); color:var(--accent-blue); display:flex; align-items:center; justify-content:center; font-size:1.1rem; box-shadow:var(--shadow-lg); transition:all 0.4s ease; text-decoration:none; position:fixed; top:12px; right:12px; z-index:9999; }
+.dash-btn:hover { transform:scale(1.15); color:#fff; background:var(--accent-blue); border-color:var(--accent-blue); box-shadow:0 0 25px rgba(59,130,246,0.5); }
+.dash-btn .fa-home { animation:homeGlow 2.5s ease infinite; }
+.dash-btn:hover .fa-home { animation:none; color:#fff; }
+.student-save-row { background:var(--bg-card);border:1px solid var(--border);border-radius:16px;padding:12px 18px;margin-bottom:16px; }
+.student-name-group { display:flex;align-items:center;gap:12px;flex-wrap:wrap; }
+.modal-overlay { position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.7);display:flex;justify-content:center;align-items:center;backdrop-filter:blur(4px);z-index:20000; }
+.modal-box { background:var(--bg-card);border:1px solid var(--border);border-radius:20px;padding:24px;box-shadow:0 20px 60px rgba(0,0,0,0.5);width:90%; }
+.cert-record-card { background:var(--bg-card-alt);border:1px solid var(--border);border-radius:12px;padding:14px 18px;margin-bottom:10px;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px; }
+.cert-record-info { flex:1;min-width:200px; }
+.cert-record-name { font-weight:800;color:#fff;font-size:0.95rem; }
+.cert-record-type { font-size:0.75rem;color:var(--accent-amber);font-weight:700; }
+.cert-record-pct { font-size:1.1rem;font-weight:900;color:var(--accent-emerald);font-family:'Changa',sans-serif; }
+.cert-record-actions { display:flex;gap:8px; }
+.cert-record-actions button { border:none;border-radius:8px;padding:6px 14px;font-weight:700;font-size:0.8rem;cursor:pointer;transition:0.2s; }
+.cert-record-actions .edit-btn { background:rgba(59,130,246,0.2);color:var(--accent-blue); }
+.cert-record-actions .edit-btn:hover { background:var(--accent-blue);color:#fff; }
+.cert-record-actions .del-btn { background:rgba(244,63,94,0.2);color:var(--accent-rose); }
+.cert-record-actions .del-btn:hover { background:var(--accent-rose);color:#fff; }
+.top-actions { display:flex;gap:10px;margin-bottom:14px;flex-wrap:wrap; }
+.btn-new-cert { background:linear-gradient(135deg,var(--accent-emerald),#0e9f6e);color:#fff;border:none;border-radius:50px;padding:10px 24px;font-weight:800;font-size:0.95rem;cursor:pointer;box-shadow:0 4px 16px rgba(16,185,129,0.35);transition:all .2s; }
+.btn-new-cert:hover { transform:translateY(-2px);box-shadow:0 8px 24px rgba(16,185,129,0.5);color:#fff; }
+.btn-records { background:var(--bg-card);border:1px solid var(--border);color:var(--text-primary);border-radius:50px;padding:10px 24px;font-weight:800;font-size:0.95rem;cursor:pointer;transition:all .2s; }
+.btn-records:hover { border-color:var(--accent-blue);color:var(--accent-blue); }
+.wizard-step { background:linear-gradient(135deg,rgba(245,158,11,0.10),rgba(59,130,246,0.08));border:2px solid var(--accent-amber);border-radius:18px;padding:22px 20px 18px;margin-bottom:16px;box-shadow:0 6px 22px rgba(0,0,0,0.25);position:relative;animation:fadeIn .3s ease; }
+#step2 { border-color:var(--accent-blue);background:linear-gradient(135deg,rgba(59,130,246,0.10),rgba(16,185,129,0.08)); }
+.step-badge { position:absolute;top:-15px;right:18px;background:var(--accent-amber);color:#1a1a1a;font-weight:900;font-family:'Changa',sans-serif;font-size:1rem;padding:5px 18px;border-radius:30px;box-shadow:0 4px 12px rgba(245,158,11,0.5); }
+#step2 .step-badge { background:var(--accent-blue);color:#fff;box-shadow:0 4px 12px rgba(59,130,246,0.5); }
+.step-hint { color:var(--text-secondary);font-size:0.85rem;margin-bottom:14px;font-weight:700; }
+.save-indicator { color:var(--accent-emerald);font-size:0.8rem;font-weight:800;margin-right:8px;white-space:nowrap;animation:fadeIn .3s ease; }
+@keyframes fadeIn { from{opacity:0;transform:translateY(8px);} to{opacity:1;transform:translateY(0);} }
+</style>
+
+<div class="app-container">
+    <header class="header-main">
+        <div class="header-inner">
+            <div class="logo-wrapper">
+                <div class="logo-ring ring-1"></div>
+                <div class="logo-ring ring-2"></div>
+                <div class="logo-ring ring-3"></div>
+                <div class="logo-inner">
+                    <img src="https://i.ibb.co/kgfm88mq/logo.png" alt="جامعة اللوتس" id="logoImg" onerror="handleLogoError()">
+                </div>
+                <div class="logo-inner-fallback" id="logoFallback"><i class="fas fa-landmark"></i></div>
+            </div>
+            <div class="header-text">
+                <h1 class="title-main">نظام <span class="title-gradient">إدارة حساب الشهادات المعادلة</span></h1>
+                <div class="subtitle-muted">Lotus University · Equivalent Certificates Calculator</div>
+                <div class="header-badges">
+                    <span class="dev-badge"><i class="fas fa-user-circle me-1"></i> تصميم وبرمجة مهندس بولس سمير</span>
+                    <span class="dev-badge"><i class="fas fa-building-columns me-1"></i> جامعة اللوتس</span>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <main class="flex-grow-1" style="padding-bottom: 16px;">
+        <div class="top-actions">
+            <button class="btn-new-cert" onclick="newCertificate()"><i class="fas fa-file-medical me-1"></i> شهادة جديدة</button>
+            <button class="btn-records" onclick="openCertRecordsModal()"><i class="fas fa-history me-1"></i> سجل الشهادات</button>
+        </div>
+
+        <div class="score-row">
+            <div class="score-card" id="rawScoreItem">
+                <div class="score-label">المجموع</div>
+                <div class="score-value blue" id="rawScoreDisplay">0</div>
+            </div>
+            <div class="score-card" id="equivScoreItem" style="display:none;">
+                <div class="score-label">المجموع المكافئ</div>
+                <div class="score-value" style="color:var(--accent-amber);" id="equivScoreDisplay">0</div>
+            </div>
+            <div class="score-card">
+                <div class="score-label">النسبة النهائية</div>
+                <div class="score-value emerald" id="finalPercentage">0.00%</div>
+            </div>
+        </div>
+
+        <div class="wizard-step" id="step1">
+            <div class="step-badge">رقم 1</div>
+            <div class="step-body">
+                <div class="student-name-group">
+                    <i class="fas fa-user-graduate" style="color:var(--accent-amber);font-size:1.4rem;"></i>
+                    <input type="text" id="certStudentName" class="input-main" placeholder="ادخل اسم الطالب (إجباري)" style="flex:1;min-width:200px;border-radius:8px;font-weight:700;font-size:1.05rem;">
+                    <button id="saveCertBtn" class="btn btn-success btn-sm" onclick="saveCertRecord()" style="display:none;border-radius:50px;padding:8px 18px;font-weight:700;" data-requires="save_certificate"><i class="fas fa-sync-alt me-1"></i> تحديث</button>
+                </div>
+                <div class="step-hint" id="step1Hint"><i class="fas fa-info-circle me-1"></i> من فضلك ادخل اسم الطالب لفتح باقي الخطوات</div>
+            </div>
+        </div>
+
+        <div class="wizard-step" id="step2" style="display:none;">
+            <div class="step-badge">رقم 2</div>
+            <div class="step-body">
+                <div class="step-hint"><i class="fas fa-arrow-left me-1"></i> اختر نوع الشهادة لفتح بياناتها</div>
+                <div class="tabs-wrapper">
+                    <button class="tab-glow thanaweya-tab active" data-tab="thanaweya" data-requires="view_certificate" onclick="window.doSwitchTab(this,'thanaweya')"><img src="https://flagcdn.com/eg.svg" width="16" class="me-1" style="border-radius:2px;" alt=""> المصرية</button>
+                    <button class="tab-glow stem-tab" data-tab="stem" data-requires="view_certificate" onclick="window.doSwitchTab(this,'stem')"><img src="https://flagcdn.com/eg.svg" width="16" class="me-1" style="border-radius:2px;" alt=""> STEM</button>
+                    <button class="tab-glow azhar-tab" data-tab="azhar" data-requires="view_certificate" onclick="window.doSwitchTab(this,'azhar')"><img src="https://flagcdn.com/eg.svg" width="16" class="me-1" style="border-radius:2px;" alt=""> الازهرية</button>
+                    <button class="tab-glow saudi-tab" data-tab="saudi" data-requires="view_certificate" onclick="window.doSwitchTab(this,'saudi')"><img src="https://flagcdn.com/sa.svg" width="16" class="me-1" style="border-radius:2px;" alt=""> السعودية</button>
+                    <button class="tab-glow gulf-tab" data-tab="gulf" data-requires="view_certificate" onclick="window.doSwitchTab(this,'gulf')"><img src="https://flagcdn.com/ae.svg" width="12" class="me-1" style="border-radius:2px;" alt=""><img src="https://flagcdn.com/qa.svg" width="12" class="me-1" style="border-radius:2px;" alt=""><img src="https://flagcdn.com/om.svg" width="12" class="me-1" style="border-radius:2px;" alt=""> عمان - قطر - الامارات</button>
+                    <button class="tab-glow libya-tab" data-tab="libya" data-requires="view_certificate" onclick="window.doSwitchTab(this,'libya')"><img src="https://flagcdn.com/ly.svg" width="16" class="me-1" style="border-radius:2px;" alt=""> ليبيا</button>
+                    <button class="tab-glow jordan-tab" data-tab="jordan" data-requires="view_certificate" onclick="window.doSwitchTab(this,'jordan')"><img src="https://flagcdn.com/jo.svg" width="16" class="me-1" style="border-radius:2px;" alt=""> الاردن</button>
+                    <button class="tab-glow kuwait-tab" data-tab="kuwait" data-requires="view_certificate" onclick="window.doSwitchTab(this,'kuwait')"><img src="https://flagcdn.com/kw.svg" width="16" class="me-1" style="border-radius:2px;" alt=""> الكويت</button>
+                    <button class="tab-glow bahrain-tab" data-tab="bahrain" data-requires="view_certificate" onclick="window.doSwitchTab(this,'bahrain')"><img src="https://flagcdn.com/bh.svg" width="16" class="me-1" style="border-radius:2px;" alt=""> البحرين</button>
+                    <button class="tab-glow american-tab" data-tab="american" data-requires="view_certificate" onclick="window.doSwitchTab(this,'american')"><img src="https://flagcdn.com/us.svg" width="16" class="me-1" style="border-radius:2px;" alt=""> امريكان دبلومة</button>
+                </div>
+                <div id="tabContent"></div>
+            </div>
+        </div>
+    </main>
+</div>
+
+<script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+<script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-auth.js"></script>
+<script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
+<script src="../../auth.js?v=4.0"></script>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+<script>
+(function() {
+    var session = (function(){
+        if (typeof window.getCurrentUser === 'function') {
+            var u = window.getCurrentUser();
+            if (u) return u;
+        }
+        try {
+            return JSON.parse(localStorage.getItem('lotus_session') || localStorage.getItem('lotus_auth_session') || localStorage.getItem('auth_session'));
+        } catch(e) { return null; }
+    })();
+    if (session && session.username && session.loginTime && Date.now() - session.loginTime < 28800000) {
+        var canView = session.username === 'boles' || session.role === 'admin' || (window.hasPermission ? window.hasPermission('access_certificate') : (session.permissions && (session.permissions.includes('access_certificate') || session.permissions.includes('view_certificate'))));
+        if (!canView) {
+            alert('ليس لديك صلاحية لعرض صفحة حساب الشهادات');
+            window.location.href = '../../index.html';
+            return;
+        }
+    } else {
+        alert('يرجى تسجيل الدخول أولاً');
+        window.location.href = '../../index.html';
+        return;
+    }
+})();
+window.toggleTheme=function(){const e=document.body,t=document.getElementById("themeToggleBtn"),n=t.querySelector("i"),o=e.getAttribute("data-theme"),s="dark"===o?"light":"dark";e.setAttribute("data-theme",s),n.className="dark"===s?"fas fa-sun":"fas fa-moon",localStorage.setItem("theme",s)};
+(function(){const e=localStorage.getItem("theme")||"dark";document.body.setAttribute("data-theme",e);const t=document.querySelector("#themeToggleBtn i");t&&(t.className="dark"===e?"fas fa-sun":"fas fa-moon")})();
+window.handleLogoError=function(){const e=document.getElementById("logoImg"),t=document.getElementById("logoFallback"),n=document.querySelector(".logo-inner");e&&t&&n&&(e.style.display="none",t.style.display="flex")};
+document.addEventListener("DOMContentLoaded",function(){const e=document.getElementById("logoImg");e&&e.complete&&0===e.naturalWidth&&handleLogoError()});
+
+try { 
+  (function(){
+    if (typeof window.authRequireSystem === 'function' && !window.authRequireSystem('view_certificate', 'حساب الشهادات')) return;
+    const s={activeTab:"thanaweya",studentName:"",amPath:"non_eng",est1Scores:{part1:"",part2:""},est2Scores:{part1:"",part2:""},amSubjects:Array(8).fill("0"),amHas9th:!1,amSubjects9:"0",thSystem:"new",thScore:"",stemTotal:"",gulfSubjects:Array(7).fill().map(()=>({mark:"",isStar:!1})),libyaSubjects:Array(8).fill(""),jordanSubjects:Array(7).fill(""),azharPath:"sci",azharLitSys:"420",azharArabic:"",azharCultural:"",methodOpen:!1,est1Percent:0,est2Percent:0,gpaPercent:0,kuwait10:Array(8).fill(""),kuwait11:Array(8).fill(""),kuwait12:Array(8).fill(""),kuwaitTotalSum:0,kuwaitW10:10,kuwaitW11:20,kuwaitW12:70,bahrainSem3:Array(7).fill().map(()=>({mark:"",hours:""})),bahrainSem4:Array(8).fill().map(()=>({mark:"",hours:""})),bahrainSem5:Array(7).fill().map(()=>({mark:"",hours:""})),bahrainSem6:Array(7).fill().map(()=>({mark:"",hours:""})),bahrainTotalSum:0,saudiSubjects:Array(9).fill().map(()=>Array(6).fill("100")),saudiQudrat:"",saudiSchoolWeight:"50",saudiQudratWeight:"50",saudiTotalSum:0,saudiSum:0,saudiSchoolAvg:0,saudiSystem:"fasly",saudiMasaratYears:3,saudiMasaratTab:3,masaratYear1Obtained:["","","","",""],masaratYear2Obtained:["","","","","",""],masaratYear3Obtained:["","","","","",""],saudiMasaratSubjects1:[{name:"الرياضيات",weight:200},{name:"الفيزياء",weight:200},{name:"الكيمياء",weight:200},{name:"الأحياء",weight:200},{name:"تقنية المعلومات",weight:200}],saudiMasaratSubjects2:[{name:"الرياضيات",weight:200},{name:"الفيزياء",weight:200},{name:"الكيمياء",weight:200},{name:"الأحياء",weight:200},{name:"تقنية المعلومات",weight:200},{name:"اللغة الإنجليزية",weight:200}],saudiMasaratSubjects3:[{name:"الرياضيات",weight:200},{name:"الفيزياء",weight:200},{name:"الكيمياء",weight:200},{name:"الأحياء",weight:200},{name:"تقنية المعلومات",weight:200},{name:"اللغة الإنجليزية",weight:200}],masaratQudrat:"",saudiFaslyModified:!1,saudiMasaratModified:!1,currentEditingId:null,masaratNawaqes:{y1:"",y2:"",y3:""},masaratNawaqesItems:{y1:Array(18).fill(""),y2:Array(18).fill(""),y3:Array(16).fill("")},masaratNawaqesExpand:{y1:!1,y2:!1,y3:!1},g2T1Obtained:["","","",""],g2T2Obtained:["","","","","","",""],g2T3Obtained:["","","","","","",""],g2T1Subjects:[{name:"الأحياء",weight:360},{name:"الرياضيات",weight:340},{name:"الكيمياء",weight:385},{name:"اللغة الانجليزية",weight:450}],g2T2Subjects:[{name:"الكفايات اللغوية",weight:288},{name:"التاريخ",weight:500},{name:"الأحياء",weight:244},{name:"الرياضيات",weight:350},{name:"الكيمياء",weight:390},{name:"اللغة الانجليزية",weight:425},{name:"التقنية الرقمية",weight:255}],g2T3Subjects:[{name:"الفيزياء",weight:375},{name:"الكفايات اللغوية",weight:300},{name:"الأحياء",weight:308},{name:"الرياضيات",weight:355},{name:"الكيمياء",weight:460},{name:"اللغة الانجليزية",weight:435},{name:"التقنية الرقمية",weight:258}],g3T1Obtained:["","","","","",""],g3T2Obtained:["","","","",""],g3T3Obtained:["","","","","",""],g3T1Subjects:[{name:"الفيزياء",weight:375},{name:"الرياضيات",weight:236},{name:"الجغرافيا",weight:288},{name:"الكيمياء",weight:370},{name:"اللغة الانجليزية",weight:395},{name:"التقنية الرقمية",weight:261}],g3T2Subjects:[{name:"الفيزياء",weight:400},{name:"الرياضيات",weight:360},{name:"اللغة الانجليزية",weight:360},{name:"علوم الارض والفضاء",weight:244}],g3T3Subjects:[{name:"الفيزياء",weight:395},{name:"الرياضيات",weight:248},{name:"الدراسات النفسية",weight:279},{name:"اللغة الانجليزية",weight:400},{name:"علوم الارض والفضاء",weight:328},{name:"الدراسات الادبية",weight:279}]};window.s=s;
+const e=document.getElementById("tabContent"),t=document.getElementById("rawScoreDisplay"),n=document.getElementById("finalPercentage"),o=document.getElementById("rawScoreItem");
+const a={american:"american-tab",stem:"stem-tab",thanaweya:"thanaweya-tab",gulf:"gulf-tab",libya:"libya-tab",jordan:"jordan-tab",azhar:"azhar-tab",kuwait:"kuwait-tab",bahrain:"bahrain-tab",saudi:"saudi-tab"};
+function g(){
+    const e=(parseFloat(s.est1Scores.part1)||0)+(parseFloat(s.est1Scores.part2)||0);
+    let t=0;
+    if(e>=1090&&e<=1600){t=e/1600*75}else if(e>=800){t=e/1600*60}
+    s.est1Percent=t;
+    const n=(parseFloat(s.est2Scores.part1)||0)+(parseFloat(s.est2Scores.part2)||0);
+    let o=0;
+    if(n>=900&&n<=1600){o=n/1600*15}
+    s.est2Percent=o;
+    
+    const a=s.amSubjects.map(e=>parseFloat(e)).filter(e=>!isNaN(e));
+    let divisor = 800;
+    if(s.amHas9th && s.amSubjects9 !== "" && !isNaN(parseFloat(s.amSubjects9))){
+        const n9=parseFloat(s.amSubjects9)||0;
+        a.push(n9);
+        divisor = 900;
+    }
+    const i=a.reduce((e,t)=>e+t,0),r=i/divisor*40;
+    s.gpaPercent=r;
+    return s.est1Percent+s.est2Percent+s.gpaPercent;
+}
+function h(){const e=parseFloat(s.thScore)||0;return"new"===s.thSystem?e/320*100:e/410*100}
+function stem_calc(){const total=parseFloat(s.stemTotal)||0;if(total<=0)return 0;return total*1.25/700}
+function u(){return s.gulfSubjects.reduce((e,t)=>t.isStar?e+50:e+(parseFloat(t.mark)||0),0)/7}
+function l(){return s.libyaSubjects.reduce((e,t)=>e+(parseFloat(t)||0),0)/1200*100}
+function c(){return s.jordanSubjects.reduce((e,t)=>e+(parseFloat(t)||0),0)/1400*100}
+function d(){const e=(parseFloat(s.azharArabic)||0)+(parseFloat(s.azharCultural)||0);return"sci"===s.azharPath?e/4.4:"420"===s.azharLitSys?e/4.2:e/3.8}
+function p(){
+    const e=document.getElementById("est1TotalDisplay"),t=document.getElementById("est1Alert");
+    if(e){
+        const n=(parseFloat(s.est1Scores.part1)||0)+(parseFloat(s.est1Scores.part2)||0);
+        e.textContent=n;
+        t&&(t.style.display=n>0&&n<800?"inline-block":"none")
+    }
+    const n=document.getElementById("est1PercentDisplay");
+    if(n){n.textContent=s.est1Percent.toFixed(1)+"%"}
+    const o=document.getElementById("est2TotalDisplay"),a=document.getElementById("est2Alert");
+    if(o){
+        const e=(parseFloat(s.est2Scores.part1)||0)+(parseFloat(s.est2Scores.part2)||0);
+        o.textContent=e;
+        a&&(a.style.display=e>0&&e<900?"inline-block":"none")
+    }
+    const i=document.getElementById("est2PercentDisplay");
+    if(i){i.textContent=s.est2Percent.toFixed(1)+"%"}
+    const r=document.getElementById("gpaPercentDisplay");
+    if(r){r.textContent=s.gpaPercent.toFixed(1)+"%"}
+    const d=document.getElementById("azharTotalSum");
+    d&&(d.textContent=(parseFloat(s.azharArabic)||0)+(parseFloat(s.azharCultural)||0));
+    const z=document.getElementById("azharPercentDisplay");
+    if(z){
+        const u=(parseFloat(s.azharArabic)||0)+(parseFloat(s.azharCultural)||0),g="sci"===s.azharPath?4.4:"420"===s.azharLitSys?4.2:3.8;
+        z.textContent=(u/g).toFixed(1)+"%"
+    }
+    const azEq=document.getElementById("azharEquivDisplay");
+    if(azEq){
+        const u=(parseFloat(s.azharArabic)||0)+(parseFloat(s.azharCultural)||0),g="sci"===s.azharPath?4.4:"420"===s.azharLitSys?4.2:3.8;
+        azEq.textContent=((u/g)*4.1).toFixed(1)
+    }
+    const m=document.getElementById("libyaTotalSum");
+    m&&(m.textContent=s.libyaSubjects.reduce((e,t)=>e+(parseFloat(t)||0),0));
+    const c=document.getElementById("jordanTotalSum");
+    c&&(c.textContent=s.jordanSubjects.reduce((e,t)=>e+(parseFloat(t)||0),0));
+    const w10=parseFloat(s.kuwaitW10)||0,w11=parseFloat(s.kuwaitW11)||0,w12=parseFloat(s.kuwaitW12)||0;
+    const k10P=document.getElementById("k10P"),k10GPA=document.getElementById("k10GPA");
+    if(k10P){
+        const t=s.kuwait10.reduce((e,t)=>e+(parseFloat(t)||0),0),n=t/420*100||0;
+        k10P.textContent=n.toFixed(1)+"%";
+        k10GPA.textContent=(n*(w10/100)).toFixed(2)+"%"
+    }
+    const k11P=document.getElementById("k11P"),k11GPA=document.getElementById("k11GPA");
+    if(k11P){
+        const t=s.kuwait11.reduce((e,t)=>e+(parseFloat(t)||0),0),n=t/560*100||0;
+        k11P.textContent=n.toFixed(1)+"%";
+        k11GPA.textContent=(n*(w11/100)).toFixed(2)+"%"
+    }
+    const k12P=document.getElementById("k12P"),k12GPA=document.getElementById("k12GPA");
+    if(k12P){
+        const t=s.kuwait12.reduce((e,t)=>e+(parseFloat(t)||0),0),n=t/520*100||0;
+        k12P.textContent=n.toFixed(1)+"%";
+        k12GPA.textContent=(n*(w12/100)).toFixed(2)+"%"
+    }
+    const kTotal=document.getElementById("kTotal");
+    if(kTotal){
+        const n10=(s.kuwait10.reduce((e,t)=>e+(parseFloat(t)||0),0)/420*100||0)*(w10/100);
+        const n11=(s.kuwait11.reduce((e,t)=>e+(parseFloat(t)||0),0)/560*100||0)*(w11/100);
+        const n12=(s.kuwait12.reduce((e,t)=>e+(parseFloat(t)||0),0)/520*100||0)*(w12/100);
+        kTotal.textContent=(n10+n11+n12).toFixed(1)+"%"
+    }
+    const b3h=document.getElementById("b3_total_hrs");
+    if(b3h){
+        for(let i=0;i<7;i++){
+            const e=document.getElementById(`b3_pts_${i}`);
+            if(e)e.textContent=((parseFloat(s.bahrainSem3[i].mark)||0)*(parseFloat(s.bahrainSem3[i].hours)||0)).toFixed(1)
+        }
+        let h=0,p=0;
+        s.bahrainSem3.forEach(t=>{h+=parseFloat(t.hours)||0;p+=(parseFloat(t.mark)||0)*(parseFloat(t.hours)||0)});
+        b3h.textContent=h.toFixed(1);
+        document.getElementById("b3_total_pts").textContent=p.toFixed(1);
+        document.getElementById("b3_gpa").textContent=h>0?(p/h).toFixed(2)+"%":"0%"
+    }
+    const b4h=document.getElementById("b4_total_hrs");
+    if(b4h){
+        for(let i=0;i<8;i++){
+            const e=document.getElementById(`b4_pts_${i}`);
+            if(e)e.textContent=((parseFloat(s.bahrainSem4[i].mark)||0)*(parseFloat(s.bahrainSem4[i].hours)||0)).toFixed(1)
+        }
+        let h=0,p=0;
+        s.bahrainSem4.forEach(t=>{h+=parseFloat(t.hours)||0;p+=(parseFloat(t.mark)||0)*(parseFloat(t.hours)||0)});
+        b4h.textContent=h.toFixed(1);
+        document.getElementById("b4_total_pts").textContent=p.toFixed(1);
+        document.getElementById("b4_gpa").textContent=h>0?(p/h).toFixed(2)+"%":"0%"
+    }
+    const b5h=document.getElementById("b5_total_hrs");
+    if(b5h){
+        for(let i=0;i<7;i++){
+            const e=document.getElementById(`b5_pts_${i}`);
+            if(e)e.textContent=((parseFloat(s.bahrainSem5[i].mark)||0)*(parseFloat(s.bahrainSem5[i].hours)||0)).toFixed(1)
+        }
+        let h=0,p=0;
+        s.bahrainSem5.forEach(t=>{h+=parseFloat(t.hours)||0;p+=(parseFloat(t.mark)||0)*(parseFloat(t.hours)||0)});
+        b5h.textContent=h.toFixed(1);
+        document.getElementById("b5_total_pts").textContent=p.toFixed(1);
+        document.getElementById("b5_gpa").textContent=h>0?(p/h).toFixed(2)+"%":"0%"
+    }
+    const b6h=document.getElementById("b6_total_hrs");
+    if(b6h){
+        for(let i=0;i<7;i++){
+            const e=document.getElementById(`b6_pts_${i}`);
+            if(e)e.textContent=((parseFloat(s.bahrainSem6[i].mark)||0)*(parseFloat(s.bahrainSem6[i].hours)||0)).toFixed(1)
+        }
+        let h=0,p=0;
+        s.bahrainSem6.forEach(t=>{h+=parseFloat(t.hours)||0;p+=(parseFloat(t.mark)||0)*(parseFloat(t.hours)||0)});
+        b6h.textContent=h.toFixed(1);
+        document.getElementById("b6_total_pts").textContent=p.toFixed(1);
+        document.getElementById("b6_gpa").textContent=h>0?(p/h).toFixed(2)+"%":"0%"
+    }
+    const saudiPctChip=document.getElementById("saudiPercentChip");
+    if(saudiPctChip){
+        saudiPctChip.textContent=(s.saudiTotalSum||0).toFixed(1)+"%";
+        if(s.saudiSystem==="fasly"){
+            let st=document.getElementById("saudiTotDisplay");
+            if(st)st.textContent=s.saudiSum||0;
+            let sa=document.getElementById("saudiSchAvgDisplay");
+            if(sa)sa.textContent=(s.saudiSchoolAvg||0).toFixed(2)+"%";
+            let sf=document.getElementById("saudiFinalDisplay");
+            if(sf)sf.textContent=(s.saudiTotalSum||0).toFixed(2)+"%"
+        }else{
+            const tab=s.saudiMasaratTab||3;
+            
+            function calcYearSum(subjects,obtained){
+                let sum=0;
+                subjects.forEach((s,i)=>{const v=parseFloat(obtained[i])||0;sum+=v*s.weight/100;});
+                return sum;
+            }
+            
+            const year1Subjects=[
+                {name:"الكفايات اللغوية",weight:445},
+                {name:"الأحياء",weight:405},
+                {name:"الرياضيات",weight:410},
+                {name:"اللغة الانجليزية",weight:485},
+                {name:"التقنية الرقمية",weight:285}
+            ];
+            const year2Subjects=[
+                {name:"الفيزياء",weight:310},
+                {name:"علم البئية",weight:282},
+                {name:"الكفايات اللغوية",weight:475},
+                {name:"الرياضيات",weight:455},
+                {name:"اللغة الانجليزية",weight:465},
+                {name:"التقنية الرقمية",weight:297}
+            ];
+            const year3Subjects=[
+                {name:"علم البئية",weight:279},
+                {name:"الرياضيات",weight:410},
+                {name:"الدراسات الاجتماعية",weight:475},
+                {name:"الكيمياء",weight:430},
+                {name:"اللغة الانجليزية",weight:415},
+                {name:"التقنية الرقمية",weight:261}
+            ];
+            
+            if(tab===3){
+                const y1=calcYearSum(year1Subjects,s.masaratYear1Obtained);
+                const y2=calcYearSum(year2Subjects,s.masaratYear2Obtained);
+                const y3=calcYearSum(year3Subjects,s.masaratYear3Obtained);
+                let e1=document.getElementById("masaratYear1Obtained_sum");if(e1)e1.textContent=y1.toFixed(1);
+                let e2=document.getElementById("masaratYear2Obtained_sum");if(e2)e2.textContent=y2.toFixed(1);
+                let e3=document.getElementById("masaratYear3Obtained_sum");if(e3)e3.textContent=y3.toFixed(1);
+            }else if(tab===2){
+                const y1=calcYearSum(year1Subjects,s.masaratYear1Obtained);
+                const y2=calcYearSum(year2Subjects,s.masaratYear2Obtained);
+                let e1=document.getElementById("masaratYear1Obtained_sum");if(e1)e1.textContent=y1.toFixed(1);
+                let e2=document.getElementById("masaratYear2Obtained_sum");if(e2)e2.textContent=y2.toFixed(1);
+            }else{
+                const y1=calcYearSum(year1Subjects,s.masaratYear1Obtained);
+                let e1=document.getElementById("masaratYear1Obtained_sum");if(e1)e1.textContent=y1.toFixed(1);
+            }
+        }
+    }
+    
+    const thPercentChip = document.getElementById("thPercentChip");
+    const thTotalHighlight = document.getElementById("thTotalHighlight");
+    if (thPercentChip || thTotalHighlight) {
+        const score = parseFloat(s.thScore) || 0;
+        const pct = "new" === s.thSystem ? score/320*100 : score/410*100;
+        if (thPercentChip) thPercentChip.textContent = pct.toFixed(1) + "%";
+        if (thTotalHighlight) {
+            thTotalHighlight.textContent = pct.toFixed(1) + "%";
+            thTotalHighlight.style.color = pct >= 50 ? "var(--accent-emerald)" : "var(--accent-rose)";
+        }
+    }
+    const gulfPercentChip = document.getElementById("gulfPercentChip");
+    const gulfTotalHighlight = document.getElementById("gulfTotalHighlight");
+    if (gulfPercentChip || gulfTotalHighlight) {
+        const sum = s.gulfSubjects.reduce((e,t)=>t.isStar?e+50:e+(parseFloat(t.mark)||0),0);
+        const pct = sum / 7;
+        if (gulfPercentChip) gulfPercentChip.textContent = pct.toFixed(1) + "%";
+        if (gulfTotalHighlight) gulfTotalHighlight.textContent = pct.toFixed(1) + "%";
+    }
+    const libyaPercentChip = document.getElementById("libyaPercentChip");
+    const libyaTotalHighlight = document.getElementById("libyaTotalHighlight");
+    if (libyaPercentChip || libyaTotalHighlight) {
+        const sum = s.libyaSubjects.reduce((e,t)=>e+(parseFloat(t)||0),0);
+        const pct = sum / 1200 * 100;
+        if (libyaPercentChip) libyaPercentChip.textContent = pct.toFixed(1) + "%";
+        if (libyaTotalHighlight) libyaTotalHighlight.textContent = sum + " / 1200";
+    }
+    const jordanPercentChip = document.getElementById("jordanPercentChip");
+    const jordanTotalHighlight = document.getElementById("jordanTotalHighlight");
+    if (jordanPercentChip || jordanTotalHighlight) {
+        const sum = s.jordanSubjects.reduce((e,t)=>e+(parseFloat(t)||0),0);
+        const pct = sum / 1400 * 100;
+        if (jordanPercentChip) jordanPercentChip.textContent = pct.toFixed(1) + "%";
+        if (jordanTotalHighlight) jordanTotalHighlight.textContent = sum + " / 1400";
+    }
+    const saudiPercentChip2=document.getElementById("saudiPercentChip");
+    const saudiTotDisplay=document.getElementById("saudiTotDisplay");
+    const saudiSchAvgDisplay=document.getElementById("saudiSchAvgDisplay");
+    const saudiFinalDisplay=document.getElementById("saudiFinalDisplay");
+    if(saudiPercentChip2||saudiTotDisplay||saudiSchAvgDisplay||saudiFinalDisplay){
+      const gpa=s.saudiTotalSum||0;
+      if(saudiPercentChip2)saudiPercentChip2.textContent=gpa.toFixed(1)+"%";
+      if(saudiTotDisplay)saudiTotDisplay.textContent=s.saudiSum||0;
+      if(saudiSchAvgDisplay)saudiSchAvgDisplay.textContent=(s.saudiSchoolAvg||0).toFixed(2)+"%";
+      if(saudiFinalDisplay)saudiFinalDisplay.textContent=gpa.toFixed(2)+"%";
+    }
+    
+    // Update masarat table sums
+    if(s.saudiSystem==="masarat"){
+        function calcYearSum(subjects,obtained){
+            let sum=0;
+            subjects.forEach((s,i)=>{const v=parseFloat(obtained[i])||0;sum+=v*s.weight/100;});
+            return sum;
+        }
+        const year1Subjects=[
+            {name:"الكفايات اللغوية",weight:445},
+            {name:"الأحياء",weight:405},
+            {name:"الرياضيات",weight:410},
+            {name:"اللغة الانجليزية",weight:485},
+            {name:"التقنية الرقمية",weight:285}
+        ];
+        const year2Subjects=[
+            {name:"الفيزياء",weight:310},
+            {name:"علم البئية",weight:282},
+            {name:"الكفايات اللغوية",weight:475},
+            {name:"الرياضيات",weight:455},
+            {name:"اللغة الانجليزية",weight:465},
+            {name:"التقنية الرقمية",weight:297}
+        ];
+        const year3Subjects=[
+            {name:"علم البئية",weight:279},
+            {name:"الرياضيات",weight:410},
+            {name:"الدراسات الاجتماعية",weight:475},
+            {name:"الكيمياء",weight:430},
+            {name:"اللغة الانجليزية",weight:415},
+            {name:"التقنية الرقمية",weight:261}
+        ];
+        
+        const y1sum=calcYearSum(year1Subjects,s.masaratYear1Obtained);
+        const y1el=document.getElementById("masaratYear1Obtained_sum");
+        if(y1el)y1el.textContent=y1sum.toFixed(1);
+        
+        const y2sum=calcYearSum(year2Subjects,s.masaratYear2Obtained);
+        const y2el=document.getElementById("masaratYear2Obtained_sum");
+        if(y2el)y2el.textContent=y2sum.toFixed(1);
+        
+        const y3sum=calcYearSum(year3Subjects,s.masaratYear3Obtained);
+        const y3el=document.getElementById("masaratYear3Obtained_sum");
+        if(y3el)y3el.textContent=y3sum.toFixed(1);
+    }
+}
+
+function updateAmel(){
+if(s.activeTab!=='saudi'||s.saudiSystem!=='masarat')return;
+const year1Subjects=[{name:"الكفايات اللغوية",weight:445},{name:"الأحياء",weight:405},{name:"الرياضيات",weight:410},{name:"اللغة الانجليزية",weight:485},{name:"التقنية الرقمية",weight:285}];
+const year2Subjects=[{name:"الفيزياء",weight:310},{name:"علم البئية",weight:282},{name:"الكفايات اللغوية",weight:475},{name:"الرياضيات",weight:455},{name:"اللغة الانجليزية",weight:465},{name:"التقنية الرقمية",weight:297}];
+const year3Subjects=[{name:"علم البئية",weight:279},{name:"الرياضيات",weight:410},{name:"الدراسات الاجتماعية",weight:475},{name:"الكيمياء",weight:430},{name:"اللغة الانجليزية",weight:415},{name:"التقنية الرقمية",weight:261}];
+const tab=s.saudiMasaratTab||3;
+function calcTableGroup(prefixes,subjectsList,obtainedList){
+const results=[];
+prefixes.forEach((prefix,idx)=>{
+const subjects=subjectsList[idx],obtained=obtainedList[idx];
+let sObt=0,sAmel=0,sWeight=0;
+subjects.forEach((subj,j)=>{
+const ob=parseFloat(obtained[j])||0;
+const amel=ob>0?(subj.weight/ob):0;
+sObt+=ob;sAmel+=amel;sWeight+=subj.weight;
+const cell=document.getElementById(`${prefix}_amel_${j}`);
+if(cell)cell.textContent=ob>0?amel.toFixed(2):'-';
+});
+const sO=document.getElementById(`${prefix}_sObt`);if(sO)sO.textContent=sObt.toFixed(0);
+const sW=document.getElementById(`${prefix}_sWgt`);if(sW)sW.textContent=sWeight;
+const sA=document.getElementById(`${prefix}_sAmel`);if(sA)sA.textContent=sAmel.toFixed(2);
+const res=sAmel>0?sWeight/sAmel:0;
+const rE=document.getElementById(`${prefix}_result`);if(rE)rE.textContent=res.toFixed(2);
+results.push(res);
+});
+return results;
+}
+const g1Results=calcTableGroup(["masaratYear1Obtained","masaratYear2Obtained","masaratYear3Obtained"],[year1Subjects,year2Subjects,year3Subjects],[s.masaratYear1Obtained,s.masaratYear2Obtained,s.masaratYear3Obtained]);
+const g2Results=calcTableGroup(["g2T1Obtained","g2T2Obtained","g2T3Obtained"],[s.g2T1Subjects,s.g2T2Subjects,s.g2T3Subjects],[s.g2T1Obtained,s.g2T2Obtained,s.g2T3Obtained]);
+const g3Results=calcTableGroup(["g3T1Obtained","g3T2Obtained","g3T3Obtained"],[s.g3T1Subjects,s.g3T2Subjects,s.g3T3Subjects],[s.g3T1Obtained,s.g3T2Obtained,s.g3T3Obtained]);
+const avg=g=>g.length>0?g.reduce((a,b)=>a+b,0)/g.length:0;
+const avg1=avg(g1Results),avg2=avg(g2Results),avg3=avg(g3Results);
+let g1P=0,g2P=0,g3P=0;
+if(tab===3){g1P=20;g2P=40;g3P=40;}
+else if(tab===2){g2P=50;g3P=50;}
+else{g3P=100;}
+const n1=avg1*g1P/100,n2=avg2*g2P/100,n3=avg3*g3P/100;
+const g1El=document.getElementById("grade1Avg");if(g1El)g1El.textContent=n1.toFixed(2);
+const g2El=document.getElementById("grade2Avg");if(g2El)g2El.textContent=n2.toFixed(2);
+const g3El=document.getElementById("grade3Avg");if(g3El)g3El.textContent=n3.toFixed(2);
+const f1El=document.getElementById("finalG1Pct");if(f1El)f1El.textContent=n1.toFixed(2);
+const f2El=document.getElementById("finalG2Pct");if(f2El)f2El.textContent=n2.toFixed(2);
+const f3El=document.getElementById("finalG3Pct");if(f3El)f3El.textContent=n3.toFixed(2);
+const sumN=n1+n2+n3;
+const q=parseFloat(s.masaratQudrat)||0;
+const sumNHalf=sumN/2;
+const qHalf=q/2;
+const finalPct=sumNHalf+qHalf;
+const finalEquiv=finalPct*4.1;
+const fnh=document.getElementById("finalPctHalf");if(fnh)fnh.textContent=sumNHalf.toFixed(2);
+const qh=document.getElementById("finalQudratHalf");if(qh)qh.textContent=qHalf.toFixed(2);
+const fp=document.getElementById("finalPct");if(fp)fp.textContent=finalPct.toFixed(2)+"%";
+const fe=document.getElementById("finalEquiv");if(fe)fe.textContent=finalEquiv.toFixed(2);
+}
+function m(){const a=(()=>{switch(s.activeTab){case"american":return g();case"stem":return stem_calc();case"thanaweya":return h();case"gulf":return u();case"libya":return l();case"jordan":return c();case"azhar":return d();case"kuwait":return K();case"bahrain":return B_calc();case"saudi":return SA_calc();default:return 0}})();n.textContent=a.toFixed(1)+"%";let e=null;switch(s.activeTab){case"american":const e1=(parseFloat(s.est1Scores.part1)||0)+(parseFloat(s.est1Scores.part2)||0);const e2=(parseFloat(s.est2Scores.part1)||0)+(parseFloat(s.est2Scores.part2)||0);let gpa=s.amSubjects.reduce((acc,val)=>acc+(parseFloat(val)||0),0);if(s.amHas9th && s.amSubjects9!=="" && !isNaN(parseFloat(s.amSubjects9))){gpa+=parseFloat(s.amSubjects9);}e=e1+e2+gpa;break;case"stem":e=parseFloat(s.stemTotal)||0;break;case"thanaweya":e=parseFloat(s.thScore)||0;break;case"gulf":e=s.gulfSubjects.reduce((e,t)=>t.isStar?e+50:e+(parseFloat(t.mark)||0),0);break;case"libya":e=s.libyaSubjects.reduce((e,t)=>e+(parseFloat(t)||0),0);break;case"jordan":e=s.jordanSubjects.reduce((e,t)=>e+(parseFloat(t)||0),0);break;case"azhar":e=(parseFloat(s.azharArabic)||0)+(parseFloat(s.azharCultural)||0);break;case"kuwait":e=s.kuwaitTotalSum;break;case"bahrain":e=(s.bahrainSem3.reduce((e,t)=>e+((parseFloat(t.mark)||0)*(parseFloat(t.hours)||0)),0)+s.bahrainSem4.reduce((e,t)=>e+((parseFloat(t.mark)||0)*(parseFloat(t.hours)||0)),0)+s.bahrainSem5.reduce((e,t)=>e+((parseFloat(t.mark)||0)*(parseFloat(t.hours)||0)),0)+s.bahrainSem6.reduce((e,t)=>e+((parseFloat(t.mark)||0)*(parseFloat(t.hours)||0)),0)).toFixed(1);break;case"saudi":e=s.saudiSystem==="fasly"?s.saudiSum:(a*18).toFixed(1);break;}null!==e?(o.style.display="",t.textContent=e):o.style.display="none";const eq=document.getElementById("equivScoreItem"),eqDisp=document.getElementById("equivScoreDisplay");if(eq&&eqDisp){if(s.activeTab==="thanaweya"){eq.style.display="none"}else if(s.activeTab==="stem"){eq.style.display="";eqDisp.textContent=(a*4.1).toFixed(1)}else{eq.style.display="";eqDisp.textContent=(a*4.1).toFixed(1)}}p();updateAmel()}
+function f(){let t="";switch(s.activeTab){case"american":t=A();break;case"stem":t=stem_html();break;case"thanaweya":t=y();break;case"gulf":t=b();break;case"libya":t=x();break;case"jordan":t=v();break;case"azhar":t=w();break;case"kuwait":t=Q();break;case"bahrain":t=B_html();break;case"saudi":t=SA_html();break;}e.innerHTML=t,k(),m()}
+function updateStemInline(){
+  var total=parseFloat(s.stemTotal)||0;
+  var pct=total>0?(total*1.25/700):0;
+  var equiv=pct*4.1;
+  var chip=document.querySelector('.percent-chip.gpa');
+  if(chip)chip.textContent=pct.toFixed(2)+'%';
+  var hl=document.getElementById('stemTotalHighlight');
+  if(hl){hl.textContent=pct.toFixed(2)+'%';hl.style.color=pct>=50?'var(--accent-emerald)':'var(--accent-rose)';}
+  var eq=document.getElementById('stemEquivHighlight');
+  if(eq)eq.textContent=equiv.toFixed(1);
+}
+function stem_html(){const total=parseFloat(s.stemTotal)||0;const pct=total>0?(total*1.25/700):0;const equiv=pct*4.1;return `<div class="card-main"><div class="section-header-row"><div class="card-heading mb-0"><span class="dot-accent" style="background:var(--accent-emerald);"></span> <i class="fas fa-microscope me-1" style="font-size:0.95rem;color:var(--accent-gold);"></i> مدرسة المتفوقين STEM</div><span class="percent-chip gpa">${pct.toFixed(2)}%</span></div>${C("طريقة حساب شهادة STEM","<ul><li>المجموع من الشهادة × <span class='method-highlight'>1.25</span> = الناتج.</li><li>الناتج <span class='divide-sign'>÷</span> 700 = <span class='method-highlight'>النسبة المئوية</span>.</li><li>النسبة × <span class='method-highlight'>4.1</span> = <span class='method-highlight'>المجموع المكافئ</span>.</li></ul>")}<div class="position-relative mt-3"><label class="subject-label" style="margin-bottom:8px;display:block;">المجموع من الشهادة</label><input class="input-main fs-5 text-center fw-bold" data-field="stemTotal" value="${s.stemTotal}" placeholder="ادخل المجموع من الشهادة" style="font-size:1.4rem!important;padding:16px;letter-spacing:2px;"></div><div class="total-box mt-3"><span>النسبة المئوية (المجموع × 1.25 ÷ 700)</span><span id="stemTotalHighlight" class="total-highlight-num" style="color:${pct>=50?"var(--accent-emerald)":"var(--accent-rose)"}">${pct.toFixed(2)}%</span></div><div class="total-box mt-2"><span>المجموع المكافئ (النسبة × 4.1)</span><span id="stemEquivHighlight" class="total-highlight-num" style="color:var(--accent-amber);">${equiv.toFixed(1)}</span></div></div>`;}
+function C(e,t){const n=s.methodOpen;return`<div class="method-collapse"><div class="method-header ${n?"open":""}" onclick="toggleMethod(this)"><span class="method-title"><div class="method-icon-wrapper"><i class="fas fa-scroll"></i></div>${e}</span><div class="method-arrow"><i class="fas fa-chevron-down"></i></div></div><div class="method-body ${n?"":"closed"}"><div class="method-content">${t}</div></div></div>`}
+function A(){let e="";for(let t=0;t<8;t++)e+=`<div class="col-6 col-md-3"><label class="subject-label">المادة ${t+1}</label><input class="input-main enter-next" data-field="amSubjects[${t}]" value="${s.amSubjects[t]}" max="100"></div>`;const t=(parseFloat(s.est1Scores.part1)||0)+(parseFloat(s.est1Scores.part2)||0),n=(parseFloat(s.est2Scores.part1)||0)+(parseFloat(s.est2Scores.part2)||0),o="eng"===s.amPath,a=o?`<ul><li><span class="method-highlight">1) Est1 او Sat1</span> : بشوف الاعلي درجه في round name ونجمعهم. <strong>لازم المجموع يكون ≥ 800</strong>.<br>• من 800 إلى 1089 : نقسم على 1600 ونضرب × <span class="method-highlight">60</span>.<br>• من 1090 إلى 1600 : نقسم على 1600 ونضرب × <span class="method-highlight">75</span>.</li><li><span class="method-highlight">2) Est2</span> : بشوف الاعلي درجه في round name ونجمعهم. <strong>لازم المجموع يكون ≥ 900</strong>.<br>• نقسم المجموع على 1600 ونضرب × <span class="method-highlight">15</span>.</li><li><span class="method-highlight">3) GPA</span> : ناخد 8 مقررات اعلي درجات (بشرط credits = 1 ساعه).<br>• على الاقل 4 مقررات Grade 12 و 4 مقررات Grade 11.<br>• <strong>يجب اختيار math و advanced math</strong> ضمن المقررات.<br>• مجموع المقررات <span class="divide-sign">÷</span> 800 × <span class="method-highlight">40</span>.</li><li><strong>النسبة النهائية = Est1 + Est2 + GPA</strong>.</li></ul>`:`<ul><li><span class="method-highlight">1) Est1 او Sat1</span> : بشوف الاعلي درجه في round name ونجمعهم. <strong>لازم المجموع يكون ≥ 800</strong>.<br>• من 800 إلى 1089 : نقسم على 1600 ونضرب × <span class="method-highlight">60</span>.<br>• من 1090 إلى 1600 : نقسم على 1600 ونضرب × <span class="method-highlight">75</span>.</li><li><span class="method-highlight">2) GPA</span> : ناخد 8 مقررات اعلي درجات (بشرط credits = 1 ساعه).<br>• على الاقل 4 مقررات Grade 12 و 4 مقررات Grade 11.<br>• <strong>يجب اختيار فيزياء، كيمياء، بيولوجيا</strong> ضمن المقررات.<br>• مجموع المقررات <span class="divide-sign">÷</span> 800 × <span class="method-highlight">40</span>.</li><li><strong>النسبة النهائية = Est1 + GPA</strong>.</li></ul>`;return`<div class="card-main mb-3 text-center"><div class="card-heading justify-content-center mb-3"><span class="dot-accent" style="background:var(--accent-blue);"></span> <i class="fas fa-flag-usa me-1" style="font-size:0.95rem;color:var(--accent-gold);"></i> الكلية المستهدفة</div><div class="d-flex gap-2 justify-content-center"><button class="toggle-btn ${o?"":"active"}" data-action="setAmPath" data-value="non_eng">عام (قطاع طبى / أدبى)</button><button class="toggle-btn ${o?"active":""}" data-action="setAmPath" data-value="eng">قطاع هندسى</button></div></div>${C("طريقة حساب الدبلومة الأمريكية",a)}<div class="row g-4"><div class="col-lg-6"><div class="card-main"><div class="section-header-row"><div class="card-heading mb-0"><span class="dot-accent" style="background:var(--accent-amber);"></span> <i class="fas fa-flag-usa me-1" style="font-size:0.95rem;color:var(--accent-gold);"></i> EST 1 / SAT 1</div><span class="percent-chip est1" id="est1PercentDisplay">${s.est1Percent.toFixed(1)}%</span></div><div class="row g-2"><div class="col-6"><input class="input-main enter-next" data-field="est1Scores.part1" value="${s.est1Scores.part1}" placeholder="القسم الأول"></div><div class="col-6"><input class="input-main enter-next" data-field="est1Scores.part2" value="${s.est1Scores.part2}" placeholder="القسم الثاني"></div></div><div class="mt-2 d-flex align-items-center gap-2 flex-wrap"><span class="badge-accent-sm" style="background:linear-gradient(135deg,var(--accent-amber),#d97706);">المجموع: <span id="est1TotalDisplay">${t}</span></span><span id="est1Alert" class="alert-inline" style="display:${t>0&&t<800?"inline-block":"none"}">⚠ يجب أن يكون ≥ 800</span></div></div><div class="card-main mt-3"><div class="section-header-row"><div class="card-heading mb-0"><span class="dot-accent" style="background:var(--accent-violet);"></span> <i class="fas fa-flag-usa me-1" style="font-size:0.95rem;color:var(--accent-gold);"></i> EST 2</div><span class="percent-chip est2" id="est2PercentDisplay">${s.est2Percent.toFixed(1)}%</span></div><div class="row g-2"><div class="col-6"><input class="input-main enter-next" data-field="est2Scores.part1" value="${s.est2Scores.part1}"></div><div class="col-6"><input class="input-main enter-next" data-field="est2Scores.part2" value="${s.est2Scores.part2}"></div></div><div class="mt-2 d-flex align-items-center gap-2 flex-wrap"><span class="badge-accent-sm">المجموع: <span id="est2TotalDisplay">${n}</span></span><span id="est2Alert" class="alert-inline" style="display:${n>0&&n<900?"inline-block":"none"}">⚠ يجب أن يكون ≥ 900</span></div></div></div><div class="col-lg-6"><div class="card-main"><div class="section-header-row"><div class="card-heading mb-0"><span class="dot-accent" style="background:var(--accent-emerald);"></span> <i class="fas fa-flag-usa me-1" style="font-size:0.95rem;color:var(--accent-gold);"></i> GPA (${s.amHas9th?"8+1":"8"} مقررات)</div><span class="percent-chip gpa" id="gpaPercentDisplay">${s.gpaPercent.toFixed(1)}%</span></div><div class="row g-2">${e}</div><div class="d-flex align-items-center gap-3 mt-3 p-2" style="background:var(--bg-input);border:1px solid var(--border);border-radius:12px;"><label style="color:var(--text-secondary);font-size:0.78rem;cursor:pointer;display:flex;align-items:center;gap:6px;"><input type="checkbox" data-field="amHas9th" ${s.amHas9th?"checked":""} style="width:1rem;height:1rem;accent-color:var(--accent-blue);"> إضافة مادة 9 (القسمة على 900)</label></div>${s.amHas9th?`<div class="mt-2"><label class="subject-label">المادة 9</label><input class="input-main enter-next" data-field="amSubjects9" value="${s.amSubjects9}" max="100"></div>`:""}</div></div></div>`}
+function y(){const e=parseFloat(s.thScore)||0,t="new"===s.thSystem?320:410,n=e>0?e/t*100:0;return`<div class="card-main"><div class="section-header-row"><div class="card-heading mb-0"><span class="dot-accent" style="background:var(--accent-cyan);"></span> <i class="fas fa-graduation-cap me-1" style="font-size:0.95rem;color:var(--accent-gold);"></i> الثانوية العامة المصرية</div><span id="thPercentChip" class="percent-chip gpa">${n.toFixed(1)}%</span></div><div class="d-flex gap-2 my-3"><button class="toggle-btn ${"new"===s.thSystem?"active":""}" data-action="setThSystem" data-value="new">حديث (<span class="divide-sign">÷</span>320)</button><button class="toggle-btn ${"old"===s.thSystem?"active":""}" data-action="setThSystem" data-value="old">قديم (<span class="divide-sign">÷</span>410)</button></div>${C("طريقة حساب الثانوية العامة","<ul><li>النسبة = (المجموع الكلي <span class='divide-sign'>÷</span> "+("new"===s.thSystem?"320":"410")+") × 100</li></ul>")}<div class="position-relative"><input class="input-main fs-5 mt-3 text-center fw-bold" data-field="thScore" value="${s.thScore}" placeholder="المجموع الكلي" style="font-size:1.4rem!important;padding:16px;letter-spacing:2px;"></div><div class="total-box mt-3"><span>النسبة المئوية</span><span id="thTotalHighlight" class="total-highlight-num" style="color:${n>=50?"var(--accent-emerald)":"var(--accent-rose)"}">${n.toFixed(1)}%</span></div></div>`}
+function b(){let e="";for(let t=0;t<7;t++){const n=s.gulfSubjects[t];const v=n.isStar?50:(parseFloat(n.mark)||0);e+=`<div class="d-flex align-items-center gap-2 mb-2 p-2" style="background:var(--bg-input);border:1px solid var(--border);border-radius:12px;"><span style="color:var(--text-label);font-size:0.8rem;font-weight:800;min-width:20px;">${t+1}</span><input class="input-main flex-grow-1 enter-next" data-field="gulfSubjects[${t}].mark" value="${n.isStar?"50":n.mark}" ${n.isStar?"disabled":""} style="border-radius:8px;${n.isStar?"color:var(--accent-emerald);font-weight:900;background:rgba(16,185,129,0.1);":""}"><label style="color:var(--text-secondary);font-size:0.72rem;white-space:nowrap;cursor:pointer;display:flex;align-items:center;gap:4px;"><input type="checkbox" data-field="gulfSubjects[${t}].isStar" ${n.isStar?"checked":""} style="width:0.85rem;height:0.85rem;accent-color:var(--accent-amber);"> <span id="gulf_star_${t}" style="font-family:'Changa',sans-serif;font-weight:900;color:var(--accent-amber);font-size:1rem;margin-top:4px;">**</span></label><span id="gulf_val_${t}" style="font-family:'Changa',sans-serif;font-weight:800;color:${v>0?"var(--accent-emerald)":"var(--text-muted)"};direction:ltr;min-width:35px;text-align:center;">${v||"0"}</span></div>`}const t=s.gulfSubjects.reduce((e,t)=>t.isStar?e+50:e+(parseFloat(t.mark)||0),0),n=t/7;return`<div class="card-main"><div class="section-header-row"><div class="card-heading mb-0"><span class="dot-accent" style="background:var(--accent-amber);"></span> <i class="fas fa-globe-asia me-1" style="font-size:0.95rem;color:var(--accent-gold);"></i> عمان - قطر - الإمارات</div><span id="gulfPercentChip" class="percent-chip est1">${n.toFixed(1)}%</span></div>${C("طريقة حساب شهادات الخليج","<ul><li>يتم حذف التربية الإسلامية.</li><li>أدخل 7 مقررات. إذا وُجدت علامة (**) بجانب الدرجة → تُحسب 50.</li><li>النسبة = (مجموع الدرجات) <span class='divide-sign'>÷</span> 7.</li></ul>")}<div>${e}</div><div class="total-box mt-3"><span>متوسط الدرجات</span><span id="gulfTotalHighlight" class="total-highlight-num">${n.toFixed(1)}%</span></div></div>`}
+function x(){let e="";for(let t=0;t<8;t++){const v=parseFloat(s.libyaSubjects[t])||0;e+=`<div class="col-6 col-md-3"><label class="subject-label">المادة ${t+1}</label><input class="input-main enter-next text-center" data-field="libyaSubjects[${t}]" value="${s.libyaSubjects[t]}" placeholder="0" style="font-weight:800;"></div>`}const t=s.libyaSubjects.reduce((e,t)=>e+(parseFloat(t)||0),0),n=t/1200*100;return`<div class="card-main"><div class="section-header-row"><div class="card-heading mb-0"><span class="dot-accent" style="background:var(--accent-rose);"></span> <i class="fas fa-map-pin me-1" style="font-size:0.95rem;color:var(--accent-gold);"></i> شهادة ليبيا</div><span id="libyaPercentChip" class="percent-chip est2">${n.toFixed(1)}%</span></div>${C("طريقة حساب الشهادة الليبية","<ul><li>حذف التربية الإسلامية.</li><li>إدخال 8 مقررات، المجموع يقسم على 1200.</li><li>تنبيه: يجب إحضار شهادة تحركات للوالد والطالب.</li></ul>")}<div class="row g-2">${e}</div><div class="total-box mt-3"><span>المجموع المدخل</span><span id="libyaTotalHighlight" class="total-highlight-num"><span id="libyaTotalSum">${t}</span> / 1200</span></div></div>`}
+function v(){let e="";for(let t=0;t<7;t++){const v=parseFloat(s.jordanSubjects[t])||0;e+=`<div class="col-6 col-md-3"><label class="subject-label">المادة ${t+1}</label><input class="input-main enter-next text-center" data-field="jordanSubjects[${t}]" value="${s.jordanSubjects[t]}" placeholder="0" style="font-weight:800;"></div>`}const t=s.jordanSubjects.reduce((e,t)=>e+(parseFloat(t)||0),0),n=t/1400*100;return`<div class="card-main"><div class="section-header-row"><div class="card-heading mb-0"><span class="dot-accent" style="background:var(--accent-violet);"></span> <i class="fas fa-map-pin me-1" style="font-size:0.95rem;color:var(--accent-gold);"></i> شهادة أردنية</div><span id="jordanPercentChip" class="percent-chip gpa">${n.toFixed(1)}%</span></div>${C("طريقة حساب الشهادة الأردنية","<ul><li>حذف التربية الإسلامية.</li><li>إدخال 7 مقررات، المجموع يقسم على 1400.</li><li>تنبيه: يجب إحضار شهادة تحركات للطالب والوالد.</li></ul>")}<div class="row g-2">${e}</div><div class="total-box mt-3"><span>المجموع المدخل</span><span id="jordanTotalHighlight" class="total-highlight-num"><span id="jordanTotalSum">${t}</span> / 1400</span></div></div>`}
+function w(){const e=(parseFloat(s.azharArabic)||0)+(parseFloat(s.azharCultural)||0),t="sci"===s.azharPath?"4.4":"420"===s.azharLitSys?"4.2":"3.8",n=e/(parseFloat(t)||1);return`<div class="card-main"><div class="section-header-row"><div class="card-heading mb-0"><span class="dot-accent" style="background:var(--accent-pink);"></span> <i class="fas fa-book-quran me-1" style="font-size:0.95rem;color:var(--accent-gold);"></i> الشهادة الأزهرية</div><span class="percent-chip gpa">${n.toFixed(1)}%</span></div><div class="d-flex gap-2 my-3"><button class="toggle-btn ${"sci"===s.azharPath?"active":""}" data-action="setAzharPath" data-value="sci">علمي (<span class="divide-sign">÷</span>4.4)</button><button class="toggle-btn ${"lit"===s.azharPath?"active":""}" data-action="setAzharPath" data-value="lit">أدبي</button></div>${"lit"===s.azharPath?`<div class="card-main mb-3"><h6 style="color:var(--text-primary);font-size:0.85rem;font-weight:700;">اختر النهاية العظمى:</h6><div class="d-flex gap-3"><label class="radio-card ${"420"===s.azharLitSys?"selected":""}" onclick="E('setAzharLitSys','420')"><input type="radio" name="azharLitSys" value="420" ${"420"===s.azharLitSys?"checked":""}> 420 (<span class="divide-sign">÷</span>4.2)</label><label class="radio-card ${"380"===s.azharLitSys?"selected":""}" onclick="E('setAzharLitSys','380')"><input type="radio" name="azharLitSys" value="380" ${"380"===s.azharLitSys?"checked":""}> 380 (<span class="divide-sign">÷</span>3.8)</label></div></div>`:""}${C("طريقة حساب الشهادة الأزهرية","<ul><li>النسبة = (مجموع اللغة العربية + المواد الثقافية) <span class='divide-sign'>÷</span> "+t+".</li></ul>")}<div class="row g-3"><div class="col-md-6"><label class="subject-label">مواد اللغة العربية</label><input class="input-main enter-next text-center fw-bold" data-field="azharArabic" value="${s.azharArabic}" placeholder="0"></div><div class="col-md-6"><label class="subject-label">مواد ثقافية</label><input class="input-main enter-next text-center fw-bold" data-field="azharCultural" value="${s.azharCultural}" placeholder="0"></div></div><div class="total-box mt-3"><span>المجموع: <span class="total-highlight-num" id="azharTotalSum">${e}</span> <span class="divide-sign">÷</span> ${t}</span><span>النسبة: <span class="total-highlight-num" style="color:var(--accent-emerald);" id="azharPercentDisplay">${(e/parseFloat(t)).toFixed(1)}%</span></span></div><div class="total-box mt-3"><span>المجموع المكافئ <span class="divide-sign">×</span> 4.1</span><span class="total-highlight-num" style="color:var(--accent-amber);" id="azharEquivDisplay">${(n*4.1).toFixed(1)}</span></div></div>`}
+function K(){const w10=parseFloat(s.kuwaitW10)||0,w11=parseFloat(s.kuwaitW11)||0,w12=parseFloat(s.kuwaitW12)||0;const sum10=s.kuwait10.reduce((e,t)=>e+(parseFloat(t)||0),0);const p10=(sum10/420)*100;const gpa10=p10*(w10/100);const sum11=s.kuwait11.reduce((e,t)=>e+(parseFloat(t)||0),0);const p11=(sum11/560)*100;const gpa11=p11*(w11/100);const sum12=s.kuwait12.reduce((e,t)=>e+(parseFloat(t)||0),0);const p12=(sum12/520)*100;const gpa12=p12*(w12/100);s.kuwaitTotalSum=sum10+sum11+sum12;return (isNaN(gpa10)?0:gpa10)+(isNaN(gpa11)?0:gpa11)+(isNaN(gpa12)?0:gpa12);}
+function Q(){const subj10=["عربي","انجليزي","الرياضيات","كيمياء","فيزياء","احياء","جيولوجيا","معلوماتيه"];const max10=[60,60,80,60,60,40,40,20];let h10="";for(let i=0;i<8;i++){h10+=`<div class="row g-2 mb-2 align-items-center"><div class="col-4"><label class="subject-label" style="font-size:0.65rem;">${subj10[i]}</label></div><div class="col-4"><input class="input-main enter-next text-center p-1" data-field="kuwait10[${i}]" value="${s.kuwait10[i]}" placeholder="0"></div><div class="col-4 text-center" style="color:var(--text-secondary);font-weight:bold;font-size:0.8rem;">${max10[i]}</div></div>`;}const subj11=["عربي","انجليزي","معلوماتيه","الرياضيات","فيزياء","كيمياء","احياء","جيولوجيا"];const max11=[80,80,20,100,80,80,60,60];let h11="";for(let i=0;i<8;i++){h11+=`<div class="row g-2 mb-2 align-items-center"><div class="col-4"><label class="subject-label" style="font-size:0.65rem;">${subj11[i]}</label></div><div class="col-4"><input class="input-main enter-next text-center p-1" data-field="kuwait11[${i}]" value="${s.kuwait11[i]}" placeholder="0"></div><div class="col-4 text-center" style="color:var(--text-secondary);font-weight:bold;font-size:0.8rem;">${max11[i]}</div></div>`;}const subj12=["عربي","انجليزي","الرياضيات","كيمياء","فيزياء","احياء","معلوماتيه","دستور وحقوق انسان"];const max12=[80,80,100,80,80,80,20,"-"];let h12="";for(let i=0;i<8;i++){h12+=`<div class="row g-2 mb-2 align-items-center"><div class="col-4"><label class="subject-label" style="font-size:0.65rem;">${subj12[i]}</label></div><div class="col-4"><input class="input-main enter-next text-center p-1" data-field="kuwait12[${i}]" value="${s.kuwait12[i]}" placeholder="0"></div><div class="col-4 text-center" style="color:var(--text-secondary);font-weight:bold;font-size:0.8rem;">${max12[i]}</div></div>`;}const w10=parseFloat(s.kuwaitW10)||0,w11=parseFloat(s.kuwaitW11)||0,w12=parseFloat(s.kuwaitW12)||0;const sum10=s.kuwait10.reduce((e,t)=>e+(parseFloat(t)||0),0);const sum11=s.kuwait11.reduce((e,t)=>e+(parseFloat(t)||0),0);const sum12=s.kuwait12.reduce((e,t)=>e+(parseFloat(t)||0),0);const p10=(sum10/420)*100||0;const p11=(sum11/560)*100||0;const p12=(sum12/520)*100||0;const gpa10=p10*(w10/100);const gpa11=p11*(w11/100);const gpa12=p12*(w12/100);const totalGPA=gpa10+gpa11+gpa12;return `<div class="card-main"><div class="section-header-row"><div class="card-heading mb-0"><span class="dot-accent" style="background:var(--accent-emerald);"></span> <i class="fas fa-flag me-1" style="font-size:0.95rem;color:var(--accent-gold);"></i> الشهادة الكويتية</div><span id="kTotal" class="percent-chip gpa">${totalGPA.toFixed(1)}%</span></div>${C("طريقة حساب الشهادة الكويتية","<ul><li>يمكنك تغيير النسبة المخصصة لكل صف عن طريق تعديل الرقم بجانب اسم الصف.</li><li>النسبة العامة = مجموع النسب للمراحل الثلاث.</li></ul>")}<div class="row mt-3"><div class="col-lg-4 mb-3"><div style="background:var(--bg-card-alt); border-radius:12px; padding:12px;"><h6 style="color:var(--accent-emerald);font-weight:bold;text-align:center;display:flex;align-items:center;justify-content:center;gap:4px;">الصف العاشر (<input class="input-main text-center p-0" style="width:30px;height:24px;font-size:0.85rem;" data-field="kuwaitW10" value="${s.kuwaitW10}">%)</h6><div class="row g-2 mb-2"><div class="col-4" style="font-size:0.7rem;color:var(--text-label);font-weight:800;">المقرر</div><div class="col-4 text-center" style="font-size:0.7rem;color:var(--text-label);font-weight:800;">الدرجة</div><div class="col-4 text-center" style="font-size:0.7rem;color:var(--text-label);font-weight:800;">النهاية</div></div>${h10}<div class="total-box mt-2 flex-column align-items-stretch gap-1" style="padding:8px;font-size:0.75rem;"><div class="d-flex justify-content-between"><span>النسبة:</span><span id="k10P" class="total-highlight-num" style="font-size:0.9rem; color:var(--text-primary);">${p10.toFixed(1)}%</span></div><div class="d-flex justify-content-between"><span>المعدل:</span><span id="k10GPA" class="total-highlight-num" style="font-size:0.9rem;">${gpa10.toFixed(2)}%</span></div></div></div></div><div class="col-lg-4 mb-3"><div style="background:var(--bg-card-alt); border-radius:12px; padding:12px;"><h6 style="color:var(--accent-emerald);font-weight:bold;text-align:center;display:flex;align-items:center;justify-content:center;gap:4px;">الحادي عشر (<input class="input-main text-center p-0" style="width:30px;height:24px;font-size:0.85rem;" data-field="kuwaitW11" value="${s.kuwaitW11}">%)</h6><div class="row g-2 mb-2"><div class="col-4" style="font-size:0.7rem;color:var(--text-label);font-weight:800;">المقرر</div><div class="col-4 text-center" style="font-size:0.7rem;color:var(--text-label);font-weight:800;">الدرجة</div><div class="col-4 text-center" style="font-size:0.7rem;color:var(--text-label);font-weight:800;">النهاية</div></div>${h11}<div class="total-box mt-2 flex-column align-items-stretch gap-1" style="padding:8px;font-size:0.75rem;"><div class="d-flex justify-content-between"><span>النسبة:</span><span id="k11P" class="total-highlight-num" style="font-size:0.9rem; color:var(--text-primary);">${p11.toFixed(1)}%</span></div><div class="d-flex justify-content-between"><span>المعدل:</span><span id="k11GPA" class="total-highlight-num" style="font-size:0.9rem;">${gpa11.toFixed(2)}%</span></div></div></div></div><div class="col-lg-4 mb-3"><div style="background:var(--bg-card-alt); border-radius:12px; padding:12px;"><h6 style="color:var(--accent-emerald);font-weight:bold;text-align:center;display:flex;align-items:center;justify-content:center;gap:4px;">الثاني عشر (<input class="input-main text-center p-0" style="width:30px;height:24px;font-size:0.85rem;" data-field="kuwaitW12" value="${s.kuwaitW12}">%)</h6><div class="row g-2 mb-2"><div class="col-4" style="font-size:0.7rem;color:var(--text-label);font-weight:800;">المقرر</div><div class="col-4 text-center" style="font-size:0.7rem;color:var(--text-label);font-weight:800;">الدرجة</div><div class="col-4 text-center" style="font-size:0.7rem;color:var(--text-label);font-weight:800;">النهاية</div></div>${h12}<div class="total-box mt-2 flex-column align-items-stretch gap-1" style="padding:8px;font-size:0.75rem;"><div class="d-flex justify-content-between"><span>النسبة:</span><span id="k12P" class="total-highlight-num" style="font-size:0.9rem; color:var(--text-primary);">${p12.toFixed(1)}%</span></div><div class="d-flex justify-content-between"><span>المعدل:</span><span id="k12GPA" class="total-highlight-num" style="font-size:0.9rem;">${gpa12.toFixed(2)}%</span></div></div></div></div></div></div>`;}
+function B_calc(){let g=0,c=0;const c3=s.bahrainSem3.reduce((e,t)=>e+(parseFloat(t.hours)||0),0),p3=s.bahrainSem3.reduce((e,t)=>e+((parseFloat(t.mark)||0)*(parseFloat(t.hours)||0)),0);if(c3>0){g+=p3/c3;c++;}const c4=s.bahrainSem4.reduce((e,t)=>e+(parseFloat(t.hours)||0),0),p4=s.bahrainSem4.reduce((e,t)=>e+((parseFloat(t.mark)||0)*(parseFloat(t.hours)||0)),0);if(c4>0){g+=p4/c4;c++;}const c5=s.bahrainSem5.reduce((e,t)=>e+(parseFloat(t.hours)||0),0),p5=s.bahrainSem5.reduce((e,t)=>e+((parseFloat(t.mark)||0)*(parseFloat(t.hours)||0)),0);if(c5>0){g+=p5/c5;c++;}const c6=s.bahrainSem6.reduce((e,t)=>e+(parseFloat(t.hours)||0),0),p6=s.bahrainSem6.reduce((e,t)=>e+((parseFloat(t.mark)||0)*(parseFloat(t.hours)||0)),0);if(c6>0){g+=p6/c6;c++;}s.bahrainTotalSum=c>0?g/c:0;return s.bahrainTotalSum;}
+function B_html(){const s3=[{code:"انج201",name:"اللغه الإنجليزيه - مهارات عامه"},{code:"حيا211",name:"الأحياء 2"},{code:"ريض 253",name:"الرياضيات 3"},{code:"ريض 261",name:"الرياضيات 2"},{code:"عرب 201",name:"اللغه العربيه 3"},{code:"فيز 210",name:"الفيزياء 2"},{code:"كيم 211",name:"الكيمياء 2"}];let h3="";for(let i=0;i<7;i++){const p=((parseFloat(s.bahrainSem3[i].mark)||0)*(parseFloat(s.bahrainSem3[i].hours)||0)).toFixed(1);h3+=`<div class="row g-2 mb-2 align-items-center"><div class="col-2 text-start" style="font-size:0.6rem;color:var(--text-label);font-weight:800;">${s3[i].code}</div><div class="col-4" style="font-size:0.6rem;line-height:1.2;color:white;font-weight:800;">${s3[i].name}</div><div class="col-2"><input class="input-main text-center p-1 enter-next" data-field="bahrainSem3[${i}].mark" value="${s.bahrainSem3[i].mark}" placeholder="0"></div><div class="col-2"><input class="input-main text-center p-1 enter-next" data-field="bahrainSem3[${i}].hours" value="${s.bahrainSem3[i].hours}" placeholder="0"></div><div class="col-2 text-center" style="font-size:0.7rem;font-weight:bold;color:var(--text-secondary);" id="b3_pts_${i}">${p}</div></div>`}const s4=[{code:"اجا 203",name:"تاريخ البحرين الحديث والمعاصر"},{code:"انج202",name:"اللغه الإنجليزيه - مهارات عامه"},{code:"جيو 211",name:"الجيولوجيا 1"},{code:"حيا 217",name:"الاحياء 3"},{code:"ريض 262",name:"الرياضيات 4"},{code:"عرب 202",name:"اللغه العربيه 4"},{code:"-",name:"الفيزياء 3"},{code:"-",name:"الكيمياء3"}];let h4="";for(let i=0;i<8;i++){const p=((parseFloat(s.bahrainSem4[i].mark)||0)*(parseFloat(s.bahrainSem4[i].hours)||0)).toFixed(1);h4+=`<div class="row g-2 mb-2 align-items-center"><div class="col-2 text-start" style="font-size:0.6rem;color:var(--text-label);font-weight:800;">${s4[i].code!=="-"?s4[i].code:""}</div><div class="col-4" style="font-size:0.6rem;line-height:1.2;color:white;font-weight:800;">${s4[i].name}</div><div class="col-2"><input class="input-main text-center p-1 enter-next" data-field="bahrainSem4[${i}].mark" value="${s.bahrainSem4[i].mark}" placeholder="0"></div><div class="col-2"><input class="input-main text-center p-1 enter-next" data-field="bahrainSem4[${i}].hours" value="${s.bahrainSem4[i].hours}" placeholder="0"></div><div class="col-2 text-center" style="font-size:0.7rem;font-weight:bold;color:var(--text-secondary);" id="b4_pts_${i}">${p}</div></div>`}const s5=[{code:"-",name:"تاريخ العالم الحديث والمعاصر"},{code:"-",name:"اللغه الإنجليزيه - مهارات عامه"},{code:"-",name:"الاحياء 4"},{code:"-",name:"الرياضيات 5"},{code:"-",name:"اللغه العربيه 5"},{code:"-",name:"الطاقه"},{code:"-",name:"الكيمياء 4"}];let h5="";for(let i=0;i<7;i++){const p=((parseFloat(s.bahrainSem5[i].mark)||0)*(parseFloat(s.bahrainSem5[i].hours)||0)).toFixed(1);h5+=`<div class="row g-2 mb-2 align-items-center"><div class="col-2 text-start" style="font-size:0.6rem;color:var(--text-label);font-weight:800;">${s5[i].code!=="-"?s5[i].code:""}</div><div class="col-4" style="font-size:0.6rem;line-height:1.2;color:white;font-weight:800;">${s5[i].name}</div><div class="col-2"><input class="input-main text-center p-1 enter-next" data-field="bahrainSem5[${i}].mark" value="${s.bahrainSem5[i].mark}" placeholder="0"></div><div class="col-2"><input class="input-main text-center p-1 enter-next" data-field="bahrainSem5[${i}].hours" value="${s.bahrainSem5[i].hours}" placeholder="0"></div><div class="col-2 text-center" style="font-size:0.7rem;font-weight:bold;color:var(--text-secondary);" id="b5_pts_${i}">${p}</div></div>`}const s6=[{code:"-",name:"اللغه الإنجليزيه - مهارات عامه"},{code:"-",name:"الاحياء 5"},{code:"-",name:"الرياضيات 6"},{code:"-",name:"اللغه العربيه"},{code:"-",name:"علوم البيئه"},{code:"-",name:"الفيزياء 4"},{code:"-",name:"الكيمياء 5"}];let h6="";for(let i=0;i<7;i++){const p=((parseFloat(s.bahrainSem6[i].mark)||0)*(parseFloat(s.bahrainSem6[i].hours)||0)).toFixed(1);h6+=`<div class="row g-2 mb-2 align-items-center"><div class="col-2 text-start" style="font-size:0.6rem;color:var(--text-label);font-weight:800;">${s6[i].code!=="-"?s6[i].code:""}</div><div class="col-4" style="font-size:0.6rem;line-height:1.2;color:white;font-weight:800;">${s6[i].name}</div><div class="col-2"><input class="input-main text-center p-1 enter-next" data-field="bahrainSem6[${i}].mark" value="${s.bahrainSem6[i].mark}" placeholder="0"></div><div class="col-2"><input class="input-main text-center p-1 enter-next" data-field="bahrainSem6[${i}].hours" value="${s.bahrainSem6[i].hours}" placeholder="0"></div><div class="col-2 text-center" style="font-size:0.7rem;font-weight:bold;color:var(--text-secondary);" id="b6_pts_${i}">${p}</div></div>`}return `<div class="card-main"><div class="section-header-row"><div class="card-heading mb-0"><span class="dot-accent" style="background:var(--accent-blue);"></span> <i class="fas fa-flag me-1" style="font-size:0.95rem;color:var(--accent-gold);"></i> الشهادة البحرينية</div></div>${C("طريقة حساب الشهادة البحرينية","<ul><li>النقاط = العلامة المئوية × الساعات المعتمدة.</li><li>نسبة الفصل = مجموع النقاط ÷ مجموع الساعات المعتمدة.</li><li>النسبة النهائية = متوسط نسب الفصول المُدخلة (مجموع النسب ÷ عدد الفصول المُدخلة).</li><li>الفصول التي تتركها فارغة لن تدخل في الحساب (مثلاً إذا أدخلت الفصلين 5 و 6 فقط، يُقسم على 2).</li></ul>")}<div class="row mt-3"><div class="col-lg-6 mb-3"><div style="background:var(--bg-card-alt); border-radius:12px; padding:12px;"><h6 style="color:var(--accent-emerald);font-weight:bold;text-align:center;">الفصل الدراسي الثالث</h6><div class="row g-2 mb-2 text-center" style="font-size:0.6rem;color:var(--text-label);font-weight:800;"><div class="col-2 text-start">الرمز</div><div class="col-4 text-start">المادة</div><div class="col-2">العلامة</div><div class="col-2">الساعات</div><div class="col-2">النقاط</div></div>${h3}<div class="total-box mt-2 flex-column align-items-stretch gap-1" style="padding:8px;font-size:0.75rem;"><div class="d-flex justify-content-between"><span>الساعات: <span id="b3_total_hrs" class="fw-bold text-white">0</span></span><span>النقاط: <span id="b3_total_pts" class="fw-bold text-white">0</span></span></div><div class="d-flex justify-content-between mt-1"><span style="color:var(--accent-emerald);">النسبة:</span><span id="b3_gpa" class="total-highlight-num" style="font-size:0.9rem;">0%</span></div></div></div></div><div class="col-lg-6 mb-3"><div style="background:var(--bg-card-alt); border-radius:12px; padding:12px;"><h6 style="color:var(--accent-emerald);font-weight:bold;text-align:center;">الفصل الدراسي الرابع</h6><div class="row g-2 mb-2 text-center" style="font-size:0.6rem;color:var(--text-label);font-weight:800;"><div class="col-2 text-start">الرمز</div><div class="col-4 text-start">المادة</div><div class="col-2">العلامة</div><div class="col-2">الساعات</div><div class="col-2">النقاط</div></div>${h4}<div class="total-box mt-2 flex-column align-items-stretch gap-1" style="padding:8px;font-size:0.75rem;"><div class="d-flex justify-content-between"><span>الساعات: <span id="b4_total_hrs" class="fw-bold text-white">0</span></span><span>النقاط: <span id="b4_total_pts" class="fw-bold text-white">0</span></span></div><div class="d-flex justify-content-between mt-1"><span style="color:var(--accent-emerald);">النسبة:</span><span id="b4_gpa" class="total-highlight-num" style="font-size:0.9rem;">0%</span></div></div></div></div><div class="col-lg-6 mb-3"><div style="background:var(--bg-card-alt); border-radius:12px; padding:12px;"><h6 style="color:var(--accent-emerald);font-weight:bold;text-align:center;">الفصل الدراسي الخامس</h6><div class="row g-2 mb-2 text-center" style="font-size:0.6rem;color:var(--text-label);font-weight:800;"><div class="col-2 text-start">الرمز</div><div class="col-4 text-start">المادة</div><div class="col-2">العلامة</div><div class="col-2">الساعات</div><div class="col-2">النقاط</div></div>${h5}<div class="total-box mt-2 flex-column align-items-stretch gap-1" style="padding:8px;font-size:0.75rem;"><div class="d-flex justify-content-between"><span>الساعات: <span id="b5_total_hrs" class="fw-bold text-white">0</span></span><span>النقاط: <span id="b5_total_pts" class="fw-bold text-white">0</span></span></div><div class="d-flex justify-content-between mt-1"><span style="color:var(--accent-emerald);">النسبة:</span><span id="b5_gpa" class="total-highlight-num" style="font-size:0.9rem;">0%</span></div></div></div></div><div class="col-lg-6 mb-3"><div style="background:var(--bg-card-alt); border-radius:12px; padding:12px;"><h6 style="color:var(--accent-emerald);font-weight:bold;text-align:center;">الفصل الدراسي السادس</h6><div class="row g-2 mb-2 text-center" style="font-size:0.6rem;color:var(--text-label);font-weight:800;"><div class="col-2 text-start">الرمز</div><div class="col-4 text-start">المادة</div><div class="col-2">العلامة</div><div class="col-2">الساعات</div><div class="col-2">النقاط</div></div>${h6}<div class="total-box mt-2 flex-column align-items-stretch gap-1" style="padding:8px;font-size:0.75rem;"><div class="d-flex justify-content-between"><span>الساعات: <span id="b6_total_hrs" class="fw-bold text-white">0</span></span><span>النقاط: <span id="b6_total_pts" class="fw-bold text-white">0</span></span></div><div class="d-flex justify-content-between mt-1"><span style="color:var(--accent-emerald);">النسبة:</span><span id="b6_gpa" class="total-highlight-num" style="font-size:0.9rem;">0%</span></div></div></div></div></div></div>`;}
+function renderNawaqesItems(year,count){if(!s.masaratNawaqesExpand[year])return'';let h='';for(let i=0;i<count;i++){h+=`<div class="col-1 p-0"><input class="input-main text-center p-0 enter-next" data-field="masaratNawaqesItems.${year}[${i}]" value="${s.masaratNawaqesItems[year][i]||''}" style="font-size:0.55rem;height:24px;padding:0!important;border-radius:4px;" placeholder="0"></div>`;}return`<div class="col-4 row g-1" style="display:flex;flex-wrap:nowrap;gap:2px;">${h}</div>`;}
+window.toggleNawaqes=function(year){s.masaratNawaqesExpand[year]=!s.masaratNawaqesExpand[year];f()};
+function SA_html(){const isFasly=s.saudiSystem==="fasly"||!s.saudiSystem;const toggleUI=`<div class="d-flex bg-dark rounded-pill p-1 mb-3" style="width: fit-content; margin: 0 auto; border: 1px solid var(--border);"><button class="btn border-0 rounded-pill px-4 ${isFasly?'btn-primary':'text-white'}" data-action="setSaudiSystem" data-value="fasly" style="font-size: 0.8rem; font-weight: bold;">سعودية فصلي</button><button class="btn border-0 rounded-pill px-4 ${!isFasly?'btn-primary':'text-white'}" data-action="setSaudiSystem" data-value="masarat" style="font-size: 0.8rem; font-weight: bold;">سعودية مسارات</button></div>`;const gpa=s.saudiTotalSum||0;if(isFasly){const subjects=["العربي","الرياضيات","الإنجليزى","الفيزياء","الكيمياء","الأحياء","الحاسب الآلى","الاجتماعيات","علم الأرض"];let rows="";for(let i=0;i<9;i++){let cols=`<div class="col-2 text-start" style="font-size:0.65rem;line-height:1.2;color:white;font-weight:800;">${subjects[i]}</div>`;for(let j=0;j<6;j++){cols+=`<div class="col"><input class="input-main text-center p-1 enter-next" data-field="saudiSubjects[${i}][${j}]" value="${s.saudiSubjects[i][j]}" placeholder="0"></div>`;}rows+=`<div class="row g-1 mb-2 align-items-center">${cols}</div>`;}let headerCols=`<div class="col-2 text-start">المقرر</div>`;const lvls=["المستوى الأول","المستوى الثاني","المستوى الثالث","المستوى الرابع","المستوى الخامس","المستوى السادس"];for(let j=0;j<6;j++){headerCols+=`<div class="col" style="font-size:0.55rem;">${lvls[j]}</div>`;}const schAvg=s.saudiSchoolAvg||0,tot=s.saudiSum||0;return `<div class="card-main"><div class="section-header-row"><div class="card-heading mb-0"><span class="dot-accent" style="background:var(--accent-cyan);"></span> <i class="fas fa-flag me-1" style="font-size:0.95rem;color:var(--accent-gold);"></i> الشهادة السعودية</div><span class="percent-chip gpa" id="saudiPercentChip">${gpa.toFixed(1)}%</span></div>${toggleUI}${C("طريقة حساب الشهادة السعودية","<ul><li>يتم حساب متوسط المدرسة من جميع المواد المُدخلة (مجموع الدرجات ÷ عددها).</li><li>تُحسب النسبة المئوية عن طريق جمع (متوسط المدرسة × وزنه) + (نسبة القدرات × وزنها).</li><li>يمكنك تعديل الأوزان الافتراضية بسهولة. المجموع المكافئ = النسبة المئوية × 4.1</li></ul>")}<div class="row mt-3"><div class="col-12 mb-3"><div style="background:var(--bg-card-alt); border-radius:12px; padding:12px; overflow-x: auto;"><div style="min-width: 500px;"><div class="row g-1 mb-2 text-center" style="font-size:0.6rem;color:var(--text-label);font-weight:800;">${headerCols}</div>${rows}</div></div></div><div class="col-lg-6 mb-3"><div style="background:var(--bg-card-alt); border-radius:12px; padding:12px;"><h6 style="color:var(--accent-emerald);font-weight:bold;text-align:center;">بيانات القدرات والأوزان</h6><div class="row g-2 align-items-center mb-3 pb-2 border-bottom border-secondary"><div class="col-6 d-flex align-items-center gap-2" style="font-size:0.75rem;color:var(--accent-pink);font-weight:bold;"><i class="fas fa-hand-point-left" style="animation: pointLeft 0.7s infinite alternate; font-size: 1.1rem;"></i> درجة القدرات</div><div class="col-6"><input class="input-main text-center p-1 enter-next" style="border-color:var(--accent-pink);font-weight:bold;" data-field="saudiQudrat" value="${s.saudiQudrat}" placeholder="0"></div></div><div class="row g-2 align-items-center mb-2"><div class="col-6" style="font-size:0.7rem;color:var(--text-muted);">وزن المدرسة (%)</div><div class="col-6"><input class="input-main text-center p-1 enter-next" data-field="saudiSchoolWeight" value="${s.saudiSchoolWeight}" readonly ondblclick="this.removeAttribute('readonly'); this.focus();" style="cursor: pointer;" title="انقر مرتين للتعديل"></div></div><div class="row g-2 align-items-center mb-2"><div class="col-6" style="font-size:0.7rem;color:var(--text-muted);">وزن القدرات (%)</div><div class="col-6"><input class="input-main text-center p-1 enter-next" data-field="saudiQudratWeight" value="${s.saudiQudratWeight}" readonly ondblclick="this.removeAttribute('readonly'); this.focus();" style="cursor: pointer;" title="انقر مرتين للتعديل"></div></div></div></div><div class="col-lg-6 mb-3"><div class="total-box flex-column align-items-stretch gap-2 h-100 justify-content-center" style="padding:16px;"><div class="d-flex justify-content-between"><span>مجموع الدرجات:</span><span class="fw-bold text-white" id="saudiTotDisplay">${tot}</span></div><div class="d-flex justify-content-between"><span>متوسط المدرسة:</span><span class="fw-bold text-white" id="saudiSchAvgDisplay">${schAvg.toFixed(2)}%</span></div><div class="d-flex justify-content-between mt-2 pt-2 border-top border-secondary"><span style="color:var(--accent-emerald);">النسبة النهائية:</span><span class="total-highlight-num" style="font-size:1.1rem;" id="saudiFinalDisplay">${gpa.toFixed(2)}%</span></div></div></div></div></div>`;}else{
+const tab=s.saudiMasaratTab||3;
+const tabBtns=`<div class="d-flex gap-2 flex-wrap justify-content-center mb-3"><button class="toggle-btn ${tab===3?'active':''}" data-action="setSaudiMasaratTab" data-value="3">طالب درس 3 سنوات</button><button class="toggle-btn ${tab===2?'active':''}" data-action="setSaudiMasaratTab" data-value="2">طالب درس سنتين</button><button class="toggle-btn ${tab===1?'active':''}" data-action="setSaudiMasaratTab" data-value="1">طالب درس سنة</button></div>`;
+
+const year1Subjects=[
+{name:"الكفايات اللغوية",weight:445},
+{name:"الأحياء",weight:405},
+{name:"الرياضيات",weight:410},
+{name:"اللغة الانجليزية",weight:485},
+{name:"التقنية الرقمية",weight:285}
+];
+const year2Subjects=[
+{name:"الفيزياء",weight:310},
+{name:"علم البئية",weight:282},
+{name:"الكفايات اللغوية",weight:475},
+{name:"الرياضيات",weight:455},
+{name:"اللغة الانجليزية",weight:465},
+{name:"التقنية الرقمية",weight:297}
+];
+const year3Subjects=[
+{name:"علم البئية",weight:279},
+{name:"الرياضيات",weight:410},
+{name:"الدراسات الاجتماعية",weight:475},
+{name:"الكيمياء",weight:430},
+{name:"اللغة الانجليزية",weight:415},
+{name:"التقنية الرقمية",weight:261}
+];
+
+function buildTableBody(subjects,obtainedArr,prefix){
+let rows="";let sObt=0,sWgt=0,sAmel=0,sWeight=0;
+subjects.forEach((subj,idx)=>{
+const ob=parseFloat(obtainedArr[idx])||0;
+const wVal=ob*subj.weight/100;
+const amel=ob>0?(subj.weight/ob):0;
+sObt+=ob;sWgt+=wVal;sAmel+=amel;sWeight+=subj.weight;
+rows+=`<div class="row g-2 mb-1 align-items-center"><div class="col-3 text-start subject-label" style="font-size:0.7rem;white-space:nowrap;">${subj.name}</div><div class="col-2"><input class="input-main text-center p-1 enter-next" data-field="${prefix}[${idx}]" value="${obtainedArr[idx]||''}" placeholder="0" style="font-size:0.8rem;"></div><div class="col-3 text-center" style="font-size:0.7rem;font-weight:bold;color:var(--accent-amber);"><input class="input-main text-center p-1" data-field="${prefix}_weight[${idx}]" value="${subj.weight}" placeholder="0" style="font-size:0.7rem;width:60px;display:inline-block;background:rgba(245,158,11,0.1);border-color:var(--accent-amber);"></div><div class="col-4 text-center" style="font-size:0.7rem;font-weight:bold;color:var(--accent-cyan);" id="${prefix}_amel_${idx}">${ob>0?amel.toFixed(2):'-'}</div></div>`;
+});
+return{rows,sObt,sWgt,sAmel,sWeight};
+}
+
+function yearCol(label,data,prefix){
+const hdr=`<div class="row g-2 mb-2 text-center" style="font-size:0.65rem;color:var(--text-label);font-weight:800;border-bottom:1px solid var(--border);padding-bottom:4px;"><div class="col-3 text-start">المقرر</div><div class="col-2">المتحصلة</div><div class="col-3">الموزونة</div><div class="col-4">المعامل</div></div>`;
+const res=data.sAmel>0?(data.sWeight/data.sAmel):0;
+return `<div style="flex:1;min-width:200px;background:var(--bg-card);border:1px solid var(--border);border-radius:10px;padding:10px;">${hdr}${data.rows}<div class="border-top border-secondary mt-2 pt-2" style="font-size:0.65rem;font-weight:700;"><div class="d-flex justify-content-between mb-1"><span style="color:white;">مجموع المتحصلة</span><span style="color:var(--accent-emerald);" id="${prefix}_sObt">${data.sObt.toFixed(0)}</span></div><div class="d-flex justify-content-between mb-1"><span style="color:white;">مجموع الموزونة</span><span style="color:var(--accent-amber);" id="${prefix}_sWgt">${data.sWeight}</span></div><div class="d-flex justify-content-between mb-1"><span style="color:white;">مجموع المعامل</span><span style="color:var(--accent-cyan);" id="${prefix}_sAmel">${data.sAmel.toFixed(2)}</span></div><div class="d-flex justify-content-between mt-1 pt-1" style="border-top:1px dashed var(--border);"><span style="color:var(--accent-gold);font-weight:900;">نتيجة الجدول</span><span style="color:var(--accent-gold);font-weight:900;" id="${prefix}_result">${res.toFixed(2)}</span></div></div></div>`;
+}
+
+function calcWeightedSum(subjects,obtained){
+let sum=0;
+subjects.forEach((s,i)=>{const v=parseFloat(obtained[i])||0;sum+=v*s.weight/100;});
+return sum;
+}
+
+const d1=buildTableBody(year1Subjects,s.masaratYear1Obtained,"masaratYear1Obtained");
+const d2=buildTableBody(year2Subjects,s.masaratYear2Obtained,"masaratYear2Obtained");
+const d3=buildTableBody(year3Subjects,s.masaratYear3Obtained,"masaratYear3Obtained");
+
+const gradeHeader=(label,color)=>`<div style="background:${color};color:white;padding:6px 14px;border-radius:8px;font-weight:900;font-size:0.85rem;text-align:center;margin-bottom:10px;">${label}</div>`;
+const g2d1=buildTableBody(s.g2T1Subjects,s.g2T1Obtained,"g2T1Obtained");
+const g2d2=buildTableBody(s.g2T2Subjects,s.g2T2Obtained,"g2T2Obtained");
+const g2d3=buildTableBody(s.g2T3Subjects,s.g2T3Obtained,"g2T3Obtained");
+const g3d1=buildTableBody(s.g3T1Subjects,s.g3T1Obtained,"g3T1Obtained");
+const g3d2=buildTableBody(s.g3T2Subjects,s.g3T2Obtained,"g3T2Obtained");
+const g3d3=buildTableBody(s.g3T3Subjects,s.g3T3Obtained,"g3T3Obtained");
+
+const allYearTables=[yearCol("السنة الأولى",d1,"masaratYear1Obtained"),yearCol("السنة الثانية",d2,"masaratYear2Obtained"),yearCol("السنة الثالثة",d3,"masaratYear3Obtained")];
+const allG2Tables=[yearCol("المجموعة 2 - السنة الأولى",g2d1,"g2T1Obtained"),yearCol("المجموعة 2 - السنة الثانية",g2d2,"g2T2Obtained"),yearCol("المجموعة 2 - السنة الثالثة",g2d3,"g2T3Obtained")];
+const allG3Tables=[yearCol("المجموعة 3 - السنة الأولى",g3d1,"g3T1Obtained"),yearCol("المجموعة 3 - السنة الثانية",g3d2,"g3T2Obtained"),yearCol("المجموعة 3 - السنة الثالثة",g3d3,"g3T3Obtained")];
+
+const gradeAvgHTML=(id,color)=>`<div style="background:var(--bg-card-alt);border:2px solid ${color};border-radius:10px;padding:10px;margin-top:10px;"><div class="d-flex justify-content-between align-items-center"><span style="color:white;font-weight:900;font-size:0.9rem;">حساب الصف</span><span style="color:white;font-weight:900;font-size:1.1rem;" id="${id}">0.00</span></div></div>`;
+
+let grade1Section="",grade2Section="",grade3Section="";
+let g1Pct=0,g2Pct=0,g3Pct=0;
+if(tab===3){g1Pct=20;g2Pct=40;g3Pct=40;}
+else if(tab===2){g2Pct=50;g3Pct=50;}
+else{g3Pct=100;}
+
+if(tab===3){
+grade1Section=`<div class="col-12 mb-4"><div style="background:var(--bg-card-alt);border-radius:12px;padding:14px;overflow-x:auto;">${gradeHeader("الصف الأول","var(--accent-amber)")}<div class="d-flex gap-3" style="direction:rtl;">${allYearTables.join("")}</div>${gradeAvgHTML("grade1Avg","var(--accent-amber)")}</div></div>`;
+grade2Section=`<div class="col-12 mb-4"><div style="background:var(--bg-card-alt);border-radius:12px;padding:14px;overflow-x:auto;">${gradeHeader("الصف الثاني","var(--accent-cyan)")}<div class="d-flex gap-3" style="direction:rtl;">${allG2Tables.join("")}</div>${gradeAvgHTML("grade2Avg","var(--accent-cyan)")}</div></div>`;
+grade3Section=`<div class="col-12 mb-4"><div style="background:var(--bg-card-alt);border-radius:12px;padding:14px;overflow-x:auto;">${gradeHeader("الصف الثالث","var(--accent-emerald)")}<div class="d-flex gap-3" style="direction:rtl;">${allG3Tables.join("")}</div>${gradeAvgHTML("grade3Avg","var(--accent-emerald)")}</div></div>`;
+}else if(tab===2){
+grade2Section=`<div class="col-12 mb-4"><div style="background:var(--bg-card-alt);border-radius:12px;padding:14px;overflow-x:auto;">${gradeHeader("الصف الثاني","var(--accent-cyan)")}<div class="d-flex gap-3" style="direction:rtl;">${allG2Tables.join("")}</div>${gradeAvgHTML("grade2Avg","var(--accent-cyan)")}</div></div>`;
+grade3Section=`<div class="col-12 mb-4"><div style="background:var(--bg-card-alt);border-radius:12px;padding:14px;overflow-x:auto;">${gradeHeader("الصف الثالث","var(--accent-emerald)")}<div class="d-flex gap-3" style="direction:rtl;">${allG3Tables.join("")}</div>${gradeAvgHTML("grade3Avg","var(--accent-emerald)")}</div></div>`;
+}else{
+grade3Section=`<div class="col-12 mb-4"><div style="background:var(--bg-card-alt);border-radius:12px;padding:14px;overflow-x:auto;">${gradeHeader("الصف الثالث","var(--accent-emerald)")}<div class="d-flex gap-3" style="direction:rtl;">${allG3Tables.join("")}</div>${gradeAvgHTML("grade3Avg","var(--accent-emerald)")}</div></div>`;
+}
+
+const pctBoxes=[];
+if(tab===3)pctBoxes.push(`<div class="col-md-4"><div style="background:var(--bg-card);border-radius:8px;padding:8px;text-align:center;"><div style="color:var(--text-secondary);font-size:0.7rem;">نسبة الصف الأول (${g1Pct}%)</div><div style="color:var(--accent-amber);font-weight:900;font-size:1rem;" id="finalG1Pct">0.00</div></div></div>`);
+if(tab>=2)pctBoxes.push(`<div class="col-md-4"><div style="background:var(--bg-card);border-radius:8px;padding:8px;text-align:center;"><div style="color:var(--text-secondary);font-size:0.7rem;">نسبة الصف الثاني (${g2Pct}%)</div><div style="color:var(--accent-cyan);font-weight:900;font-size:1rem;" id="finalG2Pct">0.00</div></div></div>`);
+pctBoxes.push(`<div class="col-md-4"><div style="background:var(--bg-card);border-radius:8px;padding:8px;text-align:center;"><div style="color:var(--text-secondary);font-size:0.7rem;">نسبة الصف الثالث (${g3Pct}%)</div><div style="color:var(--accent-emerald);font-weight:900;font-size:1rem;" id="finalG3Pct">0.00</div></div></div>`);
+
+const qudratSection=`<div class="col-lg-6 mx-auto mb-3"><div style="background:var(--bg-card-alt);border-radius:12px;padding:12px;"><h6 style="color:var(--accent-pink);font-weight:bold;text-align:center;">درجة القدرات</h6><div class="d-flex align-items-center gap-2 mt-3 justify-content-center"><i class="fas fa-hand-point-left" style="animation:pointLeft 0.7s infinite alternate;font-size:1.1rem;color:var(--accent-pink);"></i><input class="input-main text-center p-2 enter-next fs-5" style="border-color:var(--accent-pink);font-weight:bold;" data-field="masaratQudrat" value="${s.masaratQudrat}" placeholder="0"></div></div></div>`;
+
+const finalSection=`<div class="col-12 mb-3"><div style="background:var(--bg-card-alt);border:2px solid var(--accent-gold);border-radius:12px;padding:14px;"><h6 style="color:var(--accent-gold);font-weight:900;text-align:center;font-size:1rem;">النتيجة النهائية</h6><div class="row g-3 mt-2">${pctBoxes.join("")}</div><div class="mt-3 pt-3 border-top" style="border-color:var(--accent-gold) !important;"><div class="d-flex justify-content-between mb-2" style="font-size:0.8rem;"><span style="color:white;font-weight:700;">مجموع النسب ÷ 2</span><span style="color:var(--accent-gold);font-weight:900;" id="finalPctHalf">0.00</span></div><div class="d-flex justify-content-between mb-2" style="font-size:0.8rem;"><span style="color:white;font-weight:700;">القدرات ÷ 2</span><span style="color:var(--accent-pink);font-weight:900;" id="finalQudratHalf">0.00</span></div><div class="d-flex justify-content-between mb-2 pt-2" style="border-top:1px dashed var(--border);font-size:0.9rem;"><span style="color:var(--accent-gold);font-weight:900;">النسبة النهائية</span><span style="color:var(--accent-gold);font-weight:900;font-size:1.1rem;" id="finalPct">0.00%</span></div><div class="d-flex justify-content-between" style="font-size:0.9rem;"><span style="color:var(--accent-emerald);font-weight:900;">المجموع المكافئ (×4.1)</span><span style="color:var(--accent-emerald);font-weight:900;font-size:1.1rem;" id="finalEquiv">0.00</span></div></div></div></div>`;
+
+return `<div class="card-main"><div class="section-header-row"><div class="card-heading mb-0"><span class="dot-accent" style="background:var(--accent-cyan);"></span> <i class="fas fa-flag me-1" style="font-size:0.95rem;color:var(--accent-gold);"></i> الشهادة السعودية - مسارات</div></div>${toggleUI}${tabBtns}${C("طريقة حساب الشهادة السعودية - مسارات","<div style='font-size:0.8rem;line-height:1.8;'><p style='color:var(--accent-amber);font-weight:900;font-size:0.9rem;'>النوع الأول: شهادة الثلاث سنوات (نظام المسارات)</p><ul style='padding-right:18px;'><li style='margin-bottom:6px;'><span style='color:var(--accent-amber);font-weight:700;'>في حاله وجود الثلاث صفوف:</span> الصف الأول 20% / الصف الثاني 40% / الصف الثالث 40%</li><li style='margin-bottom:6px;'><span style='color:var(--accent-cyan);font-weight:700;'>في حاله عدم وجود الصف الأول:</span> الصف الثاني 50% / الصف الثالث 50%</li><li style='margin-bottom:6px;'><span style='color:var(--accent-emerald);font-weight:700;'>في حاله عدم وجود الصف الأول والثاني:</span> الصف الثالث فقط 100%</li></ul><p style='color:var(--accent-gold);font-weight:900;font-size:0.9rem;margin-top:10px;'>خطوات الحساب لكل صف دراسي:</p><ol style='padding-right:18px;'><li style='margin-bottom:4px;'>نحذف المواد التالية: القرآن الكريم، التفكير الناقد، تربية بدنية وصحية، تربية مهنية، الحديث، اللياقة، الثقافة الصحية، الفنون، التوحيد، البحث ومصادر المعلومات، التصميم الرقمي، المهارات الحياتية، المواطنة الرقمية، الفقه، التنمية المستدامة، مجال اختياري، مشروع التخرج، حصص الابتكار.</li><li style='margin-bottom:4px;'>نقسم <span style='color:var(--accent-amber);font-weight:700;'>الموزونة</span> على <span style='color:var(--accent-emerald);font-weight:700;'>المتحصل</span> لكل مقرر = <span style='color:var(--accent-cyan);font-weight:700;'>المعامل</span></li><li style='margin-bottom:4px;'>نجمع المعاملات في خانة <span style='color:var(--accent-cyan);font-weight:700;'>مجموع المعامل</span></li><li style='margin-bottom:4px;'>نجمع الموزونات في خانة <span style='color:var(--accent-amber);font-weight:700;'>مجموع الموزونة</span></li><li style='margin-bottom:4px;'><span style='color:var(--accent-gold);font-weight:700;'>نتيجة الجدول</span> = مجموع الموزونة ÷ مجموع المعامل</li><li style='margin-bottom:4px;'>نكرر العملية في الجدولين الآخرين للصف الواحد</li></ol><p style='color:var(--accent-gold);font-weight:900;font-size:0.9rem;margin-top:10px;'>حساب كل صف:</p><ul style='padding-right:18px;'><li style='margin-bottom:4px;'>حساب الصف = (نتيجة الجدول الأول + الثاني + الثالث) ÷ 3</li><li style='margin-bottom:4px;'>نسبة الصف = حساب الصف × النسبة المخصصة للصف</li></ul><p style='color:var(--accent-gold);font-weight:900;font-size:0.9rem;margin-top:10px;'>النتيجة النهائية:</p><ol style='padding-right:18px;'><li style='margin-bottom:4px;'>نجمع نسب الثلاث صفوف ÷ 2</li><li style='margin-bottom:4px;'>نجمع مع نصف درجة شهادة القدرات</li><li style='margin-bottom:4px;'>= النسبة المئوية النهائية</li><li style='margin-bottom:4px;'><span style='color:var(--accent-emerald);font-weight:700;'>المجموع المكافئ</span> = النسبة المئوية × 4.1</li></ol></div>")}${grade1Section}${grade2Section}${grade3Section}${qudratSection}${finalSection}</div>`;
+}}
+function SA_calc(){
+    let final=0;
+    if(s.saudiSystem==="fasly"){
+        let sum=0,count=0;
+        for(let r=0;r<9;r++){
+            for(let c=0;c<6;c++){
+                const v=parseFloat(s.saudiSubjects[r][c]);
+                if(!isNaN(v)){sum+=v;count++;}
+            }
+        }
+        if (s.saudiFaslyModified) {
+            const schAvg=count>0?(sum/count):0;
+            const q=parseFloat(s.saudiQudrat)||0,
+                  ws=parseFloat(s.saudiSchoolWeight)||0,
+                  wq=parseFloat(s.saudiQudratWeight)||0;
+            final=(schAvg*(ws/100))+(q*(wq/100));
+            s.saudiSum=sum;
+            s.saudiSchoolAvg=schAvg;
+        } else {
+            s.saudiSum=0;
+            s.saudiSchoolAvg=0;
+            final=0;
+        }
+        s.saudiTotalSum=final;
+    } else {
+        if (!s.saudiMasaratModified) {
+            s.saudiTotalSum = 0;
+            return 0;
+        }
+        const tab=s.saudiMasaratTab||3;
+        const q=parseFloat(s.masaratQudrat)||0;
+        
+        function calcYearSum(subjects,obtained){
+            let sum=0;
+            subjects.forEach((s,i)=>{const v=parseFloat(obtained[i])||0;sum+=v*s.weight/100;});
+            return sum;
+        }
+        
+        const year1Subjects=[
+            {name:"الكفايات اللغوية",weight:445},
+            {name:"الأحياء",weight:405},
+            {name:"الرياضيات",weight:410},
+            {name:"اللغة الانجليزية",weight:485},
+            {name:"التقنية الرقمية",weight:285}
+        ];
+        const year2Subjects=[
+            {name:"الفيزياء",weight:310},
+            {name:"علم البئية",weight:282},
+            {name:"الكفايات اللغوية",weight:475},
+            {name:"الرياضيات",weight:455},
+            {name:"اللغة الانجليزية",weight:465},
+            {name:"التقنية الرقمية",weight:297}
+        ];
+        const year3Subjects=[
+            {name:"علم البئية",weight:279},
+            {name:"الرياضيات",weight:410},
+            {name:"الدراسات الاجتماعية",weight:475},
+            {name:"الكيمياء",weight:430},
+            {name:"اللغة الانجليزية",weight:415},
+            {name:"التقنية الرقمية",weight:261}
+        ];
+        
+        let totalSchool=0;
+        if(tab===3){
+            const y1=calcYearSum(year1Subjects,s.masaratYear1Obtained);
+            const y2=calcYearSum(year2Subjects,s.masaratYear2Obtained);
+            const y3=calcYearSum(year3Subjects,s.masaratYear3Obtained);
+            totalSchool=(y1+y2+y3)/3;
+        }else if(tab===2){
+            const y1=calcYearSum(year1Subjects,s.masaratYear1Obtained);
+            const y2=calcYearSum(year2Subjects,s.masaratYear2Obtained);
+            totalSchool=(y1+y2)/2;
+        }else{
+            const y1=calcYearSum(year1Subjects,s.masaratYear1Obtained);
+            totalSchool=y1;
+        }
+        
+final=(totalSchool/2)+(q/2);
+        s.saudiTotalSum=final;
+    }
+    return final;
+}
+function k(){document.querySelectorAll('#tabContent [data-field]').forEach(function(el){el.addEventListener('input',function(){try{var field=el.getAttribute('data-field');var val=el.value;if(el.type==='checkbox')val=el.checked;var o=s;if(field==='thScore')o.thScore=val;else if(field==='stemTotal')o.stemTotal=val;else if(field==='azharArabic')o.azharArabic=val;else if(field==='azharCultural')o.azharCultural=val;else if(field==='amSubjects9')o.amSubjects9=val;else if(field==='masaratQudrat')o.masaratQudrat=val;else if(field.startsWith('est1Scores.')){var p=field.split('.')[1];o.est1Scores[p]=val}else if(field.startsWith('est2Scores.')){var p=field.split('.')[1];o.est2Scores[p]=val}else if(field.startsWith('amSubjects[')){o.amSubjects[parseInt(field.match(/\[(\d+)\]/)[1])]=val}else if(field.startsWith('kuwaitGrade')){let a=parseInt(field.match(/\[(\d+)\]/)[1]),c=field.match(/kuwaitGrade(\d+)/)[1];o['kuwaitGrade'+c][a]=val}else if(field.startsWith("libyaSubjects["))o.libyaSubjects[parseInt(field.match(/\[(\d+)\]/)[1])]=val;else if(field.startsWith("jordanSubjects["))o.jordanSubjects[parseInt(field.match(/\[(\d+)\]/)[1])]=val;else if(field.startsWith("gulfSubjects[")){let a=field.match(/\[(\d+)\]\.(\w+)/),i=parseInt(a[1]),r=a[2];"mark"===r?o.gulfSubjects[i].mark=val:"isStar"===r?(o.gulfSubjects[i].isStar=val,f()):0}else if(field.startsWith("kuwait10["))o.kuwait10[parseInt(field.match(/\[(\d+)\]/)[1])]=val;else if(field.startsWith("kuwait11["))o.kuwait11[parseInt(field.match(/\[(\d+)\]/)[1])]=val;else if(field.startsWith("kuwait12["))o.kuwait12[parseInt(field.match(/\[(\d+)\]/)[1])]=val;else if(field.startsWith("bahrainSem3[")){let a=field.match(/\[(\d+)\]\.(\w+)/),i=parseInt(a[1]),r=a[2];"mark"===r?o.bahrainSem3[i].mark=val:o.bahrainSem3[i].hours=val}else if(field.startsWith("bahrainSem4[")){let a=field.match(/\[(\d+)\]\.(\w+)/),i=parseInt(a[1]),r=a[2];"mark"===r?o.bahrainSem4[i].mark=val:o.bahrainSem4[i].hours=val}else if(field.startsWith("bahrainSem5[")){let a=field.match(/\[(\d+)\]\.(\w+)/),i=parseInt(a[1]),r=a[2];"mark"===r?o.bahrainSem5[i].mark=val:o.bahrainSem5[i].hours=val}else if(field.startsWith("bahrainSem6[")){let a=field.match(/\[(\d+)\]\.(\w+)/),i=parseInt(a[1]),r=a[2];"mark"===r?o.bahrainSem6[i].mark=val:o.bahrainSem6[i].hours=val}else if(field.startsWith("saudiSubjects[")){let a=field.match(/\[(\d+)\]\[(\d+)\]/);o.saudiSubjects[parseInt(a[1])][parseInt(a[2])]=val;o.saudiFaslyModified=true}else if(field.startsWith("masaratYear1Obtained[")){o.masaratYear1Obtained[parseInt(field.match(/\[(\d+)\]/)[1])]=val;o.saudiMasaratModified=true}else if(field.startsWith("masaratYear2Obtained[")){o.masaratYear2Obtained[parseInt(field.match(/\[(\d+)\]/)[1])]=val;o.saudiMasaratModified=true}else if(field.startsWith("masaratYear3Obtained[")){o.masaratYear3Obtained[parseInt(field.match(/\[(\d+)\]/)[1])]=val;o.saudiMasaratModified=true}else if(field==='saudiQudrat'){o.saudiQudrat=val;o.saudiFaslyModified=true}else if(field==='saudiSchoolWeight'){o.saudiSchoolWeight=val;o.saudiFaslyModified=true}else if(field==='saudiQudratWeight'){o.saudiQudratWeight=val;o.saudiFaslyModified=true}else if(field.startsWith("g2T1Obtained[")){o.g2T1Obtained[parseInt(field.match(/\[(\d+)\]/)[1])]=val}else if(field.startsWith("g2T2Obtained[")){o.g2T2Obtained[parseInt(field.match(/\[(\d+)\]/)[1])]=val}else if(field.startsWith("g2T3Obtained[")){o.g2T3Obtained[parseInt(field.match(/\[(\d+)\]/)[1])]=val}else if(field.startsWith("g3T1Obtained[")){o.g3T1Obtained[parseInt(field.match(/\[(\d+)\]/)[1])]=val}else if(field.startsWith("g3T2Obtained[")){o.g3T2Obtained[parseInt(field.match(/\[(\d+)\]/)[1])]=val}else if(field.startsWith("g3T3Obtained[")){o.g3T3Obtained[parseInt(field.match(/\[(\d+)\]/)[1])]=val}m();if(field==='stemTotal')updateStemInline()}catch(e){console.error(e)}})})}
+
+window.toggleMethod=function(e){e.classList.toggle('open');var b=e.nextElementSibling;if(b)b.classList.toggle('closed');}
+
+// Handle weight field changes for Saudi masarat
+document.addEventListener('input', function(ev) {
+  var el = ev.target;
+  if (!el || !el.getAttribute) return;
+  var field = el.getAttribute('data-field');
+  if (!field) return;
+  var val = parseFloat(el.value) || 0;
+  if (field.indexOf('_weight[') > -1) {
+    var prefix = field.split('_weight[')[0];
+    var idx = parseInt(field.match(/\[(\d+)\]/)[1]);
+    var subjects = null;
+    if (prefix === 'masaratYear1Obtained') subjects = s.saudiMasaratSubjects1;
+    else if (prefix === 'masaratYear2Obtained') subjects = s.saudiMasaratSubjects2;
+    else if (prefix === 'masaratYear3Obtained') subjects = s.saudiMasaratSubjects3;
+    if (subjects && subjects[idx]) {
+      subjects[idx].weight = val;
+      f();
+    }
+  }
+});
+
+window.E=function(e,t){
+    if (e === "setSaudiSystem" || e === "setSaudiMasaratYears" || e === "setSaudiMasaratTab") {
+        s.saudiMasaratModified = false;
+        s.saudiFaslyModified = false;
+    }
+    "setAmPath"===e?(s.amPath=t,f()):"setThSystem"===e?(s.thSystem=t,f()):"setAzharPath"===e?(s.azharPath=t,f()):"setAzharLitSys"===e?(s.azharLitSys=t,f()):"setSaudiSystem"===e?(s.saudiSystem=t,f()):"setSaudiMasaratYears"===e?(s.saudiMasaratYears=parseInt(t),s.masaratNawaqes={y1:"",y2:"",y3:""},s.masaratNawaqesItems={y1:Array(18).fill(""),y2:Array(18).fill(""),y3:Array(16).fill("")},s.masaratNawaqesExpand={y1:!1,y2:!1,y3:!1},f()):"setSaudiMasaratTab"===e?(s.saudiMasaratTab=parseInt(t),f()):0
+}
+window.resetAllFields=function(){
+    s.est1Scores={part1:"",part2:""};
+    s.est2Scores={part1:"",part2:""};
+    s.amSubjects=Array(8).fill("0");
+    s.thScore="";
+    s.thSystem="new";
+    s.gulfSubjects=Array(7).fill().map(()=>({mark:"",isStar:!1}));
+    s.libyaSubjects=Array(8).fill("");
+    s.jordanSubjects=Array(7).fill("");
+    s.azharPath="sci";
+    s.azharLitSys="420";
+    s.azharArabic="";
+    s.azharCultural="";
+    s.amPath="non_eng";
+    s.methodOpen=!1;
+    s.est1Percent=0;
+    s.est2Percent=0;
+    s.gpaPercent=0;
+    s.amHas9th=!1;
+    s.amSubjects9="0";
+    s.kuwait10=Array(8).fill("");
+    s.kuwait11=Array(8).fill("");
+    s.kuwait12=Array(8).fill("");
+    s.kuwaitTotalSum=0;
+    s.kuwaitW10=10;
+    s.kuwaitW11=20;
+    s.kuwaitW12=70;
+    s.bahrainSem3=Array(7).fill().map(()=>({mark:"",hours:""}));
+    s.bahrainSem4=Array(8).fill().map(()=>({mark:"",hours:""}));
+    s.bahrainSem5=Array(7).fill().map(()=>({mark:"",hours:""}));
+    s.bahrainSem6=Array(8).fill().map(()=>({mark:"",hours:""}));
+    s.bahrainTotalSum=0;
+    s.saudiSubjects=Array(9).fill().map(()=>Array(6).fill("100"));
+    s.saudiFaslyModified=false;
+    s.saudiMasaratModified=false;
+    s.saudiMasaratSubjects1=[{name:"الرياضيات",weight:200},{name:"الفيزياء",weight:200},{name:"الكيمياء",weight:200},{name:"الأحياء",weight:200},{name:"تقنية المعلومات",weight:200}];
+    s.saudiMasaratSubjects2=[{name:"الرياضيات",weight:200},{name:"الفيزياء",weight:200},{name:"الكيمياء",weight:200},{name:"الأحياء",weight:200},{name:"تقنية المعلومات",weight:200},{name:"اللغة الإنجليزية",weight:200}];
+    s.saudiMasaratSubjects3=[{name:"الرياضيات",weight:200},{name:"الفيزياء",weight:200},{name:"الكيمياء",weight:200},{name:"الأحياء",weight:200},{name:"تقنية المعلومات",weight:200},{name:"اللغة الإنجليزية",weight:200}];
+    s.saudiQudrat="";
+    s.currentEditingId=null;
+    var saveBtn = document.getElementById("saveCertBtn");
+    if (saveBtn) {
+        saveBtn.style.display = 'none';
+        saveBtn.innerHTML = '<i class="fas fa-sync-alt me-1"></i> تحديث';
+        saveBtn.className = "btn btn-success btn-sm";
+    }
+    var step2 = document.getElementById("step2");
+    if (step2) step2.style.display = 'none';
+    s.saudiSchoolWeight="50";
+    s.saudiQudratWeight="50";
+    s.saudiTotalSum=0;
+    s.saudiSum=0;
+    s.saudiSchoolAvg=0;
+    s.saudiSystem="fasly";
+    s.saudiMasaratYears=3;
+    s.saudiMasaratTab=3;
+    s.masaratNawaqes={y1:"",y2:"",y3:""};
+    s.masaratNawaqesItems={y1:Array(18).fill(""),y2:Array(18).fill(""),y3:Array(16).fill("")};
+    s.masaratNawaqesExpand={y1:false,y2:false,y3:false};
+    s.masaratQudrat="";
+    s.masaratYear1Obtained=["","","","",""];
+    s.masaratYear2Obtained=["","","","","",""];
+    s.masaratYear3Obtained=["","","","","",""];
+    s.studentName="";
+    f();
+    document.getElementById('certStudentName').value='';
+};
+window.s = s; window.f = f;
+window.doSwitchTab = function(btn, tab) {
+  try {
+    if (!s || !f || !tab) return;
+    if (s.activeTab !== tab) {
+      s.activeTab = tab;
+      s.amSubjects = Array(8).fill('0');
+      s.amHas9th = false;
+      s.amSubjects9 = '0';
+      s.thScore = '';
+      s.gulfSubjects = Array(7).fill(null).map(function(){ return {mark:'',isStar:false}; });
+      s.libyaSubjects = Array(8).fill('');
+      s.jordanSubjects = Array(7).fill('');
+      s.azharArabic = '';
+      s.azharCultural = '';
+      s.kuwait10 = Array(8).fill('');
+      s.kuwait11 = Array(8).fill('');
+      s.kuwait12 = Array(8).fill('');
+      s.bahrainSem3 = Array(7).fill(null).map(function(){ return {mark:'',hours:''}; });
+      s.bahrainSem4 = Array(8).fill(null).map(function(){ return {mark:'',hours:''}; });
+      s.bahrainSem5 = Array(7).fill(null).map(function(){ return {mark:'',hours:''}; });
+      s.bahrainSem6 = Array(7).fill(null).map(function(){ return {mark:'',hours:''}; });
+      s.saudiSubjects = Array(9).fill(null).map(function(){ return Array(6).fill('100'); });
+      s.saudiQudrat = '';
+      s.saudiSum = 0;
+      s.masaratNawaqesItems = {y1:Array(18).fill(''),y2:Array(18).fill(''),y3:Array(16).fill('')};
+      s.masaratYear1Obtained = ['','','','',''];
+      s.masaratYear2Obtained = ['','','','','',''];
+      s.masaratYear3Obtained = ['','','','','',''];
+      s.currentEditingId = null;
+    }
+    document.querySelectorAll('.tab-glow').forEach(function(b){ b.classList.remove('active'); });
+    if (btn) btn.classList.add('active');
+    f();
+  } catch(e) { console.error('doSwitchTab error:', e); }
+};
+// Remove old switchTab
+window.switchTab = window.doSwitchTab;
+// Delegated click handler for toggle buttons with data-action attributes
+document.getElementById('tabContent').addEventListener('click',function(ev){
+  var btn=ev.target.closest('[data-action]');
+  if(!btn)return;
+  var action=btn.getAttribute('data-action'),val=btn.getAttribute('data-value');
+  if(action&&typeof val!=='undefined'&&typeof window.E==='function')window.E(action,val);
+});
+f();
+})(); } catch(____e) { alert('IIFE Error: ' + ____e.message + '\nStack: ' + (____e.stack||'').substring(0,300)); }
+</script>
+
+<script>
+// ===== STANDALONE TAB FIXER - runs after all scripts =====
+(function() {
+  // Apply permission-based hiding
+  if (window.authApplyPermissions) window.authApplyPermissions();
+  function wireTabs() {
+    var buttons = document.querySelectorAll('.tab-glow[data-tab]');
+    if (!buttons.length) return;
+    buttons.forEach(function(btn) {
+      // Remove any old onclick to avoid double firing
+      btn.onclick = function() {
+        var tab = btn.getAttribute('data-tab');
+        if (!tab) return;
+        var tried = 0;
+        (function attempt() {
+          if (typeof window.doSwitchTab === 'function') {
+            window.doSwitchTab(btn, tab);
+          } else if (typeof window.f === 'function' && window.s) {
+            // Make doSwitchTab available for future calls
+            window.doSwitchTab = function(b, t) {
+              var _s = window.s, _f = window.f;
+              if (!_s || !_f || !t) return;
+              if (_s.activeTab !== t) {
+                _s.activeTab = t;
+                _s.amSubjects = Array(8).fill('0');
+                _s.amHas9th = false;
+                _s.amSubjects9 = '0';
+                _s.thScore = '';
+                _s.gulfSubjects = Array(7).fill(null).map(function(){ return {mark:'',isStar:false}; });
+                _s.libyaSubjects = Array(8).fill('');
+                _s.jordanSubjects = Array(7).fill('');
+                _s.azharArabic = '';
+                _s.azharCultural = '';
+                _s.kuwait10 = Array(8).fill('');
+                _s.kuwait11 = Array(8).fill('');
+                _s.kuwait12 = Array(8).fill('');
+                _s.bahrainSem3 = Array(7).fill(null).map(function(){ return {mark:'',hours:''}; });
+                _s.bahrainSem4 = Array(8).fill(null).map(function(){ return {mark:'',hours:''}; });
+                _s.bahrainSem5 = Array(7).fill(null).map(function(){ return {mark:'',hours:''}; });
+                _s.bahrainSem6 = Array(7).fill(null).map(function(){ return {mark:'',hours:''}; });
+                _s.saudiSubjects = Array(9).fill(null).map(function(){ return Array(6).fill('100'); });
+                _s.saudiQudrat = '';
+                _s.saudiSum = 0;
+                _s.masaratNawaqesItems = {y1:Array(18).fill(''),y2:Array(18).fill(''),y3:Array(16).fill('')};
+                _s.masaratYear1Obtained = ['','','','',''];
+                _s.masaratYear2Obtained = ['','','','','',''];
+                _s.masaratYear3Obtained = ['','','','','',''];
+              }
+              document.querySelectorAll('.tab-glow').forEach(function(x){ x.classList.remove('active'); });
+              if (b) b.classList.add('active');
+              _f();
+            };
+            window.doSwitchTab(btn, tab);
+          } else if (tried < 50) {
+            tried++;
+            setTimeout(attempt, 100);
+          }
+        })();
+      };
+    });
+  }
+  // Wire immediately
+  wireTabs();
+  // Also wire after DOM fully loaded (in case buttons weren't ready)
+  document.addEventListener('DOMContentLoaded', wireTabs);
+  window.addEventListener('load', wireTabs);
+  // Expose rewire globally so it can be called if new buttons are added
+  window.rewireTabs = wireTabs;
+})();
+</script>
+
+<script>
+// Reveal step 2 when student name is entered  
+(function(){
+  try {
+    var ni = document.getElementById('certStudentName');
+    var s2 = document.getElementById('step2');
+    if (!ni || !s2) return;
+    var toggle = function(){ s2.style.display = ni.value.trim() ? '' : 'none'; };
+    ni.oninput = toggle;
+    ni.onchange = toggle;
+    toggle();
+    setTimeout(function(){ toggle(); }, 150);
+    window.addEventListener('load', function(){ setTimeout(function(){ toggle(); }, 50); });
+  } catch(e) { console.error('toggle err', e); }
+})();
+</script>
+
+<script>
+// Certificate Records Management
+function getCertRecords() { try { return JSON.parse(localStorage.getItem('lotus_certificate_records') || '[]'); } catch(e) { return []; } }
+function saveCertRecords(arr) { localStorage.setItem('lotus_certificate_records', JSON.stringify(arr)); }
+
+// Unified Firebase handle (same DB as the rest of the system = dent-35a17)
+function getCertDB() {
+    if (window.AUTH_DB && typeof window.AUTH_DB.ref === 'function') return window.AUTH_DB;
+    try {
+        if (typeof firebase !== 'undefined' && firebase.app) {
+            var app = null;
+            try { app = firebase.app('_lotus_auth'); } catch (e) {}
+            if (!app) {
+                app = firebase.initializeApp({
+                    apiKey: "AIzaSyBajCZMATK21mgaEFcccyhLne4pgdaxMfk",
+                    authDomain: "dent-35a17.firebaseapp.com",
+                    databaseURL: "https://dent-35a17-default-rtdb.firebaseio.com",
+                    projectId: "dent-35a17",
+                    storageBucket: "dent-35a17.firebasestorage.app",
+                    messagingSenderId: "416163754700",
+                    appId: "1:416163754700:web:dec496619e3e6fff3e0869"
+                }, '_lotus_auth');
+            }
+            return firebase.database(app);
+        }
+    } catch (e) { console.error('getCertDB error', e); }
+    return null;
+}
+
+// Realtime Sync from Firebase
+(function() {
+    function setupFirebaseSync() {
+        var db = getCertDB();
+        if (db && typeof db.ref === 'function') {
+            db.ref('certificateRecords').on('value', function(snap) {
+                try {
+                    var val = snap.val() || {};
+                    var list = Object.keys(val).map(function(k) { return val[k]; });
+                    list.sort(function(a, b) { return (b.id || '').localeCompare(a.id || ''); });
+                    saveCertRecords(list);
+                    if (typeof renderCertRecords === 'function') renderCertRecords();
+                } catch(err) { console.error('Error syncing cert records:', err); }
+            });
+        } else {
+            setTimeout(setupFirebaseSync, 500);
+        }
+    }
+    setupFirebaseSync();
+})();
+
+function getCertSession() {
+    if (typeof window.getCurrentUser === 'function') {
+        var u = window.getCurrentUser();
+        if (u) return u;
+    }
+    try {
+        return JSON.parse(localStorage.getItem('lotus_session') || localStorage.getItem('lotus_auth_session') || localStorage.getItem('auth_session'));
+    } catch(e) { return null; }
+}
+
+window.saveCertRecord = function(silent) {
+    var session = getCertSession();
+    var canSave = session && (session.username === 'boles' || session.role === 'admin' || (session.permissions && (session.permissions.includes('save_certificate') || session.permissions.includes('access_certificate') || session.permissions.includes('create') || session.permissions.includes('edit'))));
+    if (!canSave) {
+        try { toast('ليس لديك صلاحية لحفظ الشهادات', true); } catch(e) { alert('ليس لديك صلاحية لحفظ الشهادات'); }
+        return;
+    }
+    var name = document.getElementById('certStudentName').value.trim();
+    if (!name) { try { toast('يرجى إدخال اسم الطالب'); } catch(e) { alert('يرجى إدخال اسم الطالب'); } return; }
+    
+    if (typeof s === 'undefined') { try { toast('خطأ في قراءة البيانات'); } catch(e) {} return; }
+    
+    var activeTab = s.activeTab || 'thanaweya';
+    var tabNames = { thanaweya:'المصرية', stem:'STEM', azhar:'الأزهرية', saudi:'السعودية', gulf:'عمان-قطر-الإمارات', libya:'ليبيا', jordan:'الأردن', kuwait:'الكويت', bahrain:'البحرين', american:'أمريكان دبلومة' };
+    
+    var totalPct = 0;
+    try { var el = document.getElementById('finalPercentage'); if (el) totalPct = parseFloat(el.textContent) || 0; } catch(e) {}
+    var totalScore = 0;
+    try { var el2 = document.getElementById('rawScoreDisplay'); if (el2) totalScore = parseFloat(el2.textContent) || 0; } catch(e) {}
+    var equivScore = 0;
+    try { var el3 = document.getElementById('equivScoreDisplay'); if (el3) equivScore = parseFloat(el3.textContent) || 0; } catch(e) {}
+
+    // Check if record already exists for this student + cert type (update mode)
+    var records = getCertRecords();
+    var existingIdx = -1;
+    if (s.currentEditingId) {
+        existingIdx = records.findIndex(function(r) { return r.id === s.currentEditingId; });
+    } else {
+        for (var i = 0; i < records.length; i++) {
+            if (records[i].studentName === name && records[i].certificateType === activeTab) {
+                existingIdx = i;
+                break;
+            }
+        }
+    }
+
+    var nowISO = new Date().toISOString();
+    var curSes = getCertSession();
+    var rec = {
+        id: s.currentEditingId || Date.now().toString(36) + '-' + Math.random().toString(36).substr(2,9),
+        studentName: name,
+        certificateType: activeTab,
+        certificateLabel: tabNames[activeTab] || activeTab,
+        scores: JSON.parse(JSON.stringify(s)),
+        totalPercentage: totalPct,
+        totalScore: totalScore,
+        equivalentScore: equivScore,
+        createdAt: existingIdx >= 0 ? records[existingIdx].createdAt : nowISO,
+        updatedAt: nowISO,
+        employeeUsername: curSes ? (curSes.username || '') : '',
+        employeeName: curSes ? (curSes.name || curSes.username || '') : ''
+    };
+
+    function saveComplete() {
+        if (typeof renderCertRecords === 'function') renderCertRecords();
+        if (!silent) {
+            var btn = document.getElementById('saveCertBtn');
+            if (btn) {
+                var existing = btn.parentElement.querySelector('.save-indicator');
+                if (existing) existing.remove();
+                var indicator = document.createElement('span');
+                indicator.className = 'save-indicator';
+                indicator.style.cssText = 'color:var(--accent-emerald);font-size:0.8rem;font-weight:800;margin-right:8px;white-space:nowrap;animation:fadeIn 0.3s ease;';
+                indicator.textContent = existingIdx >= 0 ? '✓ تم التحديث بنجاح' : '✓ تم الحفظ';
+                btn.parentElement.insertBefore(indicator, btn.nextSibling);
+                setTimeout(function() { indicator.remove(); }, 3000);
+            }
+            try { toast(existingIdx >= 0 ? 'تم التحديث بنجاح' : 'تم حفظ الشهادة'); } catch(e) {}
+        }
+        // Reset editing mode after successful save/update
+        s.currentEditingId = null;
+        var saveBtn = document.getElementById('saveCertBtn');
+        if (saveBtn) {
+            saveBtn.style.display = 'none';
+            saveBtn.innerHTML = '<i class="fas fa-sync-alt me-1"></i> تحديث';
+            saveBtn.className = "btn btn-success btn-sm";
+        }
+    }
+
+    if (existingIdx >= 0) {
+        records[existingIdx] = rec;
+        saveCertRecords(records);
+    } else {
+        records.unshift(rec);
+        saveCertRecords(records);
+    }
+
+    var cdb = getCertDB();
+    if (cdb && typeof cdb.ref === 'function') {
+        cdb.ref('certificateRecords/' + rec.id).set(rec)
+            .then(function() { saveComplete(); })
+            .catch(function(err) {
+                console.error('Firebase save error:', err);
+                saveComplete();
+            });
+    } else {
+        saveComplete();
+    }
+
+    try { if (typeof window.authLogActivity === 'function') window.authLogActivity('حفظ', 'حساب الشهادات', rec.id, name, (existingIdx>=0?'تحديث شهادة: ':'حفظ شهادة: ') + name + ' - ' + rec.certificateLabel); } catch(e) {}
+};
+
+window.loadCertRecord = function(id) {
+    var records = getCertRecords();
+    var rec = records.find(function(r) { return r.id === id; });
+    if (!rec) { try { toast('لم يتم العثور على السجل'); } catch(e) {} return; }
+    
+    if (typeof s !== 'undefined' && rec.scores) {
+        // Reset necessary fields before rendering to avoid state conflicts
+        if (typeof resetAllFields === 'function') {
+            resetAllFields();
+        }
+        // Restore values from stored scores
+        Object.keys(rec.scores).forEach(function(k) { s[k] = rec.scores[k]; });
+        var nameInput = document.getElementById('certStudentName');
+        if (nameInput) nameInput.value = rec.studentName || '';
+        if (rec.certificateType && typeof f === 'function') {
+            s.activeTab = rec.certificateType;
+            var tabs = document.querySelectorAll('.tab-glow');
+            tabs.forEach(function(t) { t.classList.remove('active'); });
+            var btn = document.querySelector('.tab-glow[data-tab="' + rec.certificateType + '"]');
+            if (btn) btn.classList.add('active');
+            f();
+        }
+        // Reveal step 2 since a name is present
+        var step2 = document.getElementById('step2');
+        if (step2) step2.style.display = 'block';
+        // Mark as editing existing record -> button becomes "تحديث"
+        s.currentEditingId = id;
+        var saveBtn = document.getElementById('saveCertBtn');
+        if (saveBtn) {
+            saveBtn.style.display = '';
+            saveBtn.innerHTML = '<i class="fas fa-sync-alt me-1"></i> تحديث';
+            saveBtn.className = "btn btn-success btn-sm";
+        }
+    }
+    closeCertRecordsModal();
+    try { toast('تم تحميل بيانات ' + rec.studentName + ' — عدّل ثم اضغط تحديث'); } catch(e) {}
+};
+
+// "شهادة جديدة": auto-save the current certificate (if it has a name), then open a fresh one
+window.newCertificate = function() {
+    var nameInput = document.getElementById('certStudentName');
+    var name = nameInput ? nameInput.value.trim() : '';
+    if (name && typeof s !== 'undefined') {
+        try { saveCertRecord(true); } catch(e) { console.error('auto-save err', e); }
+    }
+    if (typeof resetAllFields === 'function') resetAllFields();
+    var step2 = document.getElementById('step2');
+    if (step2) step2.style.display = 'none';
+    if (nameInput) nameInput.focus();
+    try { toast(name ? 'تم حفظ الشهادة السابقة وفتح شهادة جديدة' : 'تم فتح شهادة جديدة'); } catch(e) {}
+};
+
+window.deleteCertRecord = function(id) {
+    var session = getCertSession();
+    var canSave = session && (session.username === 'boles' || session.role === 'admin' || (session.permissions && (session.permissions.includes('save_certificate') || session.permissions.includes('access_certificate') || session.permissions.includes('delete'))));
+    if (!canSave) {
+        try { toast('ليس لديك صلاحية لحذف الشهادات', true); } catch(e) { alert('ليس لديك صلاحية لحذف الشهادات'); }
+        return;
+    }
+    if (!confirm('حذف سجل الشهادة؟')) return;
+    var records = getCertRecords();
+    records = records.filter(function(r) { return r.id !== id; });
+    saveCertRecords(records);
+    renderCertRecords();
+    // Delete from Firebase
+    if (window.AUTH_DB && typeof window.AUTH_DB.ref === 'function') {
+        window.AUTH_DB.ref('certificateRecords/' + id).remove().catch(function(err) { console.error('Firebase delete error:', err); });
+    }
+    try { toast('تم الحذف'); } catch(e) {}
+    try { if (typeof window.authLogActivity === 'function') window.authLogActivity('حذف', 'حساب الشهادات', id, '', 'حذف سجل شهادة'); } catch(e) {}
+};
+
+window.renderCertRecords = function() {
+    var container = document.getElementById('certRecordsList');
+    if (!container) return;
+    var records = getCertRecords();
+    var search = document.getElementById('certRecordsSearch');
+    var q = search ? search.value.trim().toLowerCase() : '';
+    if (q) records = records.filter(function(r) { return (r.studentName || '').toLowerCase().indexOf(q) !== -1; });
+    
+    if (!records.length) {
+        container.innerHTML = '<div style="text-align:center;padding:40px;color:var(--text-muted);"><i class="fas fa-inbox fa-3x mb-3" style="display:block;opacity:0.3;"></i>لا توجد شهادات محفوظة' + (q ? ' تطابق البحث' : '') + '</div>';
+        return;
+    }
+    
+    var session = getCertSession();
+    var canSave = session && (session.username === 'boles' || session.role === 'admin' || (session.permissions && (session.permissions.includes('save_certificate') || session.permissions.includes('access_certificate') || session.permissions.includes('create') || session.permissions.includes('edit'))));
+
+    var html = '';
+    records.forEach(function(r) {
+        var date = r.createdAt ? new Date(r.createdAt).toLocaleDateString('ar-EG') : '';
+        var pctDisplay = r.totalPercentage ? r.totalPercentage.toFixed(1) + '%' : '—';
+        html += '<div class="cert-record-card">'
+            + '<div class="cert-record-info">'
+            + '<div class="cert-record-name">' + (r.studentName || '—') + '</div>'
+            + '<div><span class="cert-record-type">' + (r.certificateLabel || '') + '</span> <span style="color:var(--text-muted);font-size:0.7rem;">' + date + '</span></div>'
+            + '<div style="font-size:0.7rem;color:var(--text-muted);">بواسطة: ' + (r.employeeName || r.employeeUsername || '—') + '</div>'
+            + '</div>'
+            + '<div style="text-align:center;min-width:60px;"><div class="cert-record-pct">' + pctDisplay + '</div></div>'
+            + '<div class="cert-record-actions">';
+        if (canSave) {
+            html += '<button class="edit-btn" onclick="window.loadCertRecord(\'' + r.id + '\')"><i class="fas fa-edit"></i> تعديل</button>'
+                + '<button class="del-btn" onclick="window.deleteCertRecord(\'' + r.id + '\')"><i class="fas fa-trash"></i></button>';
+        }
+        html += '</div>'
+            + '</div>';
+    });
+    container.innerHTML = html;
+};
+
+window.openCertRecordsModal = function() {
+    var modal = document.getElementById('certRecordsModal');
+    if (modal) { modal.style.display = 'flex'; renderCertRecords(); }
+};
+
+window.closeCertRecordsModal = function() {
+    var modal = document.getElementById('certRecordsModal');
+    if (modal) modal.style.display = 'none';
+};
+
+// Auto-load student name from session if exists
+(function() {
+    var input = document.getElementById('certStudentName');
+    if (input) {
+        input.value = '';
+        input.addEventListener('change', function() { try { localStorage.removeItem('cert_last_student'); } catch(e) {} });
+    }
+    // Close modal on overlay click
+    document.addEventListener('click', function(e) {
+        var modal = document.getElementById('certRecordsModal');
+        if (modal && modal.style.display === 'flex' && e.target === modal) closeCertRecordsModal();
+    });
+})();
+</script>
+
+<div class="modal-overlay" id="certRecordsModal" style="display:none;z-index:20000;">
+    <div class="modal-box" style="max-width:800px;max-height:80vh;overflow-y:auto;">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;">
+            <h3 style="font-family:'Changa',sans-serif;font-weight:800;color:var(--text-primary);margin:0;"><i class="fas fa-history me-1" style="color:var(--accent-amber);"></i> سجل الشهادات المحفوظة</h3>
+            <button onclick="closeCertRecordsModal()" style="background:none;border:none;color:var(--text-muted);font-size:1.4rem;cursor:pointer;">&times;</button>
+        </div>
+        <div style="margin-bottom:12px;">
+            <input type="text" id="certRecordsSearch" class="input-main" placeholder="بحث باسم الطالب..." style="border-radius:8px;font-weight:700;" oninput="renderCertRecords()">
+        </div>
+        <div id="certRecordsList"></div>
+        <div style="text-align:center;margin-top:16px;">
+            <button class="btn btn-ghost" onclick="closeCertRecordsModal()" style="border:1px solid var(--border);border-radius:50px;padding:8px 24px;color:#ffffff;">إغلاق</button>
+        </div>
+    </div>
+</div>
+
+<footer class="footer-animated">
+    <span class="ft-icon"><i class="fas fa-copyright"></i></span>
+    <span class="ft-text"> جميع الحقوق محفوظة لجامعة اللوتس </span>
+    <span class="ft-icon"><i class="fas fa-heart"></i></span>
+</footer>
+
+</body>
+</html>
+
