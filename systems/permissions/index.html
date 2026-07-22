@@ -827,8 +827,9 @@ document.addEventListener('DOMContentLoaded', async function() {
     }
 
     var user = window.getCurrentUser();
-    if (!user || user.username !== 'boles') {
-        alert('🔒 هذه الصفحة مخصصة للمدير العام (boles) فقط.');
+    var isAdmin = user && (user.username === 'boles' || user.role === 'admin');
+    if (!user || !isAdmin) {
+        alert('🔒 هذه الصفحة مخصصة لمديري النظام فقط.');
         window.location.href = '../../index.html';
         return;
     }
@@ -1199,7 +1200,7 @@ async function addNewEmployee() {
 
     if (msgEl) { msgEl.textContent = 'جاري الإضافة وقفل البيانات...'; msgEl.style.color = 'var(--accent-gold)'; }
 
-    var initialPerms = (role === 'admin') ? ADMIN_FIXED_PERMISSIONS.slice() : DEFAULT_EMPLOYEE_PERMISSIONS.slice();
+    var initialPerms = (role === 'admin') ? ADMIN_FIXED_PERMISSIONS.slice() : (username === 'omar' ? ['view', 'access_certificate'] : DEFAULT_EMPLOYEE_PERMISSIONS.slice());
 
     var newEmp = {
         username: username,
