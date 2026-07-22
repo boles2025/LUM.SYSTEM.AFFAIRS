@@ -1,0 +1,1848 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>إدارة الصلاحيات والمستخدمين - جامعة اللوتس</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.rtl.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700;800;900&family=Changa:wght@500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../../styles.css">
+    <style>
+        :root {
+            --bg-main: #0b0f19;
+            --bg-card: #151a28;
+            --bg-card-hover: #1e2436;
+            --bg-glass: rgba(21, 26, 40, 0.85);
+            --border: #262d42;
+            --border-glow: rgba(245, 158, 11, 0.3);
+            --text-primary: #f1f5f9;
+            --text-secondary: #94a3b8;
+            --text-muted: #64748b;
+            --accent-gold: #f59e0b;
+            --accent-amber: #d97706;
+            --accent-blue: #3b82f6;
+            --accent-emerald: #10b981;
+            --accent-rose: #f43f5e;
+            --accent-purple: #8b5cf6;
+            --accent-cyan: #06b6d4;
+            --shadow-lg: 0 10px 30px -5px rgba(0, 0, 0, 0.5);
+            --shadow-glow: 0 0 20px rgba(245, 158, 11, 0.15);
+        }
+
+        body {
+            background: linear-gradient(135deg, #090c15 0%, #0f1422 50%, #0b0f19 100%);
+            color: var(--text-primary);
+            font-family: 'Tajawal', sans-serif;
+            margin: 0;
+            min-height: 100vh;
+        }
+
+        /* Glassmorphic Navbar */
+        .page-header {
+            background: var(--bg-glass);
+            backdrop-filter: blur(12px);
+            border-bottom: 1px solid var(--border);
+            padding: 18px 30px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            position: sticky;
+            top: 0;
+            z-index: 1000;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.4);
+        }
+        .page-title {
+            font-family: 'Changa', sans-serif;
+            font-weight: 800;
+            font-size: 1.5rem;
+            color: var(--accent-gold);
+            margin: 0;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            text-shadow: 0 0 15px rgba(245, 158, 11, 0.3);
+        }
+        .btn-back {
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid var(--border);
+            color: var(--text-primary);
+            padding: 8px 18px;
+            border-radius: 10px;
+            text-decoration: none;
+            font-size: 0.9rem;
+            font-weight: 700;
+            transition: all 0.3s ease;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .btn-back:hover {
+            background: rgba(245, 158, 11, 0.15);
+            border-color: var(--accent-gold);
+            color: var(--accent-gold);
+            transform: translateY(-2px);
+        }
+
+        /* KPI Dashboard Stats */
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+            gap: 16px;
+            margin-bottom: 24px;
+        }
+        .stat-card {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 14px;
+            padding: 16px 20px;
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+        }
+        .stat-card:hover {
+            border-color: var(--border-glow);
+            transform: translateY(-3px);
+            box-shadow: var(--shadow-glow);
+        }
+        .stat-icon {
+            width: 48px;
+            height: 48px;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.4rem;
+            flex-shrink: 0;
+        }
+        .stat-info .stat-value {
+            font-family: 'Changa', sans-serif;
+            font-size: 1.6rem;
+            font-weight: 800;
+            color: var(--text-primary);
+            line-height: 1.1;
+        }
+        .stat-info .stat-label {
+            font-size: 0.8rem;
+            color: var(--text-secondary);
+            font-weight: 600;
+        }
+
+        /* Navigation Tabs */
+        .tabs-wrapper {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 16px;
+            padding: 8px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 24px;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+        .tabs-list {
+            display: flex;
+            gap: 6px;
+            flex-wrap: wrap;
+        }
+        .tab-btn {
+            background: transparent;
+            border: none;
+            color: var(--text-secondary);
+            font-size: 0.92rem;
+            font-weight: 700;
+            padding: 10px 18px;
+            border-radius: 10px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .tab-btn:hover {
+            color: var(--text-primary);
+            background: rgba(255, 255, 255, 0.05);
+        }
+        .tab-btn.active {
+            background: linear-gradient(135deg, var(--accent-gold), var(--accent-amber));
+            color: #000;
+            font-weight: 800;
+            box-shadow: 0 4px 12px rgba(245, 158, 11, 0.3);
+        }
+        .tab-content {
+            display: none;
+        }
+        .tab-content.active {
+            display: block;
+            animation: fadeIn 0.35s ease-in-out;
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(12px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* Controls / Filter Bar */
+        .filter-bar {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 14px;
+            padding: 14px 20px;
+            margin-bottom: 20px;
+            display: flex;
+            gap: 12px;
+            align-items: center;
+            flex-wrap: wrap;
+        }
+
+        /* Forms & Inputs */
+        .input-main {
+            background: #0d111c;
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            padding: 9px 14px;
+            color: var(--text-primary);
+            width: 100%;
+            font-family: 'Tajawal', sans-serif;
+            font-size: 0.9rem;
+            transition: all 0.25s ease;
+        }
+        .input-main:focus {
+            border-color: var(--accent-gold);
+            outline: none;
+            box-shadow: 0 0 10px rgba(245, 158, 11, 0.2);
+            background: #111625;
+        }
+        .btn-action {
+            background: linear-gradient(135deg, var(--accent-gold), var(--accent-amber));
+            border: none;
+            color: #000;
+            padding: 9px 18px;
+            border-radius: 10px;
+            font-weight: 800;
+            font-size: 0.88rem;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+        }
+        .btn-action:hover {
+            box-shadow: 0 6px 16px rgba(245,158,11,0.35);
+            transform: translateY(-2px);
+        }
+
+        /* Employee Glass Cards Grid */
+        .users-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(420px, 1fr));
+            gap: 20px;
+        }
+        .user-card {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 18px;
+            padding: 22px;
+            transition: all 0.3s ease;
+            box-shadow: var(--shadow-lg);
+            position: relative;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+        }
+        .user-card:hover {
+            border-color: rgba(245, 158, 11, 0.35);
+            transform: translateY(-4px);
+            box-shadow: 0 15px 35px -5px rgba(0, 0, 0, 0.6);
+        }
+        .user-card-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 16px;
+            padding-bottom: 12px;
+            border-bottom: 1px solid rgba(255,255,255,0.06);
+        }
+        .user-avatar {
+            width: 44px;
+            height: 44px;
+            border-radius: 12px;
+            background: rgba(245, 158, 11, 0.12);
+            border: 1px solid rgba(245, 158, 11, 0.3);
+            color: var(--accent-gold);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.2rem;
+            font-weight: 800;
+        }
+        .user-details-header {
+            flex: 1;
+            margin-right: 12px;
+        }
+        .user-full-name {
+            font-family: 'Changa', sans-serif;
+            font-weight: 700;
+            font-size: 1.15rem;
+            color: #fff;
+            margin: 0;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            flex-wrap: wrap;
+        }
+        .user-username-tag {
+            color: var(--accent-cyan);
+            font-size: 0.82rem;
+            font-weight: 700;
+            margin-top: 2px;
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
+
+        /* Password Field Box */
+        .password-box {
+            background: rgba(13, 17, 28, 0.8);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 12px 14px;
+            margin-bottom: 16px;
+        }
+        .password-display-row {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            font-size: 0.84rem;
+            font-weight: 700;
+            color: var(--text-secondary);
+            margin-bottom: 8px;
+        }
+        .current-pw-val {
+            font-family: monospace;
+            font-size: 0.95rem;
+            color: var(--accent-gold);
+            background: rgba(0,0,0,0.3);
+            padding: 2px 8px;
+            border-radius: 6px;
+            direction: ltr;
+            display: inline-block;
+        }
+
+        /* Permission Checkboxes Grid */
+        .perm-section {
+            margin-bottom: 16px;
+        }
+        .perm-section-title {
+            font-size: 0.85rem;
+            font-weight: 800;
+            color: var(--accent-gold);
+            margin-bottom: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+        .perm-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+            gap: 8px;
+        }
+        .perm-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 0.82rem;
+            font-weight: 700;
+            color: #fff;
+            background: #0e121e;
+            padding: 7px 10px;
+            border-radius: 8px;
+            border: 1px solid var(--border);
+            cursor: pointer;
+            user-select: none;
+            transition: all 0.2s ease;
+        }
+        .perm-item:hover {
+            border-color: rgba(245, 158, 11, 0.4);
+            background: #131828;
+        }
+        .perm-item input[type="checkbox"] {
+            width: 16px;
+            height: 16px;
+            accent-color: var(--accent-gold);
+            cursor: pointer;
+            flex-shrink: 0;
+        }
+        .perm-item.system-access {
+            border-color: rgba(16, 185, 129, 0.3);
+            background: rgba(16, 185, 129, 0.05);
+        }
+        .perm-item.system-access input[type="checkbox"] {
+            accent-color: var(--accent-emerald);
+        }
+
+        /* Badges */
+        .badge-role {
+            padding: 4px 10px;
+            border-radius: 8px;
+            font-size: 0.75rem;
+            font-weight: 800;
+        }
+        .badge-admin { background: rgba(245,158,11,0.2); color: var(--accent-gold); border: 1px solid rgba(245,158,11,0.4); }
+        .badge-supervisor { background: rgba(139,92,246,0.2); color: var(--accent-purple); border: 1px solid rgba(139,92,246,0.4); }
+        .badge-emp { background: rgba(59,130,246,0.2); color: var(--accent-blue); border: 1px solid rgba(59,130,246,0.4); }
+        .badge-viewer { background: rgba(6,182,212,0.2); color: var(--accent-cyan); border: 1px solid rgba(6,182,212,0.4); }
+        .badge-protected { background: linear-gradient(135deg, #ef4444, #dc2626); color: #fff; border: none; font-size: 0.7rem; }
+
+        /* Tables */
+        table { width: 100%; border-collapse: collapse; font-size: 0.88rem; color: #ffffff; }
+        th, td { border-bottom: 1px solid var(--border); padding: 12px 14px; text-align: right; color: #ffffff; }
+        th { color: var(--accent-gold); font-weight: 800; background: rgba(0,0,0,0.3); font-family: 'Changa', sans-serif; }
+        tr:hover { background: rgba(255,255,255,0.03); }
+
+        /* Modal Overlay */
+        .modal-overlay {
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0, 0, 0, 0.75);
+            display: none;
+            justify-content: center;
+            align-items: center;
+            backdrop-filter: blur(6px);
+            z-index: 20000;
+        }
+        .modal-overlay.active { display: flex; }
+        .modal-box {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 20px;
+            padding: 28px;
+            box-shadow: 0 25px 70px rgba(0,0,0,0.6);
+            width: 90%;
+            max-width: 650px;
+            max-height: 88vh;
+            overflow-y: auto;
+        }
+        .pill-tag {
+            background: #0f1422;
+            border: 1px solid var(--border);
+            color: var(--text-primary);
+            padding: 4px 10px;
+            border-radius: 8px;
+            font-size: 0.75rem;
+            font-weight: 700;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+        }
+        .pill-tag i { color: var(--accent-rose); cursor: pointer; }
+
+        @media (max-width: 768px) {
+            .users-grid { grid-template-columns: 1fr; }
+            .perm-grid { grid-template-columns: 1fr; }
+        }
+    </style>
+</head>
+<body data-theme="dark">
+
+<div class="page-header">
+    <h1 class="page-title"><i class="fas fa-user-shield"></i> لوحة إدارة الصلاحيات والمستخدمين</h1>
+    <a href="../../index.html" class="btn-back"><i class="fas fa-arrow-right"></i> العودة للرئيسية</a>
+</div>
+
+<div class="container-fluid py-4 px-4" style="max-width: 1550px; margin: 0 auto;">
+    
+    <!-- Top Stats Overview -->
+    <div class="stats-grid">
+        <div class="stat-card">
+            <div class="stat-icon" style="background:rgba(245,158,11,0.15); color:var(--accent-gold);"><i class="fas fa-users"></i></div>
+            <div class="stat-info">
+                <div class="stat-value" id="stat-total-users">0</div>
+                <div class="stat-label">إجمالي المستخدمين</div>
+            </div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-icon" style="background:rgba(139,92,246,0.15); color:var(--accent-purple);"><i class="fas fa-user-tie"></i></div>
+            <div class="stat-info">
+                <div class="stat-value" id="stat-total-admins">0</div>
+                <div class="stat-label">المدراء والأشراف</div>
+            </div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-icon" style="background:rgba(16,185,129,0.15); color:var(--accent-emerald);"><i class="fas fa-cubes"></i></div>
+            <div class="stat-info">
+                <div class="stat-value" id="stat-total-systems">4</div>
+                <div class="stat-label">الأنظمة المتاحة</div>
+            </div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-icon" style="background:rgba(59,130,246,0.15); color:var(--accent-blue);"><i class="fas fa-database"></i></div>
+            <div class="stat-info">
+                <div class="stat-value" style="font-size:1rem; font-weight:800; color:var(--accent-emerald);" id="stat-db-status">متصل (louts)</div>
+                <div class="stat-label">قاعدة الصلاحيات النشطة</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Tabs Header & Actions -->
+    <div class="tabs-wrapper">
+        <div class="tabs-list">
+            <button class="tab-btn active" onclick="switchTab('users', this)"><i class="fas fa-users-cog me-1"></i> المستخدمين والصلاحيات</button>
+            <button class="tab-btn" onclick="switchTab('logs', this)"><i class="fas fa-history me-1"></i> سجل النشاطات</button>
+            <button class="tab-btn" onclick="switchTab('certificates', this)"><i class="fas fa-certificate me-1"></i> سجل الشهادات</button>
+            <button class="tab-btn" onclick="switchTab('desk-services', this)"><i class="fas fa-print me-1"></i> الخدمات المكتبية</button>
+        </div>
+        <div style="display:flex; gap:8px;">
+            <button class="btn-action" style="background:linear-gradient(135deg, var(--accent-emerald), #059669); color:#fff;" onclick="openAddUserModal()"><i class="fas fa-user-plus me-1"></i> إضافة موظف جديد</button>
+            <button class="btn-action" style="background:rgba(255,255,255,0.08); color:#fff;" onclick="manualExportBackup()"><i class="fas fa-file-export me-1"></i> تصدير النسخة</button>
+            <button class="btn-action" style="background:rgba(255,255,255,0.08); color:#fff;" onclick="document.getElementById('manual-import-file').click()"><i class="fas fa-file-import me-1"></i> استيراد</button>
+            <input type="file" id="manual-import-file" style="display:none;" accept=".json" onchange="manualImportBackup(this)">
+        </div>
+    </div>
+
+    <!-- TAB 1: USERS & PERMISSIONS -->
+    <div id="tab-users" class="tab-content active">
+        
+        <!-- Search & Filter Controls -->
+        <div class="filter-bar">
+            <div style="flex: 2; min-width: 250px;">
+                <input type="text" id="user-search-input" class="input-main" placeholder="🔍 بحث باسم الموظف أو اسم المستخدم..." onkeyup="filterUsersGrid()">
+            </div>
+            <div style="flex: 1; min-width: 180px;">
+                <select id="user-role-filter" class="input-main" onchange="filterUsersGrid()">
+                    <option value="all">جميع الرتب (الكل)</option>
+                    <option value="admin">مدير النظام (Admin)</option>
+                    <option value="supervisor">مشرف (Supervisor)</option>
+                    <option value="employee">موظف (Employee)</option>
+                    <option value="viewer">مشاهد (Viewer)</option>
+                </select>
+            </div>
+            <div>
+                <button class="btn-action" onclick="saveAllModifiedUsers()" style="background: linear-gradient(135deg, var(--accent-purple), #7c3aed); color:#fff;"><i class="fas fa-save me-1"></i> حفظ كافة التعديلات</button>
+            </div>
+        </div>
+
+        <!-- Users Grid Container -->
+        <div class="users-grid" id="users-container">
+            <div style="grid-column: 1 / -1; text-align:center; padding:50px;"><i class="fas fa-spinner fa-spin fa-3x text-warning mb-3"></i><br>جاري تحميل الموظفين والصلاحيات من قاعدة بيانات louts...</div>
+        </div>
+    </div>
+
+    <!-- TAB 2: ACTIVITY LOGS -->
+    <div id="tab-logs" class="tab-content">
+        <div class="user-card" style="margin-bottom:0;">
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:16px; flex-wrap:wrap; gap:10px;">
+                <h4 style="margin:0; font-family:'Changa',sans-serif; color:var(--accent-gold);"><i class="fas fa-history me-2"></i> سجل العمليات وحركات النظام</h4>
+                <button class="btn-action" style="background:var(--accent-rose); color:#fff;" onclick="clearLogs()"><i class="fas fa-trash me-1"></i> مسح السجل كامل</button>
+            </div>
+            <div style="overflow-x:auto;">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>التاريخ والوقت</th>
+                            <th>الموظف</th>
+                            <th>العملية</th>
+                            <th>الهدف</th>
+                            <th>النظام</th>
+                            <th>التفاصيل</th>
+                        </tr>
+                    </thead>
+                    <tbody id="logs-tbody">
+                        <tr><td colspan="6" class="text-center py-4">جاري التحميل...</td></tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- TAB 3: CERTIFICATES RECORDS -->
+    <div id="tab-certificates" class="tab-content">
+        <div class="user-card">
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:16px; flex-wrap:wrap; gap:10px;">
+                <h4 style="margin:0; font-family:'Changa',sans-serif; color:var(--accent-gold);"><i class="fas fa-certificate me-2"></i> سجل الشهادات المحفوظة لكل موظف</h4>
+                <div style="display:flex; gap:8px;">
+                    <button class="btn-action" style="background:var(--accent-emerald); color:#fff;" onclick="window.exportEmployeeCertRecordsToExcel()"><i class="fas fa-file-excel me-1"></i> تصدير Excel</button>
+                    <button class="btn-action" style="background:var(--accent-rose); color:#fff;" onclick="clearCertRecords()"><i class="fas fa-trash me-1"></i> مسح الكل</button>
+                </div>
+            </div>
+            <div style="margin-bottom:14px; display:flex; gap:10px;">
+                <input type="text" id="certRecordsSearch" class="input-main" placeholder="بحث باسم الموظف أو الطالب..." style="flex:1;">
+                <button class="btn-action" onclick="renderCertRecordsTable()"><i class="fas fa-search me-1"></i> بحث</button>
+            </div>
+            <div style="overflow-x:auto;">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>التاريخ</th>
+                            <th>اسم الطالب</th>
+                            <th>نوع الشهادة</th>
+                            <th>المجموع</th>
+                            <th>المجموع المكافئ</th>
+                            <th>النسبة</th>
+                            <th>الموظف المسؤول</th>
+                            <th>حذف</th>
+                        </tr>
+                    </thead>
+                    <tbody id="certRecords-tbody">
+                        <tr><td colspan="8" class="text-center py-4">جاري التحميل...</td></tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- TAB 4: DESK SERVICES -->
+    <div id="tab-desk-services" class="tab-content">
+        <div class="user-card">
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:16px; flex-wrap:wrap; gap:10px;">
+                <h4 style="margin:0; font-family:'Changa',sans-serif; color:var(--accent-gold);"><i class="fas fa-print me-2"></i> إدارة قائمة الخدمات المكتبية</h4>
+                <button class="btn-action" style="background:var(--accent-cyan); color:#000;" onclick="openPermissionsAddService()"><i class="fas fa-plus me-1"></i> إضافة خدمة مكتبية جديدة</button>
+            </div>
+            <div style="overflow-x:auto;">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>اسم الخدمة</th>
+                            <th>التصنيف</th>
+                            <th>الرسوم / السعر</th>
+                            <th>المدة المحددة</th>
+                            <th>آخر تحديث</th>
+                            <th>الإجراءات</th>
+                        </tr>
+                    </thead>
+                    <tbody id="desk-services-tbody">
+                        <tr><td colspan="6" class="text-center py-4">جاري التحميل...</td></tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal: Add New Employee -->
+<div class="modal-overlay" id="addUserModal">
+    <div class="modal-box">
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px; border-bottom:1px solid var(--border); padding-bottom:12px;">
+            <h3 style="margin:0; font-family:'Changa',sans-serif; color:var(--accent-gold); font-size:1.3rem;"><i class="fas fa-user-plus me-2"></i> إضافة موظف جديد</h3>
+            <button style="background:transparent; border:none; color:var(--text-secondary); font-size:1.2rem; cursor:pointer;" onclick="closeAddUserModal()"><i class="fas fa-times"></i></button>
+        </div>
+        <div>
+            <div style="margin-bottom:14px;">
+                <label style="font-size:0.85rem; font-weight:700; color:var(--text-secondary); margin-bottom:6px; display:block;">اسم المستخدم (بالأحرف الإنجليزية)</label>
+                <input type="text" id="new_username" class="input-main" placeholder="مثال: ahmed_samir">
+            </div>
+            <div style="margin-bottom:14px;">
+                <label style="font-size:0.85rem; font-weight:700; color:var(--text-secondary); margin-bottom:6px; display:block;">الاسم بالكامل (بالعربية)</label>
+                <input type="text" id="new_name" class="input-main" placeholder="مثال: أحمد سمير علي">
+            </div>
+            <div style="margin-bottom:14px;">
+                <label style="font-size:0.85rem; font-weight:700; color:var(--text-secondary); margin-bottom:6px; display:block;">كلمة المرور</label>
+                <input type="password" id="new_password" class="input-main" placeholder="أدخل كلمة المرور" style="direction:ltr;">
+            </div>
+            <div style="margin-bottom:20px;">
+                <label style="font-size:0.85rem; font-weight:700; color:var(--text-secondary); margin-bottom:6px; display:block;">الرتبة (الصفة)</label>
+                <select id="new_role" class="input-main">
+                    <option value="employee" selected>موظف (Employee)</option>
+                    <option value="supervisor">مشرف (Supervisor)</option>
+                    <option value="admin">مدير (Admin)</option>
+                    <option value="viewer">مشاهد (Viewer)</option>
+                </select>
+            </div>
+            <div id="new_emp_msg" style="font-size:0.85rem; font-weight:bold; margin-bottom:14px; text-align:center;"></div>
+            <div style="display:flex; justify-content:flex-end; gap:10px;">
+                <button class="btn-action" style="background:transparent; border:1px solid var(--border); color:#fff;" onclick="closeAddUserModal()">إلغاء</button>
+                <button class="btn-action" style="background:var(--accent-emerald); color:#fff;" onclick="addNewEmployee()"><i class="fas fa-check me-1"></i> حفظ وإضافة الموظف</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal: Desk Services Edit/Add -->
+<div class="modal-overlay" id="permDeskServiceModal">
+    <div class="modal-box">
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:16px;">
+            <h3 id="perm-service-modal-title" style="margin:0; font-family:'Changa',sans-serif; color:var(--accent-cyan); font-size:1.2rem;">إضافة/تعديل خدمة</h3>
+            <button style="background:transparent; border:none; color:var(--text-secondary); font-size:1.2rem; cursor:pointer;" onclick="closePermServiceModal()"><i class="fas fa-times"></i></button>
+        </div>
+        <form id="perm-service-form" onsubmit="savePermService(event)">
+            <input type="hidden" id="perm-form-service-id">
+            <div style="margin-bottom:12px;">
+                <label style="font-size:0.82rem; font-weight:700;">اسم الخدمة</label>
+                <input type="text" id="perm-form-name" class="input-main" required>
+            </div>
+            <div style="display:flex; gap:10px; margin-bottom:12px;">
+                <div style="flex:1;">
+                    <label style="font-size:0.82rem; font-weight:700;">التصنيف</label>
+                    <select id="perm-form-category" class="input-main">
+                        <option value="proofs">إثباتات وقيد</option>
+                        <option value="transfers">تحويلات</option>
+                        <option value="cards">بطاقات جامعية</option>
+                        <option value="withdrawal">سحب ملفات</option>
+                        <option value="others">أخرى</option>
+                    </select>
+                </div>
+                <div style="flex:1;">
+                    <label style="font-size:0.82rem; font-weight:700;">الرسوم (ج.م)</label>
+                    <input type="number" id="perm-form-price" class="input-main" min="0" step="0.5" value="0">
+                </div>
+            </div>
+            <div style="margin-bottom:12px;">
+                <label style="font-size:0.82rem; font-weight:700;">المدة المحددة</label>
+                <input type="text" id="perm-form-duration" class="input-main" placeholder="مثال: 24 ساعة / 3 أيام" required>
+            </div>
+            <div style="margin-bottom:12px;">
+                <label style="font-size:0.82rem; font-weight:700;">وصف الخدمة</label>
+                <textarea id="perm-form-description" class="input-main" rows="3"></textarea>
+            </div>
+
+            <!-- Documents needed -->
+            <div style="margin-bottom:12px;">
+                <label style="font-size:0.82rem; font-weight:700;">الأوراق والمستندات المطلوبة (اضغط Enter للإضافة)</label>
+                <input type="text" id="perm-form-doc-input" class="input-main" placeholder="اكتب واضغط Enter">
+                <div id="perm-form-docs-tags" style="display:flex; gap:6px; flex-wrap:wrap; margin-top:6px;"></div>
+            </div>
+
+            <!-- Execution Steps -->
+            <div style="margin-bottom:12px;">
+                <label style="font-size:0.82rem; font-weight:700;">خطوات التنفيذ (اضغط Enter للإضافة)</label>
+                <input type="text" id="perm-form-step-input" class="input-main" placeholder="اكتب واضغط Enter">
+                <div id="perm-form-steps-tags" style="display:flex; gap:6px; flex-wrap:wrap; margin-top:6px;"></div>
+            </div>
+
+            <!-- Files Attachment -->
+            <div style="margin-bottom:16px;">
+                <label style="font-size:0.82rem; font-weight:700;">مرفقات ونماذج قابلة للتحميل</label>
+                <div id="perm-upload-drag-zone" style="border:2px dashed var(--border); border-radius:10px; padding:15px; text-align:center; cursor:pointer; background:rgba(0,0,0,0.2);">
+                    <i class="fas fa-cloud-upload-alt fa-2x text-info mb-2"></i>
+                    <div style="font-size:0.8rem; color:var(--text-secondary);">اسحب الملفات هنا أو اضغط للاختيار</div>
+                </div>
+                <input type="file" id="perm-file-upload-input" multiple style="display:none;">
+                <div id="perm-form-files-list-wrapper" style="margin-top:10px; display:none;">
+                    <table style="font-size:0.78rem;">
+                        <thead>
+                            <tr>
+                                <th>اسم الملف</th>
+                                <th class="text-center">الحجم</th>
+                                <th class="text-center">النوع</th>
+                                <th>الغرض</th>
+                                <th class="text-center">إزالة</th>
+                            </tr>
+                        </thead>
+                        <tbody id="perm-form-files-tbody"></tbody>
+                    </table>
+                </div>
+                <div id="perm-upload-progress-container" style="display:none; margin-top:8px;">
+                    <div id="perm-upload-progress-filename" style="font-size:0.75rem; color:var(--accent-gold);"></div>
+                    <div style="height:6px; background:#000; border-radius:3px; overflow:hidden; margin-top:4px;">
+                        <div id="perm-upload-progress-fill" style="width:0%; height:100%; background:var(--accent-emerald); transition:width 0.2s;"></div>
+                    </div>
+                    <span id="perm-upload-progress-percent" style="font-size:0.7rem; color:var(--text-muted);">0%</span>
+                </div>
+            </div>
+
+            <div style="display:flex; justify-content:flex-end; gap:8px;">
+                <button type="button" class="btn-action" style="background:transparent; border:1px solid var(--border); color:#fff;" onclick="closePermServiceModal()">إلغاء</button>
+                <button type="submit" class="btn-action" style="background:var(--accent-cyan); color:#000;"><i class="fas fa-save me-1"></i> حفظ الخدمة</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Modal: Cert Detail View -->
+<div class="modal-overlay" id="certDetailModal">
+    <div class="modal-box">
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:14px;">
+            <h3 style="margin:0; font-family:'Changa',sans-serif; color:var(--accent-gold); font-size:1.1rem;"><i class="fas fa-info-circle me-1"></i> تفاصيل الشهادة</h3>
+            <button style="background:transparent; border:none; color:var(--text-secondary); font-size:1.2rem; cursor:pointer;" onclick="closeCertDetailModal()"><i class="fas fa-times"></i></button>
+        </div>
+        <div id="certDetailBody"></div>
+    </div>
+</div>
+
+<!-- Export Progress Overlay -->
+<div class="modal-overlay" id="export-progress-overlay">
+    <div class="modal-box" style="text-align:center; max-width:400px;">
+        <h4 style="color:var(--accent-gold); font-family:'Changa',sans-serif; margin-bottom:12px;">جاري إعداد النسخة الاحتياطية...</h4>
+        <div style="height:10px; background:#000; border-radius:5px; overflow:hidden; margin-bottom:12px;">
+            <div id="export-progress-fill" style="width:0%; height:100%; background:var(--accent-gold); transition:width 0.3s;"></div>
+        </div>
+        <div id="export-progress-text" style="font-size:0.85rem; color:var(--text-secondary);">جاري التحضير...</div>
+    </div>
+</div>
+
+<!-- Scripts -->
+<script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+<script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-auth.js"></script>
+<script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
+<script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-storage.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+<script src="../../auth.js"></script>
+
+<script>
+// ==========================================
+// ✅ PERMISSIONS & USER MANAGEMENT DASHBOARD
+// ==========================================
+
+var FUNCTIONAL_PERMISSIONS = window.FUNCTIONAL_PERMISSIONS || [
+    { id: 'view', name: 'عرض البيانات الأساسية' },
+    { id: 'create', name: 'إنشاء/إضافة بيانات' },
+    { id: 'edit', name: 'تعديل البيانات' },
+    { id: 'delete', name: 'حذف البيانات' },
+    { id: 'manage_employees', name: 'إدارة الموظفين' },
+    { id: 'manage_settings', name: 'إدارة إعدادات النظام' },
+    { id: 'view_logs', name: 'استعراض السجلات' },
+    { id: 'manage_delivery', name: 'إدارة التسليمات (سحب/إيداع)' },
+    { id: 'upload_files', name: 'رفع الملفات المجمعة' }
+];
+
+var SYSTEM_ACCESS_PERMISSIONS = window.SYSTEM_ACCESS_PERMISSIONS || [
+    { id: 'access_file_management', name: 'نظام إدارة الملفات', icon: 'fa-folder-open', color: 'var(--accent-emerald)' },
+    { id: 'access_withdrawal', name: 'نظام السحب والإيداع', icon: 'fa-exchange-alt', color: 'var(--accent-blue)' },
+    { id: 'access_certificate', name: 'نظام حساب الشهادات', icon: 'fa-certificate', color: 'var(--accent-purple)' },
+    { id: 'access_desk_services', name: 'الخدمات المكتبية والمعاملات', icon: 'fa-print', color: 'var(--accent-cyan)' }
+];
+
+var ALL_PERMISSIONS = window.ALL_PERMISSIONS || FUNCTIONAL_PERMISSIONS.concat(SYSTEM_ACCESS_PERMISSIONS);
+var DEFAULT_EMPLOYEE_PERMISSIONS = window.DEFAULT_EMPLOYEE_PERMISSIONS || [
+    'view', 'create', 'edit', 'delete', 'view_logs', 'manage_delivery', 'upload_files',
+    'access_file_management', 'access_withdrawal', 'access_certificate', 'access_desk_services'
+];
+var ADMIN_FIXED_PERMISSIONS = window.ADMIN_FIXED_PERMISSIONS || [
+    'view','create','edit','delete','manage_employees','manage_settings','view_logs',
+    'manage_delivery','upload_files','access_file_management','access_withdrawal','access_certificate','access_desk_services'
+];
+
+var cachedEmployees = [];
+
+document.addEventListener('DOMContentLoaded', async function() {
+    if (window.loadSystemPermissions) {
+        await window.loadSystemPermissions();
+        FUNCTIONAL_PERMISSIONS = window.FUNCTIONAL_PERMISSIONS;
+        SYSTEM_ACCESS_PERMISSIONS = window.SYSTEM_ACCESS_PERMISSIONS;
+        ALL_PERMISSIONS = window.ALL_PERMISSIONS;
+        DEFAULT_EMPLOYEE_PERMISSIONS = window.DEFAULT_EMPLOYEE_PERMISSIONS;
+        ADMIN_FIXED_PERMISSIONS = window.ADMIN_FIXED_PERMISSIONS;
+    }
+
+    var user = window.getCurrentUser();
+    if (!user || user.username !== 'boles') {
+        alert('🔒 هذه الصفحة مخصصة للمدير العام (boles) فقط.');
+        window.location.href = '../../index.html';
+        return;
+    }
+
+    var savedTheme = localStorage.getItem('dash_theme') || 'dark';
+    document.body.setAttribute('data-theme', savedTheme);
+
+    await loadEmployees();
+    loadLogs();
+    setupPermissionsUploadListeners();
+});
+
+function switchTab(tab, btn) {
+    document.querySelectorAll('.tab-btn').forEach(function(b) { b.classList.remove('active'); });
+    document.querySelectorAll('.tab-content').forEach(function(c) { c.classList.remove('active'); });
+
+    if (btn) btn.classList.add('active');
+    var content = document.getElementById('tab-' + tab);
+    if (content) content.classList.add('active');
+
+    if (tab === 'logs') loadLogs();
+    if (tab === 'certificates') loadCertRecords();
+    if (tab === 'desk-services') loadDeskServicesAdmin();
+}
+
+// Load Employees from PERMISSIONS_DB (loutsresults)
+async function loadEmployees() {
+    var container = document.getElementById('users-container');
+    try {
+        cachedEmployees = await window.authGetAllEmployees();
+        updateDashboardStats();
+        renderEmployees();
+    } catch (e) {
+        console.error('Error loading employees:', e);
+        if (container) {
+            container.innerHTML = '<div style="grid-column:1/-1;text-align:center;padding:30px;color:var(--accent-rose);"><i class="fas fa-exclamation-triangle fa-2x mb-2"></i><br>حدث خطأ أثناء تحميل المستخدمين</div>';
+        }
+    }
+}
+
+function updateDashboardStats() {
+    var totalUsersEl = document.getElementById('stat-total-users');
+    var totalAdminsEl = document.getElementById('stat-total-admins');
+    var totalSystemsEl = document.getElementById('stat-total-systems');
+    
+    if (totalUsersEl) totalUsersEl.textContent = cachedEmployees.length;
+    
+    var adminsCount = cachedEmployees.filter(function(e) { return e.role === 'admin' || e.role === 'supervisor'; }).length;
+    if (totalAdminsEl) totalAdminsEl.textContent = adminsCount;
+    if (totalSystemsEl) totalSystemsEl.textContent = SYSTEM_ACCESS_PERMISSIONS.length;
+}
+
+function filterUsersGrid() {
+    var query = (document.getElementById('user-search-input').value || '').trim().toLowerCase();
+    var roleFilter = document.getElementById('user-role-filter').value;
+    renderEmployees(query, roleFilter);
+}
+
+// Render Employee Cards Grid
+function renderEmployees(searchQuery, roleFilter) {
+    var container = document.getElementById('users-container');
+    if (!container) return;
+    container.innerHTML = '';
+
+    searchQuery = searchQuery || '';
+    roleFilter = roleFilter || 'all';
+
+    var seen = {};
+    var filteredList = [];
+
+    for (var i = 0; i < cachedEmployees.length; i++) {
+        var emp = cachedEmployees[i];
+        if (!emp || !emp.username || seen[emp.username]) continue;
+        seen[emp.username] = true;
+
+        if (emp.username === 'boles') {
+            emp.role = 'admin';
+            emp.permissions = ADMIN_FIXED_PERMISSIONS.slice();
+            emp.active = true;
+        }
+
+        var nameMatch = (emp.name || '').toLowerCase().indexOf(searchQuery) !== -1 || (emp.username || '').toLowerCase().indexOf(searchQuery) !== -1;
+        var roleMatch = (roleFilter === 'all') || (emp.role === roleFilter);
+
+        if (nameMatch && roleMatch) {
+            filteredList.push(emp);
+        }
+    }
+
+    if (filteredList.length === 0) {
+        container.innerHTML = '<div style="grid-column:1/-1;text-align:center;padding:40px;color:var(--text-muted);"><i class="fas fa-search fa-2x mb-2"></i><br>لا يوجد موظفين يطابقون خيارات البحث الحالية</div>';
+        return;
+    }
+
+    filteredList.forEach(function(emp, idx) {
+        var activePerms = [];
+        if (emp.permissions !== undefined && emp.permissions !== null) {
+            activePerms = window.authNormalizePermissions(emp.permissions);
+        } else if (window.AUTH_ROLE_PERMISSIONS && window.AUTH_ROLE_PERMISSIONS[emp.role]) {
+            activePerms = window.AUTH_ROLE_PERMISSIONS[emp.role];
+        }
+
+        if (emp.username === 'boles') {
+            activePerms = ADMIN_FIXED_PERMISSIONS.slice();
+        }
+
+        var roleMap = { admin: 'مدير', supervisor: 'مشرف', employee: 'موظف', viewer: 'مشاهد' };
+        var badgeMap = { admin: 'badge-admin', supervisor: 'badge-supervisor', employee: 'badge-emp', viewer: 'badge-viewer' };
+
+        var roleName = roleMap[emp.role] || emp.role;
+        var badgeClass = badgeMap[emp.role] || 'badge-emp';
+        var isBoles = emp.username === 'boles';
+        var disabled = isBoles ? 'disabled' : '';
+
+        // Functional Permissions Checkboxes
+        var functionalHtml = '';
+        FUNCTIONAL_PERMISSIONS.forEach(function(p) {
+            var isChecked = activePerms.indexOf(p.id) !== -1 ? 'checked' : '';
+            functionalHtml += '<label class="perm-item">' +
+                '<input type="checkbox" id="perm_' + idx + '_' + p.id + '" value="' + p.id + '" ' + isChecked + ' ' + disabled + '>' +
+                '<span>' + p.name + '</span>' +
+            '</label>';
+        });
+
+        // Systems Access Checkboxes
+        var systemsHtml = '';
+        SYSTEM_ACCESS_PERMISSIONS.forEach(function(sys) {
+            var isChecked = activePerms.indexOf(sys.id) !== -1 ? 'checked' : '';
+            systemsHtml += '<label class="perm-item system-access">' +
+                '<input type="checkbox" id="perm_' + idx + '_' + sys.id + '" value="' + sys.id + '" ' + isChecked + ' ' + disabled + '>' +
+                '<i class="fas ' + sys.icon + '" style="color:' + sys.color + ';"></i>' +
+                '<span>' + sys.name + '</span>' +
+            '</label>';
+        });
+
+        // Password Display Resolution
+        var currentPassword = emp.plainPassword || 'غير متاح';
+        if (!emp.plainPassword && emp.password) {
+            if (emp.password === window.authHashPassword('123456')) currentPassword = '123456';
+            else if (emp.password === window.authHashPassword('8520')) currentPassword = '8520';
+        }
+
+        var escapedName = escapeHtml(emp.name || '');
+        var escapedUsername = escapeHtml(emp.username);
+        var jsSafeUsername = emp.username.replace(/'/g, "\\'").replace(/"/g, "&quot;");
+
+        var card = document.createElement('div');
+        card.className = 'user-card';
+        card.innerHTML = 
+            '<div>' +
+                '<div class="user-card-header">' +
+                    '<div class="user-avatar"><i class="fas fa-user-shield"></i></div>' +
+                    '<div class="user-details-header">' +
+                        '<h4 class="user-full-name">' +
+                            escapedName + ' ' +
+                            '<span class="badge-role ' + badgeClass + '">' + roleName + '</span>' +
+                            (isBoles ? ' <span class="badge-role badge-protected">🔒 محمي</span>' : '') +
+                        '</h4>' +
+                        '<div class="user-username-tag"><i class="fas fa-user-circle"></i> ' + escapedUsername + '</div>' +
+                    '</div>' +
+                '</div>' +
+
+                '<div style="display:flex; gap:10px; margin-bottom:12px; flex-wrap:wrap;">' +
+                    '<div style="flex:1; min-width:140px;">' +
+                        '<label style="font-size:0.78rem; font-weight:700; color:var(--text-secondary); margin-bottom:4px; display:block;">تعديل الاسم</label>' +
+                        '<input type="text" class="input-main" id="name_' + idx + '" value="' + escapedName + '">' +
+                    '</div>' +
+                    '<div style="flex:1; min-width:140px;">' +
+                        '<label style="font-size:0.78rem; font-weight:700; color:var(--text-secondary); margin-bottom:4px; display:block;">الرتبة / الصفة</label>' +
+                        '<select class="input-main" id="role_' + idx + '" ' + disabled + '>' +
+                            '<option value="admin" ' + (emp.role === 'admin' ? 'selected' : '') + '>مدير (Admin)</option>' +
+                            '<option value="supervisor" ' + (emp.role === 'supervisor' ? 'selected' : '') + '>مشرف (Supervisor)</option>' +
+                            '<option value="employee" ' + (emp.role === 'employee' ? 'selected' : '') + '>موظف (Employee)</option>' +
+                            '<option value="viewer" ' + (emp.role === 'viewer' ? 'selected' : '') + '>مشاهد (Viewer)</option>' +
+                        '</select>' +
+                    '</div>' +
+                '</div>' +
+
+                '<div class="password-box">' +
+                    '<div class="password-display-row">' +
+                        '<span>كلمة المرور الحالية:</span>' +
+                        '<div>' +
+                            '<span class="current-pw-val" id="pw_val_' + idx + '" data-pw="' + escapeHtml(currentPassword) + '">••••••••</span> ' +
+                            '<button style="background:transparent; border:none; color:var(--accent-gold); cursor:pointer; font-size:0.9rem;" onclick="togglePasswordVisibility(' + idx + ')" title="إظهار/إخفاء كلمة المرور"><i class="fas fa-eye" id="pw_eye_' + idx + '"></i></button>' +
+                        '</div>' +
+                    '</div>' +
+                    '<div style="display:flex; gap:8px;">' +
+                        '<input type="password" class="input-main" id="pass_' + idx + '" placeholder="تغيير كلمة المرور جديدة..." style="direction:ltr; font-size:0.85rem;">' +
+                        '<button class="btn-action" style="background:rgba(255,255,255,0.08); color:#fff; white-space:nowrap; font-size:0.78rem;" onclick="resetPassword(' + idx + ', \'' + jsSafeUsername + '\')" title="إعادة ضبط كلمة المرور لـ 123456"><i class="fas fa-undo"></i> ضبط 123456</button>' +
+                    '</div>' +
+                '</div>' +
+
+                '<div class="perm-section">' +
+                    '<div class="perm-section-title">' +
+                        '<span><i class="fas fa-cogs text-warning me-1"></i> الصلاحيات الوظيفية</span>' +
+                        (!isBoles ? '<button style="background:transparent; border:none; color:var(--accent-cyan); font-size:0.75rem; cursor:pointer;" onclick="toggleAllPermsGroup(' + idx + ', \'func\')">تحديد/إلغاء الكل</button>' : '') +
+                    '</div>' +
+                    '<div class="perm-grid">' + functionalHtml + '</div>' +
+                '</div>' +
+
+                '<div class="perm-section">' +
+                    '<div class="perm-section-title">' +
+                        '<span><i class="fas fa-th-large text-success me-1"></i> صلاحيات الوصول للأنظمة</span>' +
+                        (!isBoles ? '<button style="background:transparent; border:none; color:var(--accent-cyan); font-size:0.75rem; cursor:pointer;" onclick="toggleAllPermsGroup(' + idx + ', \'sys\')">تحديد/إلغاء الكل</button>' : '') +
+                    '</div>' +
+                    '<div class="perm-grid">' + systemsHtml + '</div>' +
+                '</div>' +
+            '</div>' +
+
+            '<div style="display:flex; justify-content:space-between; align-items:center; margin-top:16px; border-top:1px solid var(--border); padding-top:14px;">' +
+                (isBoles 
+                    ? '<small style="color:var(--accent-gold); font-weight:700;">🔒 حساب المدير الرئيسي محفوظ</small>' 
+                    : '<button class="btn-action" style="background:var(--accent-rose); color:#fff; font-size:0.8rem;" onclick="deleteEmployee(\'' + jsSafeUsername + '\')"><i class="fas fa-trash me-1"></i> حذف الموظف</button>') +
+                '<div style="display:flex; align-items:center; gap:8px;">' +
+                    '<span id="msg_' + idx + '" style="font-size:0.82rem; font-weight:bold;"></span>' +
+                    '<button class="btn-action" onclick="saveUser(' + idx + ', \'' + jsSafeUsername + '\')"><i class="fas fa-save me-1"></i> حفظ التعديلات</button>' +
+                '</div>' +
+            '</div>';
+
+        container.appendChild(card);
+    });
+}
+
+function togglePasswordVisibility(idx) {
+    var valEl = document.getElementById('pw_val_' + idx);
+    var eyeEl = document.getElementById('pw_eye_' + idx);
+    if (!valEl || !eyeEl) return;
+    
+    var realPw = valEl.getAttribute('data-pw');
+    if (valEl.textContent === '••••••••') {
+        valEl.textContent = realPw;
+        eyeEl.className = 'fas fa-eye-slash';
+    } else {
+        valEl.textContent = '••••••••';
+        eyeEl.className = 'fas fa-eye';
+    }
+}
+
+function toggleAllPermsGroup(idx, groupType) {
+    var permsList = groupType === 'func' ? FUNCTIONAL_PERMISSIONS : SYSTEM_ACCESS_PERMISSIONS;
+    var firstCb = document.getElementById('perm_' + idx + '_' + permsList[0].id);
+    if (!firstCb) return;
+    
+    var targetState = !firstCb.checked;
+    permsList.forEach(function(p) {
+        var cb = document.getElementById('perm_' + idx + '_' + p.id);
+        if (cb && !cb.disabled) cb.checked = targetState;
+    });
+}
+
+// Save User (Primary Firebase loutsresults + localStorage)
+async function saveUser(index, username) {
+    var emp = null;
+    for (var i = 0; i < cachedEmployees.length; i++) {
+        if (cachedEmployees[i].username === username) { emp = cachedEmployees[i]; break; }
+    }
+    if (!emp) return;
+
+    var isBoles = username === 'boles';
+    var newNameEl = document.getElementById('name_' + index);
+    var newRoleEl = document.getElementById('role_' + index);
+    var newPassEl = document.getElementById('pass_' + index);
+    var msgEl = document.getElementById('msg_' + index);
+
+    var newName = newNameEl ? newNameEl.value.trim() : '';
+    var newRole = isBoles ? 'admin' : (newRoleEl ? newRoleEl.value : 'employee');
+    var newPass = newPassEl ? newPassEl.value.trim() : '';
+
+    if (!newName) {
+        if (msgEl) { msgEl.textContent = '⚠️ الاسم مطلوب!'; msgEl.style.color = 'var(--accent-rose)'; }
+        return;
+    }
+
+    emp.name = newName;
+    emp.role = newRole;
+
+    if (newPass) {
+        emp.password = window.authHashPassword(newPass);
+        emp.plainPassword = newPass;
+    }
+
+    if (isBoles) {
+        emp.permissions = ADMIN_FIXED_PERMISSIONS.slice();
+    } else {
+        var customPerms = [];
+        ALL_PERMISSIONS.forEach(function(p) {
+            var cb = document.getElementById('perm_' + index + '_' + p.id);
+            if (cb && cb.checked) customPerms.push(p.id);
+        });
+        emp.permissions = customPerms;
+    }
+
+    try {
+        if (msgEl) { msgEl.textContent = 'جاري الحفظ...'; msgEl.style.color = 'var(--accent-gold)'; }
+
+        await window.authSaveEmployeeToDb(emp);
+
+        if (typeof window.authLogActivity === 'function') {
+            await window.authLogActivity('تعديل', 'نظام الصلاحيات', emp.username, emp.name, 'تم تعديل بيانات أو صلاحيات الموظف', 'نظام الصلاحيات');
+        }
+
+        if (msgEl) { msgEl.textContent = '✓ تم الحفظ بنجاح!'; msgEl.style.color = 'var(--accent-emerald)'; }
+        if (newPassEl) newPassEl.value = '';
+
+        setTimeout(function() { if (msgEl) msgEl.textContent = ''; }, 3000);
+        await loadEmployees();
+    } catch(e) {
+        console.error('Save error:', e);
+        if (msgEl) { msgEl.textContent = '❌ حدث خطأ في الحفظ!'; msgEl.style.color = 'var(--accent-rose)'; }
+    }
+}
+
+async function saveAllModifiedUsers() {
+    var count = 0;
+    for (var idx = 0; idx < cachedEmployees.length; idx++) {
+        var emp = cachedEmployees[idx];
+        if (emp && emp.username) {
+            try {
+                await saveUser(idx, emp.username);
+                count++;
+            } catch(e) {}
+        }
+    }
+    alert('✅ تم حفظ كافة تعديلات الموظفين بنجاح!');
+}
+
+function openAddUserModal() {
+    var modal = document.getElementById('addUserModal');
+    var msg = document.getElementById('new_emp_msg');
+    if (msg) msg.textContent = '';
+    if (modal) modal.classList.add('active');
+}
+
+function closeAddUserModal() {
+    var modal = document.getElementById('addUserModal');
+    if (modal) modal.classList.remove('active');
+}
+
+async function addNewEmployee() {
+    var usernameEl = document.getElementById('new_username');
+    var nameEl = document.getElementById('new_name');
+    var passwordEl = document.getElementById('new_password');
+    var roleEl = document.getElementById('new_role');
+    var msgEl = document.getElementById('new_emp_msg');
+
+    var username = usernameEl ? usernameEl.value.trim().toLowerCase() : '';
+    var name = nameEl ? nameEl.value.trim() : '';
+    var password = passwordEl ? passwordEl.value : '';
+    var role = roleEl ? roleEl.value : 'employee';
+
+    if (!username || !name || !password) {
+        if (msgEl) { msgEl.textContent = '⚠️ يرجى إدخال اسم المستخدم، الاسم الكامل، وكلمة المرور'; msgEl.style.color = 'var(--accent-rose)'; }
+        return;
+    }
+
+    if (username === 'boles') {
+        if (msgEl) { msgEl.textContent = '🔒 اسم المستخدم "boles" محجوز لمدير النظام!'; msgEl.style.color = 'var(--accent-rose)'; }
+        return;
+    }
+
+    var exists = cachedEmployees.some(function(e) { return (e.username || '').toLowerCase() === username; });
+    if (exists) {
+        if (msgEl) { msgEl.textContent = '⚠️ اسم المستخدم موجود بالفعل!'; msgEl.style.color = 'var(--accent-rose)'; }
+        return;
+    }
+
+    if (msgEl) { msgEl.textContent = 'جاري الإضافة وقفل البيانات...'; msgEl.style.color = 'var(--accent-gold)'; }
+
+    var initialPerms = (role === 'admin') ? ADMIN_FIXED_PERMISSIONS.slice() : DEFAULT_EMPLOYEE_PERMISSIONS.slice();
+
+    var newEmp = {
+        username: username,
+        name: name,
+        password: window.authHashPassword(password),
+        plainPassword: password,
+        role: role,
+        active: true,
+        createdAt: new Date().toISOString(),
+        employeeId: username,
+        permissions: initialPerms
+    };
+
+    try {
+        await window.authSaveEmployeeToDb(newEmp);
+        if (typeof window.authLogActivity === 'function') {
+            await window.authLogActivity('إضافة', 'نظام الصلاحيات', username, name, 'تم إضافة موظف جديد: ' + name, 'نظام الصلاحيات');
+        }
+
+        if (msgEl) { msgEl.textContent = '✅ تمت إضافة الموظف بنجاح!'; msgEl.style.color = 'var(--accent-emerald)'; }
+
+        if (usernameEl) usernameEl.value = '';
+        if (nameEl) nameEl.value = '';
+        if (passwordEl) passwordEl.value = '';
+
+        setTimeout(function() {
+            closeAddUserModal();
+        }, 1200);
+
+        await loadEmployees();
+    } catch (e) {
+        console.error('Add error:', e);
+        if (msgEl) { msgEl.textContent = '❌ حدث خطأ أثناء إرسال البيانات!'; msgEl.style.color = 'var(--accent-rose)'; }
+    }
+}
+
+async function deleteEmployee(username) {
+    if (username === 'boles') {
+        alert('🔒 لا يمكن حذف مدير النظام الأساسي!');
+        return;
+    }
+    if (!confirm('هل أنت متأكد من حذف الموظف: ' + username + ' نهائياً؟\n\n⚠️ لا يمكن التراجع عن هذا الإجراء.')) return;
+    try {
+        await window.authDeleteEmployeeFromDb(username);
+        if (typeof window.authLogActivity === 'function') {
+            await window.authLogActivity('حذف', 'نظام الصلاحيات', username, username, 'تم حذف الموظف نهائياً', 'نظام الصلاحيات');
+        }
+        alert('✅ تم حذف الموظف بنجاح.');
+        await loadEmployees();
+    } catch (e) {
+        console.error('Delete error:', e);
+        alert('❌ حدث خطأ أثناء الحذف.');
+    }
+}
+
+async function resetPassword(index, username) {
+    if (!confirm('هل أنت متأكد من إعادة ضبط كلمة مرور ' + username + ' إلى 123456؟')) return;
+
+    var emp = cachedEmployees.find(function(e) { return e.username === username; });
+    if (!emp) return;
+
+    emp.password = window.authHashPassword('123456');
+    emp.plainPassword = '123456';
+
+    if (username === 'boles') {
+        emp.role = 'admin';
+        emp.permissions = ADMIN_FIXED_PERMISSIONS.slice();
+    }
+
+    try {
+        await window.authSaveEmployeeToDb(emp);
+        if (typeof window.authLogActivity === 'function') {
+            await window.authLogActivity('تعديل', 'نظام الصلاحيات', username, emp.name, 'تم إعادة ضبط كلمة المرور إلى 123456', 'نظام الصلاحيات');
+        }
+        alert('✅ تم إعادة ضبط كلمة المرور إلى 123456 بنجاح.');
+        await loadEmployees();
+    } catch (e) {
+        console.error('Reset error:', e);
+        alert('❌ حدث خطأ أثناء إعادة الضبط.');
+    }
+}
+
+// Activity Log Render
+function renderLogsData(logs) {
+    var tbody = document.getElementById('logs-tbody');
+    if (!tbody) return;
+
+    if (!logs || !logs.length) {
+        tbody.innerHTML = '<tr><td colspan="6" class="text-center py-4 text-muted">لا توجد حركات مسجلة حتى الآن</td></tr>';
+        return;
+    }
+
+    var html = '';
+    for (var i = 0; i < logs.length; i++) {
+        var log = logs[i];
+        var date = log.timestamp ? new Date(log.timestamp) : new Date();
+        var dateStr = date.toLocaleDateString('ar-EG') + ' ' + date.toLocaleTimeString('ar-EG');
+
+        var badgeStyle = 'background: rgba(245,158,11,0.2); color: var(--accent-gold); border: 1px solid rgba(245,158,11,0.4); font-size:0.75rem; padding:3px 8px; border-radius:6px; font-weight:800;';
+        if (log.system === 'نظام الملفات') {
+            badgeStyle = 'background: rgba(16,185,129,0.2); color: var(--accent-emerald); border: 1px solid rgba(16,185,129,0.4); font-size:0.75rem; padding:3px 8px; border-radius:6px; font-weight:800;';
+        } else if (log.system === 'نظام السحب' || log.system === 'الخدمات المكتبية' || log.system === 'desk-services') {
+            badgeStyle = 'background: rgba(59,130,246,0.2); color: var(--accent-blue); border: 1px solid rgba(59,130,246,0.4); font-size:0.75rem; padding:3px 8px; border-radius:6px; font-weight:800;';
+        } else if (log.system === 'حساب الشهادات') {
+            badgeStyle = 'background: rgba(139,92,246,0.2); color: var(--accent-purple); border: 1px solid rgba(139,92,246,0.4); font-size:0.75rem; padding:3px 8px; border-radius:6px; font-weight:800;';
+        }
+
+        html += '<tr>' +
+            '<td style="direction:ltr; text-align:right; color:var(--text-muted);">' + dateStr + '</td>' +
+            '<td><strong style="color:#fff;">' + escapeHtml(log.employeeName || '—') + '</strong><br><small style="color:var(--text-secondary);">' + escapeHtml(log.employeeUsername || '—') + '</small></td>' +
+            '<td style="color:#fff; font-weight:700;">' + escapeHtml(log.action || '—') + '</td>' +
+            '<td><span style="color:#fff; font-weight:700;">' + escapeHtml(log.targetType || '—') + '</span><br><small style="color:var(--text-secondary);">' + escapeHtml(log.targetName || '—') + '</small></td>' +
+            '<td><span class="badge" style="' + badgeStyle + '">' + escapeHtml(log.system || 'عام') + '</span></td>' +
+            '<td style="color:var(--text-secondary);">' + escapeHtml(log.details || '') + '</td>' +
+        '</tr>';
+    }
+    tbody.innerHTML = html;
+}
+
+function loadLogs() {
+    var tbody = document.getElementById('logs-tbody');
+    if (!tbody) return;
+
+    var targetDb = window.PERMISSIONS_DB || window.AUTH_DB;
+    if (targetDb) {
+        targetDb.ref('activityLog').limitToLast(500).on('value', function(snap) {
+            try {
+                var val = snap.val() || {};
+                var list = [];
+                if (Array.isArray(val)) {
+                    list = val.slice();
+                } else {
+                    Object.keys(val).forEach(function(k) { list.push(val[k]); });
+                }
+                list.sort(function(a, b) {
+                    var tA = a.timestamp ? new Date(a.timestamp).getTime() : 0;
+                    var tB = b.timestamp ? new Date(b.timestamp).getTime() : 0;
+                    return tB - tA;
+                });
+                localStorage.setItem('lotus_activity_log', JSON.stringify(list));
+                renderLogsData(list);
+            } catch (e) {
+                var local = JSON.parse(localStorage.getItem('lotus_activity_log') || '[]');
+                renderLogsData(local);
+            }
+        }, function() {
+            var local = JSON.parse(localStorage.getItem('lotus_activity_log') || '[]');
+            renderLogsData(local);
+        });
+    } else {
+        var local = JSON.parse(localStorage.getItem('lotus_activity_log') || '[]');
+        renderLogsData(local);
+    }
+}
+
+function clearLogs() {
+    if (confirm('⚠️ هل أنت متأكد من مسح جميع السجلات؟ لا يمكن التراجع عن هذا الإجراء.')) {
+        localStorage.setItem('lotus_activity_log', '[]');
+        var targetDb = window.PERMISSIONS_DB || window.AUTH_DB;
+        if (targetDb) {
+            targetDb.ref('activityLog').remove().catch(function(){});
+        }
+        loadLogs();
+    }
+}
+
+// Certificate Records Admin
+function getCertRecords() {
+    try { return JSON.parse(localStorage.getItem('lotus_certificate_records') || '[]'); } catch(e) { return []; }
+}
+function saveCertRecords(arr) {
+    localStorage.setItem('lotus_certificate_records', JSON.stringify(arr));
+}
+var CERT_TAB_NAMES = {
+    thanaweya: 'المصرية', stem: 'STEM', azhar: 'الأزهرية',
+    saudi: 'السعودية', gulf: 'عمان-قطر-الإمارات', libya: 'ليبيا',
+    jordan: 'الأردن', kuwait: 'الكويت', bahrain: 'البحرين', american: 'أمريكان دبلومة'
+};
+
+function loadCertRecords() {
+    try {
+        var targetDb = window.PERMISSIONS_DB || window.AUTH_DB;
+        if (targetDb && typeof targetDb.ref === 'function') {
+            targetDb.ref('certificateRecords').on('value', function(snap) {
+                try {
+                    var val = snap.val() || {};
+                    var list = Object.keys(val).map(function(k) { return val[k]; });
+                    list.sort(function(a, b) { return (b.id || '').localeCompare(a.id || ''); });
+                    saveCertRecords(list);
+                    renderCertRecordsTable();
+                } catch (e) { renderCertRecordsTable(); }
+            });
+        } else {
+            renderCertRecordsTable();
+        }
+    } catch(e) { renderCertRecordsTable(); }
+}
+
+function renderCertRecordsTable() {
+    var tbody = document.getElementById('certRecords-tbody');
+    if (!tbody) return;
+
+    try {
+        var records = getCertRecords();
+        var searchEl = document.getElementById('certRecordsSearch');
+        var q = searchEl ? searchEl.value.trim().toLowerCase() : '';
+
+        if (q) {
+            records = records.filter(function(r) {
+                var student = (r.studentName || '').toLowerCase();
+                var emp = (r.employeeName || r.employeeUsername || '').toLowerCase();
+                return student.indexOf(q) !== -1 || emp.indexOf(q) !== -1;
+            });
+        }
+
+        if (records.length === 0) {
+            tbody.innerHTML = '<tr><td colspan="8" class="text-center py-4 text-muted">لا توجد شهادات محفوظة' + (q ? ' تطابق البحث' : '') + '</td></tr>';
+            return;
+        }
+
+        var groups = {};
+        for (var i = 0; i < records.length; i++) {
+            var r = records[i];
+            var empUser = r.employeeUsername || '';
+            var empName = r.employeeName || r.employeeUsername || '—';
+            var key = empUser + '||' + empName;
+            if (!groups[key]) groups[key] = [];
+            groups[key].push(r);
+        }
+
+        var html = '';
+        var gi = 0;
+        var groupKeys = Object.keys(groups);
+        for (var g = 0; g < groupKeys.length; g++) {
+            gi++;
+            var gk = groupKeys[g];
+            var parts = gk.split('||');
+            var empUser = parts[0];
+            var empName = parts[1];
+            var list = groups[gk];
+            var count = list.length;
+            var gid = 'emp' + gi;
+
+            html += '<tr class="emp-group-row" style="cursor:pointer; background:rgba(245,158,11,0.08);" onclick="toggleEmpGroup(\'' + gid + '\')">' +
+                '<td colspan="8" style="padding:12px 16px;">' +
+                '<span id="' + gid + '_arrow" style="display:inline-block; transition:transform .2s; margin-left:8px; color:var(--accent-gold); font-weight:900;">▶</span>' +
+                '<strong style="color:#fff; font-size:1rem;">' + escapeHtml(empName) + '</strong>' +
+                ' <span style="color:var(--text-secondary); font-size:0.82rem;">' + (empUser ? '(' + escapeHtml(empUser) + ') · ' : '') + count + ' شهادة</span>' +
+                '</td></tr>';
+
+            for (var j = 0; j < list.length; j++) {
+                var r = list[j];
+                var date = r.createdAt ? new Date(r.createdAt).toLocaleDateString('ar-EG') : '—';
+                var label = r.certificateLabel || CERT_TAB_NAMES[r.certificateType] || r.certificateType || '—';
+                var total = r.totalScore != null ? r.totalScore : '—';
+                var equiv = r.equivalentScore != null ? r.equivalentScore : '—';
+                var pct = r.totalPercentage != null ? r.totalPercentage.toFixed(1) + '%' : '—';
+
+                html += '<tr class="emp-detail-' + gid + '" style="display:none; background:rgba(255,255,255,0.015);">' +
+                    '<td style="direction:ltr; text-align:right; color:var(--text-muted); font-size:0.82rem; padding-right:34px;">' + date + '</td>' +
+                    '<td><strong style="color:var(--accent-gold); cursor:pointer; text-decoration:underline; text-decoration-style:dotted;" onclick="viewCertRecordDetail(\'' + r.id + '\')">' + escapeHtml(r.studentName || '—') + '</strong></td>' +
+                    '<td><span class="badge" style="background:rgba(139,92,246,0.2); color:#fff; border:1px solid rgba(139,92,246,0.4); font-size:0.75rem; padding:3px 8px; border-radius:6px; font-weight:800;">' + escapeHtml(label) + '</span></td>' +
+                    '<td style="color:#fff; font-weight:700;">' + total + '</td>' +
+                    '<td style="color:var(--accent-gold); font-weight:700;">' + equiv + '</td>' +
+                    '<td style="color:var(--accent-emerald); font-weight:900;">' + pct + '</td>' +
+                    '<td style="color:#fff;">' + escapeHtml(empName) + '</td>' +
+                    '<td><button class="btn-action" style="background:var(--accent-rose); padding:4px 10px; font-size:0.75rem;" onclick="deleteCertRecordAdmin(\'' + r.id + '\')"><i class="fas fa-trash"></i></button></td>' +
+                '</tr>';
+            }
+        }
+        tbody.innerHTML = html;
+    } catch(e) {
+        console.error('Render cert error:', e);
+        tbody.innerHTML = '<tr><td colspan="8" class="text-center py-4 text-danger">حدث خطأ في تحميل السجل</td></tr>';
+    }
+}
+
+function toggleEmpGroup(gid) {
+    try {
+        var rows = document.querySelectorAll('.emp-detail-' + gid);
+        var arrow = document.getElementById(gid + '_arrow');
+        var show = false;
+        if (rows.length > 0) {
+            show = rows[0].style.display === 'none';
+        }
+        for (var i = 0; i < rows.length; i++) {
+            rows[i].style.display = show ? '' : 'none';
+        }
+        if (arrow) arrow.style.transform = show ? 'rotate(90deg)' : 'rotate(0deg)';
+    } catch(e) {}
+}
+
+function deleteCertRecordAdmin(id) {
+    if (!confirm('⚠️ هل أنت متأكد من حذف سجل الشهادة هذا؟')) return;
+    var records = getCertRecords().filter(function(r) { return r.id !== id; });
+    saveCertRecords(records);
+    var targetDb = window.PERMISSIONS_DB || window.AUTH_DB;
+    if (targetDb && typeof targetDb.ref === 'function') {
+        targetDb.ref('certificateRecords/' + id).remove().catch(function() {});
+    }
+    renderCertRecordsTable();
+}
+
+function clearCertRecords() {
+    if (!confirm('⚠️ هل أنت متأكد من مسح جميع سجلات الشهادات المحفوظة؟')) return;
+    saveCertRecords([]);
+    var targetDb = window.PERMISSIONS_DB || window.AUTH_DB;
+    if (targetDb && typeof targetDb.ref === 'function') {
+        targetDb.ref('certificateRecords').remove().catch(function() {});
+    }
+    renderCertRecordsTable();
+}
+
+window.viewCertRecordDetail = function(id) {
+    var modal = document.getElementById('certDetailModal');
+    var body = document.getElementById('certDetailBody');
+    if (!modal || !body) return;
+    body.innerHTML = '<div style="text-align:center;padding:20px;color:var(--text-muted);">جاري التحميل...</div>';
+    modal.classList.add('active');
+    setTimeout(function() {
+        var records = getCertRecords();
+        var rec = records.find(function(r) { return r.id === id; });
+        if (!rec) { body.innerHTML = '<div style="text-align:center;padding:20px;">لم يتم العثور على السجل</div>'; return; }
+        body.innerHTML = '<div style="margin-bottom:14px;"><strong style="color:#fff; font-size:1.1rem;">' + escapeHtml(rec.studentName || '—') + '</strong></div>' +
+            '<div style="color:var(--accent-gold); font-weight:700;">نوع الشهادة: ' + escapeHtml(rec.certificateLabel || rec.certificateType || '—') + '</div>' +
+            '<div>النسبة الإجمالية: <strong style="color:var(--accent-emerald);">' + (typeof rec.totalPercentage === 'number' ? rec.totalPercentage.toFixed(1)+'%' : '—') + '</strong></div>' +
+            '<div style="margin-top:10px; font-size:0.8rem; color:var(--text-muted);">تمت الإضافة بواسطة: ' + escapeHtml(rec.employeeName || rec.employeeUsername || '—') + '</div>';
+    }, 100);
+};
+
+window.closeCertDetailModal = function() {
+    var modal = document.getElementById('certDetailModal');
+    if (modal) modal.classList.remove('active');
+};
+
+// Desk Services Admin
+var cachedDeskServices = [];
+var permFormDocuments = [];
+var permFormSteps = [];
+var permFormAttachedFiles = [];
+var currentPermEditingService = null;
+
+function loadDeskServicesAdmin() {
+    var tbody = document.getElementById('desk-services-tbody');
+    if (!tbody) return;
+    var targetDb = window.PERMISSIONS_DB || window.AUTH_DB;
+    if (targetDb) {
+        targetDb.ref('deskServices').on('value', function(snap) {
+            try {
+                cachedDeskServices = [];
+                var val = snap.val();
+                if (val) {
+                    Object.keys(val).forEach(function(key) {
+                        cachedDeskServices.push(Object.assign({ id: key }, val[key]));
+                    });
+                }
+                renderDeskServicesTable();
+            } catch(e) {
+                tbody.innerHTML = '<tr><td colspan="6" class="text-center py-4 text-danger">حدث خطأ في تحميل الخدمات</td></tr>';
+            }
+        });
+    }
+}
+
+function renderDeskServicesTable() {
+    var tbody = document.getElementById('desk-services-tbody');
+    if (!tbody) return;
+    tbody.innerHTML = '';
+    if (cachedDeskServices.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="6" class="text-center py-4 text-muted">لا توجد خدمات مكتبية مسجلة حالياً</td></tr>';
+        return;
+    }
+    var categories = { proofs: 'إثباتات وقيد', transfers: 'تحويلات', cards: 'بطاقات جامعية', withdrawal: 'سحب ملفات', others: 'أخرى' };
+    var html = '';
+    cachedDeskServices.forEach(function(s, idx) {
+        var date = s.lastUpdated ? new Date(s.lastUpdated).toLocaleDateString('ar-EG') : '—';
+        var categoryName = categories[s.category] || s.category || 'غير محدد';
+        var priceText = s.price > 0 ? s.price + ' ج.م' : 'مجانية';
+        html += '<tr>' +
+            '<td><strong>' + escapeHtml(s.name) + '</strong><br><small style="color:var(--text-muted); font-size:0.75rem;">' + escapeHtml((s.description || '').substring(0, 50)) + '...</small></td>' +
+            '<td><span class="badge-role badge-emp">' + categoryName + '</span></td>' +
+            '<td style="color:var(--accent-gold); font-weight:800;">' + priceText + '</td>' +
+            '<td>' + escapeHtml(s.duration) + '</td>' +
+            '<td style="direction:ltr; text-align:right;">' + date + '</td>' +
+            '<td style="text-align:center;">' +
+                '<button class="btn-action" style="background:var(--accent-blue); color:#fff; padding:4px 8px; font-size:0.75rem; margin-left:4px;" onclick="openPermissionsEditService(' + idx + ')"><i class="fas fa-edit"></i> تعديل</button>' +
+                '<button class="btn-action" style="background:var(--accent-rose); color:#fff; padding:4px 8px; font-size:0.75rem;" onclick="deletePermService(\'' + s.id + '\')"><i class="fas fa-trash"></i></button>' +
+            '</td>' +
+        '</tr>';
+    });
+    tbody.innerHTML = html;
+}
+
+function openPermissionsAddService() {
+    currentPermEditingService = null;
+    document.getElementById('perm-service-modal-title').innerHTML = `<i class="fas fa-file-pen me-2 text-info"></i> إضافة خدمة جديدة`;
+    document.getElementById('perm-service-form').reset();
+    document.getElementById('perm-form-service-id').value = '';
+    permFormDocuments = [];
+    permFormSteps = [];
+    permFormAttachedFiles = [];
+    renderPermFormTags();
+    renderPermFormFilesTable();
+    openPermModal('permDeskServiceModal');
+}
+
+function openPermissionsEditService(index) {
+    var service = cachedDeskServices[index];
+    if (!service) return;
+    currentPermEditingService = service;
+    document.getElementById('perm-service-modal-title').innerHTML = `<i class="fas fa-file-pen me-2 text-info"></i> تعديل الخدمة (${escapeHtml(service.name)})`;
+    document.getElementById('perm-form-service-id').value = service.id;
+    document.getElementById('perm-form-name').value = service.name;
+    document.getElementById('perm-form-category').value = service.category;
+    document.getElementById('perm-form-price').value = service.price;
+    document.getElementById('perm-form-duration').value = service.duration;
+    document.getElementById('perm-form-description').value = service.description;
+    permFormDocuments = service.documents ? service.documents.slice() : [];
+    permFormSteps = service.steps ? service.steps.slice() : [];
+    permFormAttachedFiles = [];
+    if (service.files) {
+        Object.keys(service.files).forEach(function(fKey) {
+            permFormAttachedFiles.push(Object.assign({ fileId: fKey, isExisting: true }, service.files[fKey]));
+        });
+    }
+    renderPermFormTags();
+    renderPermFormFilesTable();
+    openPermModal('permDeskServiceModal');
+}
+
+function openPermModal(id) { document.getElementById(id).classList.add('active'); }
+function closePermServiceModal() { document.getElementById('permDeskServiceModal').classList.remove('active'); }
+
+function renderPermFormTags() {
+    var docsContainer = document.getElementById('perm-form-docs-tags');
+    docsContainer.innerHTML = '';
+    permFormDocuments.forEach(function(doc, i) {
+        var pill = document.createElement('span');
+        pill.className = 'pill-tag';
+        pill.innerHTML = escapeHtml(doc) + ' <i class="fas fa-times-circle" onclick="removePermFormDoc(' + i + ')"></i>';
+        docsContainer.appendChild(pill);
+    });
+
+    var stepsContainer = document.getElementById('perm-form-steps-tags');
+    stepsContainer.innerHTML = '';
+    permFormSteps.forEach(function(step, i) {
+        var pill = document.createElement('span');
+        pill.className = 'pill-tag';
+        pill.innerHTML = (i+1) + '. ' + escapeHtml(step) + ' <i class="fas fa-times-circle" onclick="removePermFormStep(' + i + ')"></i>';
+        stepsContainer.appendChild(pill);
+    });
+}
+
+function removePermFormDoc(i) { permFormDocuments.splice(i, 1); renderPermFormTags(); }
+function removePermFormStep(i) { permFormSteps.splice(i, 1); renderPermFormTags(); }
+
+function setupPermissionsUploadListeners() {
+    var dropZone = document.getElementById('perm-upload-drag-zone');
+    var fileInput = document.getElementById('perm-file-upload-input');
+    if (dropZone && fileInput) {
+        dropZone.onclick = function() { fileInput.click(); };
+        dropZone.addEventListener('dragover', function(e) { e.preventDefault(); });
+        dropZone.addEventListener('drop', function(e) {
+            e.preventDefault();
+            processPermFormFiles(Array.from(e.dataTransfer.files));
+        });
+        fileInput.addEventListener('change', function(e) {
+            processPermFormFiles(Array.from(e.target.files));
+        });
+    }
+
+    var docInp = document.getElementById('perm-form-doc-input');
+    if (docInp) {
+        docInp.addEventListener('keydown', function(e) {
+            if (e.key === 'Enter') {
+                e.preventDefault();
+                var val = this.value.trim();
+                if (val && permFormDocuments.indexOf(val) === -1) {
+                    permFormDocuments.push(val);
+                    this.value = '';
+                    renderPermFormTags();
+                }
+            }
+        });
+    }
+
+    var stepInp = document.getElementById('perm-form-step-input');
+    if (stepInp) {
+        stepInp.addEventListener('keydown', function(e) {
+            if (e.key === 'Enter') {
+                e.preventDefault();
+                var val = this.value.trim();
+                if (val && permFormSteps.indexOf(val) === -1) {
+                    permFormSteps.push(val);
+                    this.value = '';
+                    renderPermFormTags();
+                }
+            }
+        });
+    }
+}
+
+function processPermFormFiles(files) {
+    files.forEach(function(file) {
+        if (file.size > 10 * 1024 * 1024) { alert('الملف "' + file.name + '" تجاوز الحد (10 ميجابايت)'); return; }
+        var fileId = "file_" + Math.random().toString(36).substring(2, 11) + "_" + Date.now();
+        permFormAttachedFiles.push({
+            fileId: fileId, fileName: file.name, fileSize: file.size, fileType: file.type || getFileTypeByName(file.name),
+            purpose: 'template', fileRef: file, isExisting: false
+        });
+    });
+    renderPermFormFilesTable();
+}
+
+function getFileTypeByName(name) {
+    var ext = name.toLowerCase().split('.').pop();
+    if (ext === 'pdf') return 'application/pdf';
+    if (ext === 'doc' || ext === 'docx') return 'application/msword';
+    if (['jpg', 'jpeg', 'png', 'gif', 'webp'].includes(ext)) return 'image/' + ext;
+    return 'application/octet-stream';
+}
+
+function renderPermFormFilesTable() {
+    var wrapper = document.getElementById('perm-form-files-list-wrapper');
+    var tbody = document.getElementById('perm-form-files-tbody');
+    if (!tbody || !wrapper) return;
+    tbody.innerHTML = '';
+    if (permFormAttachedFiles.length === 0) { wrapper.style.display = 'none'; return; }
+    wrapper.style.display = 'block';
+    permFormAttachedFiles.forEach(function(file, i) {
+        var tr = document.createElement('tr');
+        var sz = formatBytes(file.fileSize);
+        tr.innerHTML = '<td>' + escapeHtml(file.fileName) + '</td>' +
+            '<td class="text-center">' + sz + '</td>' +
+            '<td class="text-center">' + escapeHtml(file.fileType) + '</td>' +
+            '<td><select class="input-main" style="padding:4px 8px; font-size:0.75rem;" onchange="updatePermFormFilePurpose(' + i + ', this.value)"><option value="template" ' + (file.purpose === 'template' ? 'selected' : '') + '>نموذج ورقي</option><option value="attachment" ' + (file.purpose === 'attachment' ? 'selected' : '') + '>مرفق توضيحي</option></select></td>' +
+            '<td class="text-center"><button type="button" class="btn-action" style="background:var(--accent-rose); padding:4px 8px; font-size:0.7rem;" onclick="removePermFormFile(' + i + ')"><i class="fas fa-trash"></i></button></td>';
+        tbody.appendChild(tr);
+    });
+}
+
+function updatePermFormFilePurpose(index, val) { permFormAttachedFiles[index].purpose = val; }
+function removePermFormFile(index) { permFormAttachedFiles.splice(index, 1); renderPermFormFilesTable(); }
+function formatBytes(bytes) {
+    if (!bytes || bytes === 0) return '0 Bytes';
+    var k = 1024, sizes = ['Bytes', 'KB', 'MB', 'GB'];
+    var i = Math.floor(Math.log(bytes) / Math.log(k));
+    return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+}
+
+function escapeHtml(text) {
+    if (!text) return '';
+    var map = { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#039;' };
+    return String(text).replace(/[&<>"']/g, function(m) { return map[m]; });
+}
+
+async function savePermService(event) {
+    event.preventDefault();
+    var targetDb = window.PERMISSIONS_DB || window.AUTH_DB;
+    if (!targetDb) { alert('تعذر الاتصال بقاعدة البيانات.'); return; }
+    var serviceId = document.getElementById('perm-form-service-id').value || ("service_" + Math.random().toString(36).substring(2, 11) + "_" + Date.now());
+    var name = document.getElementById('perm-form-name').value.trim();
+    var category = document.getElementById('perm-form-category').value;
+    var price = parseFloat(document.getElementById('perm-form-price').value) || 0;
+    var duration = document.getElementById('perm-form-duration').value.trim();
+    var description = document.getElementById('perm-form-description').value.trim();
+
+    var serviceMeta = {
+        id: serviceId, name: name, category: category, price: price, duration: duration, description: description,
+        documents: permFormDocuments, steps: permFormSteps, lastUpdated: new Date().toISOString(), files: {}
+    };
+
+    try {
+        await targetDb.ref('deskServices/' + serviceId).set(serviceMeta);
+        alert("✅ تم حفظ الخدمة المكتبية بنجاح!");
+        closePermServiceModal();
+    } catch (err) {
+        alert('حدث خطأ أثناء الحفظ: ' + err.message);
+    }
+}
+
+async function deletePermService(serviceId) {
+    var service = cachedDeskServices.find(function(s) { return s.id === serviceId; });
+    if (!service || !confirm('حذف الخدمة المكتبية (' + service.name + ')؟')) return;
+    var targetDb = window.PERMISSIONS_DB || window.AUTH_DB;
+    if (targetDb) {
+        await targetDb.ref('deskServices/' + serviceId).remove();
+        alert('✅ تم الحذف بنجاح.');
+    }
+}
+
+// Backup Export & Import
+async function manualExportBackup() {
+    if (!confirm('تصدير نسخة احتياطية من كافة بيانت وصلاحيات النظام؟')) return;
+    try {
+        var employees = await window.authGetAllEmployees();
+        var logs = JSON.parse(localStorage.getItem('lotus_activity_log') || '[]');
+        var certRecords = getCertRecords();
+        var backup = {
+            employees: employees,
+            activityLog: logs,
+            certificateRecords: certRecords,
+            backupTime: new Date().toISOString(),
+            version: '3.0'
+        };
+        var blob = new Blob([JSON.stringify(backup, null, 2)], { type: 'application/json' });
+        var a = document.createElement('a');
+        a.href = URL.createObjectURL(blob);
+        a.download = 'نسخة_الصلاحيات_والمستخدمين_' + new Date().toISOString().split('T')[0] + '.json';
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        alert('✅ تم تصدير النسخة الاحتياطية بنجاح!');
+    } catch(e) {
+        alert('حدث خطأ أثناء التصدير: ' + e.message);
+    }
+}
+
+async function manualImportBackup(input) {
+    var file = input.files[0];
+    if (!file || !confirm('⚠️ استعادة النسخة الاحتياطية ستقوم باستبدال الصلاحيات بالحالية. هل تريد الاستمرار؟')) return;
+    try {
+        var text = await file.text();
+        var backup = JSON.parse(text);
+        if (backup.employees && Array.isArray(backup.employees)) {
+            for (var i = 0; i < backup.employees.length; i++) {
+                await window.authSaveEmployeeToDb(backup.employees[i]);
+            }
+        }
+        alert('✅ تم استعادة البيانات بنجاح!');
+        location.reload();
+    } catch(e) {
+        alert('حدث خطأ أثناء الاستيراد: ' + e.message);
+    }
+}
+
+window.exportEmployeeCertRecordsToExcel = function() {
+    if (typeof XLSX === 'undefined') { alert('مكتبة Excel غير محملة'); return; }
+    var certRecords = getCertRecords();
+    if (!certRecords.length) { alert('لا توجد شهادات للتصدير'); return; }
+    var ws = XLSX.utils.json_to_sheet(certRecords);
+    var wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, 'الشهادات');
+    XLSX.writeFile(wb, 'سجل_شهادات_الموظفين.xlsx');
+};
+</script>
+</body>
+</html>

@@ -1,0 +1,921 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+  <meta http-equiv="Pragma" content="no-cache">
+  <meta http-equiv="Expires" content="0">
+  <title>جامعة اللوتس - تسجيل البيانات ورفع المستندات</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <link href="https://fonts.googleapis.com/css2?family=El+Messiri:wght@400;500;600;700&family=Tajawal:wght@300;400;500;700;800&display=swap" rel="stylesheet">
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=El+Messiri:wght@400;500;600;700&family=Tajawal:wght@300;400;500;700;800&display=swap');
+
+    :root {
+      --primary: #d4af37;
+      --primary-glow: rgba(212, 175, 55, 0.4);
+      --primary-dark: #aa851c;
+      --bg-dark: #060b08;
+      --bg-card: rgba(12, 24, 18, 0.75);
+      --border-gold: 1px solid rgba(212, 175, 55, 0.25);
+      --text-gold: #e5c158;
+      --text-white: #f4f1ea;
+      --text-muted: #849d8e;
+      --success: #3cd070;
+      --danger: #ff5f5f;
+      --warning: #f39c12;
+      --radius: 12px;
+      --font-title: 'El Messiri', serif;
+      --font-body: 'Tajawal', sans-serif;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: var(--font-body);
+      background: var(--bg-dark);
+      background-image: radial-gradient(circle at 50% 50%, #0d1e15 0%, #050a07 100%);
+      background-attachment: fixed;
+      color: var(--text-white);
+      min-height: 100vh;
+      direction: rtl;
+    }
+
+    /* ===== LOGO HEADER ===== */
+    .logo-header {
+      padding: 20px 15px 10px;
+      position: relative;
+      overflow: hidden;
+      background: linear-gradient(180deg, rgba(26, 58, 92, 0.1) 0%, transparent 100%);
+    }
+
+    .logo-glow {
+      position: absolute;
+      top: 0;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 300px;
+      height: 300px;
+      background: radial-gradient(circle, rgba(212, 175, 55, 0.15) 0%, transparent 70%);
+      pointer-events: none;
+      animation: glowPulse 4s ease-in-out infinite;
+    }
+
+    @keyframes glowPulse {
+      0%, 100% { opacity: 0.5; transform: translateX(-50%) scale(1); }
+      50% { opacity: 1; transform: translateX(-50%) scale(1.1); }
+    }
+
+    .logo-area {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 15px;
+      position: relative;
+      z-index: 2;
+    }
+
+    .main-logo {
+      width: 180px;
+      height: auto;
+      filter: brightness(0) invert(1) drop-shadow(0 0 20px rgba(212, 175, 55, 0.4));
+      animation: logoAppear 1s ease-out;
+    }
+
+    @keyframes logoAppear {
+      0% { opacity: 0; transform: scale(0.5) translateY(-20px); }
+      100% { opacity: 1; transform: scale(1) translateY(0); }
+    }
+
+    .logo-text {
+      text-align: center;
+    }
+
+    .logo-title {
+      font-family: 'Playfair Display', serif;
+      font-size: 26px;
+      color: var(--gold);
+      margin: 0;
+      letter-spacing: 4px;
+    }
+
+    .logo-subtitle {
+      font-family: 'Amiri', serif;
+      font-size: 20px;
+      color: var(--white);
+      margin: 2px 0;
+    }
+
+    .logo-location {
+      font-size: 12px;
+      color: rgba(255,255,255,0.6);
+      letter-spacing: 3px;
+      margin: 2px 0 0;
+    }
+
+    /* ===== MAIN CONTENT ===== */
+    .main-wrap {
+      max-width: 750px;
+      margin: 20px auto 40px;
+      padding: 0 20px;
+      position: relative;
+      z-index: 2;
+    }
+
+    .card {
+      background: var(--bg-card);
+      border: var(--border-gold);
+      border-radius: var(--radius);
+      padding: 30px;
+      margin-bottom: 20px;
+      backdrop-filter: blur(16px);
+    }
+
+    .card-title {
+      font-family: var(--font-title);
+      font-size: 20px;
+      color: var(--text-gold);
+      margin-bottom: 5px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .card-title i {
+      color: var(--primary);
+      font-size: 18px;
+    }
+
+    .card-subtitle {
+      font-size: 13px;
+      color: var(--text-muted);
+      margin-bottom: 25px;
+      padding-bottom: 15px;
+      border-bottom: 1px solid rgba(212, 175, 55, 0.15);
+    }
+
+    /* ===== FORM ===== */
+    .form-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 18px;
+    }
+
+    .form-group { display: flex; flex-direction: column; }
+    .form-group.full { grid-column: 1 / -1; }
+
+    .form-label {
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--text-gold);
+      margin-bottom: 6px;
+    }
+
+    .form-label .req { color: var(--danger); margin-right: 2px; }
+
+    .form-input {
+      width: 100%;
+      padding: 12px 14px;
+      border: 1px solid rgba(212, 175, 55, 0.2);
+      border-radius: 8px;
+      font-family: var(--font-body);
+      font-size: 15px;
+      color: var(--text-white);
+      background: rgba(255, 255, 255, 0.05);
+      transition: all 0.2s;
+      outline: none;
+    }
+
+    .form-input:focus {
+      border-color: var(--primary);
+      background: rgba(255, 255, 255, 0.08);
+      box-shadow: 0 0 0 3px rgba(212, 175, 55, 0.1);
+    }
+
+    .form-input::placeholder { color: var(--text-muted); }
+    
+    select.form-input {
+      appearance: none;
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' fill='%23d4af37' viewBox='0 0 16 16'%3E%3Cpath d='M8 11L3 6h10l-5 5z'/%3E%3C/svg%3E");
+      background-repeat: no-repeat;
+      background-position: left 12px center;
+      padding-left: 35px;
+      cursor: pointer;
+    }
+    
+    select.form-input option {
+      background: #0d1e15;
+      color: var(--text-white);
+      padding: 10px;
+    }
+
+    /* ===== UPLOAD SECTION ===== */
+    .upload-card {
+      background: rgba(255, 255, 255, 0.02);
+      border: 1px solid rgba(212, 175, 55, 0.1);
+      border-radius: 10px;
+      padding: 18px 20px;
+      margin-bottom: 12px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      transition: all 0.3s;
+    }
+
+    .upload-card:hover {
+      border-color: rgba(212, 175, 55, 0.3);
+      background: rgba(255, 255, 255, 0.03);
+    }
+
+    .upload-card.has-file {
+      border-style: solid;
+      border-color: rgba(60, 208, 112, 0.4);
+      background: rgba(60, 208, 112, 0.05);
+    }
+
+    .upload-info { flex: 1; }
+
+    .upload-name {
+      font-size: 15px;
+      font-weight: 600;
+      color: var(--text-white);
+      margin-bottom: 3px;
+    }
+
+    .upload-status {
+      font-size: 12px;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .dot {
+      width: 7px;
+      height: 7px;
+      border-radius: 50%;
+      display: inline-block;
+    }
+
+    .dot-red { background: var(--text-muted); }
+    .dot-green { background: var(--success); box-shadow: 0 0 6px var(--success); }
+    
+    .upload-done {
+      color: var(--success);
+      font-size: 14px;
+      text-shadow: 0 0 8px var(--success);
+    }
+
+    .upload-actions { display: flex; gap: 8px; }
+
+    .btn-upload {
+      padding: 8px 16px;
+      border-radius: 6px;
+      border: none;
+      font-family: var(--font-body);
+      font-size: 13px;
+      font-weight: 600;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      transition: all 0.2s;
+    }
+
+    .btn-upload-primary {
+      background: var(--primary);
+      color: var(--bg-dark);
+    }
+
+    .btn-upload-primary:hover { background: var(--text-gold); }
+
+    .btn-upload-danger {
+      background: transparent;
+      color: var(--danger);
+      border: 1px solid rgba(255, 95, 95, 0.3);
+    }
+
+    .btn-upload-danger:hover { background: rgba(255, 95, 95, 0.1); }
+
+    .btn-upload input[type="file"] { display: none; }
+
+    /* ===== SUBMIT ===== */
+    .submit-section {
+      text-align: center;
+      padding: 10px 0;
+    }
+
+    .btn-submit {
+      background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
+      color: var(--bg-dark);
+      border: none;
+      padding: 14px 50px;
+      border-radius: 8px;
+      font-family: var(--font-title);
+      font-size: 18px;
+      font-weight: 700;
+      cursor: pointer;
+      transition: all 0.3s;
+      box-shadow: 0 4px 15px var(--primary-glow);
+      display: inline-flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .btn-submit:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 6px 25px rgba(212, 175, 55, 0.4);
+    }
+
+    .btn-submit:active { transform: translateY(0); }
+
+    .btn-submit:disabled {
+      opacity: 0.6;
+      cursor: not-allowed;
+      transform: none;
+    }
+
+    /* ===== SUCCESS ===== */
+    .success-screen {
+      text-align: center;
+      padding: 50px 20px;
+    }
+
+    .success-icon {
+      width: 80px;
+      height: 80px;
+      border-radius: 50%;
+      background: rgba(60, 208, 112, 0.1);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin: 0 auto 20px;
+      animation: popIn 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    }
+
+    .success-icon i { font-size: 36px; color: var(--success); }
+
+    @keyframes popIn {
+      0% { transform: scale(0); }
+      100% { transform: scale(1); }
+    }
+
+    .success-screen h2 {
+      font-family: var(--font-title);
+      font-size: 24px;
+      color: var(--text-gold);
+      margin-bottom: 8px;
+    }
+
+    .success-screen p {
+      color: var(--text-muted);
+      font-size: 14px;
+      max-width: 400px;
+      margin: 0 auto;
+    }
+
+    /* ===== TOAST ===== */
+    .toast-box {
+      position: fixed;
+      bottom: 20px;
+      left: 20px;
+      z-index: 9999;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    .toast {
+      background: var(--bg-card);
+      border-radius: 8px;
+      padding: 12px 18px;
+      box-shadow: 0 8px 30px rgba(0,0,0,0.5);
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      font-size: 13px;
+      color: var(--text-white);
+      min-width: 220px;
+      border-right: 3px solid var(--primary);
+      backdrop-filter: blur(12px);
+      animation: slideIn 0.3s ease;
+    }
+
+    .toast-success { border-right-color: var(--success); }
+    .toast-error { border-right-color: var(--danger); }
+    .toast-warning { border-right-color: var(--warning); }
+
+    @keyframes slideIn {
+      from { transform: translateX(-100%); opacity: 0; }
+      to { transform: translateX(0); opacity: 1; }
+    }
+
+    /* ===== FOOTER ===== */
+    .page-footer {
+      text-align: center;
+      padding: 20px;
+      color: var(--text-muted);
+      font-size: 13px;
+      border-top: 1px solid rgba(212, 175, 55, 0.15);
+    }
+
+    /* ===== LOADING ===== */
+    .loader {
+      position: fixed;
+      inset: 0;
+      background: rgba(6, 11, 8, 0.9);
+      z-index: 9998;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-direction: column;
+      gap: 12px;
+    }
+
+    .spinner {
+      width: 40px;
+      height: 40px;
+      border: 3px solid rgba(212, 175, 55, 0.2);
+      border-top-color: var(--primary);
+      border-radius: 50%;
+      animation: spin 0.7s linear infinite;
+    }
+
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    .hidden { display: none !important; }
+
+    /* ===== PROGRESS ===== */
+    .progress-wrap {
+      margin-top: 15px;
+      display: none;
+    }
+
+    .progress-bar {
+      height: 6px;
+      background: rgba(255, 255, 255, 0.1);
+      border-radius: 10px;
+      overflow: hidden;
+      margin-bottom: 6px;
+    }
+
+    .progress-fill {
+      height: 100%;
+      background: linear-gradient(90deg, var(--primary), var(--text-gold));
+      border-radius: 10px;
+      width: 0%;
+      transition: width 0.3s;
+    }
+
+    .progress-text {
+      font-size: 12px;
+      color: var(--text-muted);
+    }
+
+    /* ===== MOBILE RESPONSIVE ===== */
+    @media (max-width: 768px) {
+      .logo-header { padding: 15px 10px 8px; }
+      .main-logo { width: 140px; }
+      .logo-title { font-size: 18px; letter-spacing: 2px; }
+      .logo-subtitle { font-size: 16px; }
+      .main-wrap { padding: 0 15px; margin-top: 10px; }
+      .card { padding: 20px; }
+      .form-grid { grid-template-columns: 1fr; }
+      .card-title { font-size: 18px; }
+    }
+    
+    @media (max-width: 480px) {
+      .logo-header { padding: 10px 8px 6px; }
+      .logo-area { gap: 10px; }
+      .main-logo { width: 100px; }
+      .logo-title { font-size: 14px; letter-spacing: 1px; }
+      .logo-subtitle { font-size: 14px; }
+      .logo-location { font-size: 10px; }
+      .card { padding: 15px; }
+      .upload-card { flex-direction: column; align-items: flex-start; gap: 10px; }
+      .upload-actions { width: 100%; justify-content: flex-end; }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- LOADING -->
+  <div class="loader" id="loader" style="display:none;">
+    <div class="spinner"></div>
+    <span style="color:var(--navy); font-size:14px;">جاري التحميل...</span>
+  </div>
+
+  <!-- LOGO HEADER -->
+  <div class="logo-header">
+    <div class="logo-glow"></div>
+    <div class="logo-area">
+      <img src="https://i.ibb.co/svV8V9Rs/Horizontal-blue-5x-sticky-20260709155801.png" alt="Lotus University" class="main-logo">
+      <div class="logo-text">
+        <h1 class="logo-title">LOTUS UNIVERSITY</h1>
+        <h2 class="logo-subtitle">جامعة اللوتس</h2>
+        <p class="logo-location">in Minya</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- MAIN -->
+  <div class="main-wrap">
+
+    <!-- STEP 1: Registration Form -->
+    <div id="step-form">
+      <div class="card">
+        <div class="card-title"><i class="fas fa-user-edit"></i> تسجيل البيانات الشخصية</div>
+        <div class="card-subtitle">أدخل بياناتك بشكل صحيح لتسجيلك في النظام الأرشيفي</div>
+
+        <div class="form-grid">
+          <div class="form-group full">
+            <label class="form-label"><span class="req">*</span> الاسم الكامل</label>
+            <input type="text" id="f-name" class="form-input" placeholder="الاسم كما هو في البطاقة">
+          </div>
+
+          <div class="form-group">
+            <label class="form-label"><span class="req">*</span> الرقم القومي</label>
+            <input type="text" id="f-national" class="form-input" placeholder="14 رقم" maxlength="14">
+          </div>
+
+          <div class="form-group">
+            <label class="form-label">كود الطالب</label>
+            <input type="text" id="f-code" class="form-input" placeholder="إن وجد">
+          </div>
+
+          <div class="form-group">
+            <label class="form-label"><span class="req">*</span> الكلية</label>
+            <select id="f-college" class="form-input">
+              <option value="">اختر الكلية</option>
+              <option value="كلية الهندسة">كلية الهندسة</option>
+              <option value="كلية طب الفم والاسنان">كلية طب الفم والاسنان</option>
+              <option value="كلية العلاج الطبيعي">كلية العلاج الطبيعي</option>
+              <option value="كلية التمريض">كلية التمريض</option>
+              <option value="كلية الحاسبات والمعلومات والذكاء الاصطناعي">كلية الحاسبات والمعلومات والذكاء الاصطناعي</option>
+              <option value="كلية الادارة والاقتصاد والعلوم السياسية">كلية الادارة والاقتصاد والعلوم السياسية</option>
+              <option value="كلية تكنولوجيا العلوم الصحية التطبيقية">كلية تكنولوجيا العلوم الصحية التطبيقية</option>
+            </select>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label"><span class="req">*</span> الفرقة / المستوي</label>
+            <select id="f-level" class="form-input">
+              <option value="">اختر الفرقة</option>
+              <option value="الفرقة الاولى">الفرقة الاولى</option>
+              <option value="الفرقة الثانية">الفرقة الثانية</option>
+              <option value="الفرقة الثالثة">الفرقة الثالثة</option>
+              <option value="الفرقة الرابعة">الفرقة الرابعة</option>
+              <option value="الفرقة الخامسة">الفرقة الخامسة</option>
+            </select>
+          </div>
+
+          <div class="form-group full">
+            <label class="form-label"><span class="req">*</span> العنوان</label>
+            <input type="text" id="f-address" class="form-input" placeholder="العنوان التفصيلي">
+          </div>
+
+          <div class="form-group">
+            <label class="form-label"><span class="req">*</span> رقم الموبايل</label>
+            <input type="tel" id="f-phone" class="form-input" placeholder="01xxxxxxxxx" maxlength="11">
+          </div>
+
+          <div class="form-group">
+            <label class="form-label">رقم الواتساب</label>
+            <input type="tel" id="f-whatsapp" class="form-input" placeholder="01xxxxxxxxx" maxlength="11">
+          </div>
+        </div>
+      </div>
+
+      <!-- STEP 2: Upload Documents -->
+      <div class="card">
+        <div class="card-title"><i class="fas fa-paperclip"></i> رفع المستندات المطلوبة</div>
+        <div class="card-subtitle">برجاء رفع المرفقات والمستندات المطلوبة بجودة واضحة</div>
+
+        <div id="upload-cards"></div>
+
+        <div class="progress-wrap" id="progress-wrap">
+          <div class="progress-bar"><div class="progress-fill" id="progress-fill"></div></div>
+          <div class="progress-text" id="progress-text">جاري الرفع...</div>
+        </div>
+      </div>
+
+      <!-- Submit -->
+      <div class="card submit-section">
+        <button class="btn-submit" id="btn-submit" onclick="submitForm()">
+          <i class="fas fa-paper-plane"></i> إرسال وتسجيل
+        </button>
+      </div>
+    </div>
+
+    <!-- SUCCESS SCREEN -->
+    <div id="step-success" class="card hidden">
+      <div class="success-screen">
+        <div class="success-icon"><i class="fas fa-check"></i></div>
+        <h2>تم التسجيل بنجاح!</h2>
+        <p>تم الحفظ وإرسال بياناتك بنجاح</p>
+        <button class="btn-submit" style="margin-top:25px;" onclick="location.reload()">
+          <i class="fas fa-redo"></i> تسجيل طالب آخر
+        </button>
+      </div>
+    </div>
+
+  </div>
+
+  <div class="page-footer">
+    <img src="https://i.ibb.co/svV8V9Rs/Horizontal-blue-5x-sticky-20260709155801.png" alt="LUM" style="width:100px; height:auto; margin-bottom:8px; filter:brightness(0) invert(1) drop-shadow(0 0 8px rgba(212,175,55,0.3));">
+    <div>جميع الحقوق محفوظة © جامعة اللوتس ٢٠٢٦</div>
+  </div>
+
+  <!-- Toast Container -->
+  <div class="toast-box" id="toast-box"></div>
+
+  <!-- Firebase -->
+  <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js?v=2"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-database-compat.js?v=2"></script>
+
+  <script>
+  // ===== FIREBASE =====
+  const firebaseConfig = {
+    apiKey: "AIzaSyBajCZMATK21mgaEFcccyhLne4pgdaxMfk",
+    authDomain: "dent-35a17.firebaseapp.com",
+    databaseURL: "https://dent-35a17-default-rtdb.firebaseio.com",
+    projectId: "dent-35a17",
+    storageBucket: "dent-35a17.firebasestorage.app",
+    messagingSenderId: "416163754700",
+    appId: "1:416163754700:web:dec496619e3e6fff3e0869"
+  };
+
+  let db = null, isOffline = false;
+  try {
+    firebase.initializeApp(firebaseConfig);
+    db = firebase.database();
+  } catch (e) { isOffline = true; }
+
+  // ===== GLOBAL CONFIG =====
+  let globalConfig = {
+    globalAttachments: [
+      { id: "national_id", name: "صورة بطاقة الرقم القومي", required: true },
+      { id: "birth_cert", name: "شهادة الميلاد الأصلية", required: true },
+      { id: "high_school", name: "شهادة الثانوية العامة", required: true }
+    ],
+    colleges: [
+      "كلية الهندسة",
+      "كلية طب الفم والاسنان",
+      "كلية العلاج الطبيعي",
+      "كلية التمريض",
+      "كلية الحاسبات والمعلومات والذكاء الاصطناعي",
+      "كلية الادارة والاقتصاد والعلوم السياسية",
+      "كلية تكنولوجيا العلوم الصحية التطبيقية"
+    ],
+    levels: [
+      "الفرقة الاولى",
+      "الفرقة الثانية",
+      "الفرقة الثالثة",
+      "الفرقة الرابعة",
+      "الفرقة الخامسة"
+    ]
+  };
+
+  let uploadedFiles = {}; // attachmentId -> { fileName, fileUrl, size }
+
+  // ===== LOAD CONFIG =====
+  (async function() {
+    // Try Realtime Database
+    if (db && !isOffline) {
+      try {
+        const snapshot = await Promise.race([
+          db.ref("settings/config").once("value"),
+          new Promise((_, r) => setTimeout(() => r(new Error("timeout")), 4000))
+        ]);
+        if (snapshot.exists()) {
+          globalConfig = {...globalConfig, ...snapshot.val()};
+          if (!globalConfig.globalAttachments) globalConfig.globalAttachments = [];
+          if (!globalConfig.colleges) globalConfig.colleges = ["كلية الهندسة","كلية طب الفم والاسنان","كلية العلاج الطبيعي","كلية التمريض","كلية الحاسبات والمعلومات والذكاء الاصطناعي","كلية الادارة والاقتصاد والعلوم السياسية","كلية تكنولوجيا العلوم الصحية التطبيقية"];
+          if (!globalConfig.levels) globalConfig.levels = ["الفرقة الاولى","الفرقة الثانية","الفرقة الثالثة","الفرقة الرابعة","الفرقة الخامسة"];
+        }
+      } catch (e) {}
+    }
+    // Fallback localStorage
+    const c = localStorage.getItem("lotus_config");
+    if (c) try { 
+      const parsed = JSON.parse(c);
+      globalConfig = {...globalConfig, ...parsed};
+      if (!globalConfig.colleges) globalConfig.colleges = ["كلية الهندسة","كلية طب الفم والاسنان","كلية العلاج الطبيعي","كلية التمريض","كلية الحاسبات والمعلومات والذكاء الاصطناعي","كلية الادارة والاقتصاد والعلوم السياسية","كلية تكنولوجيا العلوم الصحية التطبيقية"];
+      if (!globalConfig.levels) globalConfig.levels = ["الفرقة الاولى","الفرقة الثانية","الفرقة الثالثة","الفرقة الرابعة","الفرقة الخامسة"];
+    } catch(e) {}
+    populateSelects();
+    renderUploadCards();
+  })();
+
+  // ===== POPULATE SELECT DROPDOWNS =====
+  function populateSelects() {
+    const collegeSelect = document.getElementById("f-college");
+    const levelSelect = document.getElementById("f-level");
+    
+    if (collegeSelect && globalConfig.colleges) {
+      collegeSelect.innerHTML = '<option value="">اختر الكلية</option>';
+      globalConfig.colleges.forEach(c => {
+        const opt = document.createElement("option");
+        opt.value = c;
+        opt.textContent = c;
+        collegeSelect.appendChild(opt);
+      });
+    }
+    
+    if (levelSelect && globalConfig.levels) {
+      levelSelect.innerHTML = '<option value="">اختر الفرقة</option>';
+      globalConfig.levels.forEach(l => {
+        const opt = document.createElement("option");
+        opt.value = l;
+        opt.textContent = l;
+        levelSelect.appendChild(opt);
+      });
+    }
+  }
+
+  // ===== RENDER UPLOAD CARDS =====
+  // ===== DETECT GENDER FROM NATIONAL ID =====
+  function detectGender(nationalId) {
+    if (!nationalId || nationalId.length !== 14 || !/^\d{14}$/.test(nationalId)) return null;
+    const digit = parseInt(nationalId.charAt(12));
+    return digit % 2 === 1 ? 'male' : 'female';
+  }
+
+  // ===== RENDER UPLOAD CARDS =====
+  function renderUploadCards() {
+    const container = document.getElementById("upload-cards");
+    container.innerHTML = "";
+    if (!globalConfig.globalAttachments) return;
+
+    globalConfig.globalAttachments.forEach(att => {
+      const data = uploadedFiles[att.id];
+      const has = !!data;
+      const card = document.createElement("div");
+      card.className = `upload-card ${has ? 'has-file' : ''}`;
+      card.id = `card-${att.id}`;
+      card.innerHTML = `
+        <div class="upload-info">
+          <div class="upload-name">${esc(att.name)}</div>
+          <div class="upload-status">
+            ${has ? '<span class="upload-done"><i class="fas fa-check-circle"></i></span>' : '<span class="dot dot-red"></span>'}
+            <span style="color:${has ? 'var(--success)' : 'var(--gray-400)'}">${has ? esc(data.fileName) : 'لم يتم الرفع'}</span>
+          </div>
+        </div>
+        <div class="upload-actions">
+          ${has ? `<button class="btn-upload btn-upload-danger" onclick="removeFile('${att.id}')"><i class="fas fa-trash-alt"></i></button>` : ''}
+          <label class="btn-upload btn-upload-primary">
+            <i class="fas fa-${has ? 'sync-alt' : 'upload'}"></i> ${has ? 'تغيير' : 'رفع'}
+            <input type="file" onchange="handleSingle(this,'${att.id}')">
+          </label>
+        </div>`;
+      container.appendChild(card);
+    });
+  }
+
+  // ===== HANDLE SINGLE FILE =====
+  async function handleSingle(input, attId) {
+    if (!input.files.length) return;
+    const file = input.files[0];
+    if (file.size > 10 * 1024 * 1024) { toast("الملف أكبر من 10MB!", "warning"); return; }
+    const url = await toBase64(file);
+    uploadedFiles[attId] = { fileName: file.name, fileUrl: url, size: file.size };
+    renderUploadCards();
+  }
+
+  // ===== REMOVE FILE =====
+  function removeFile(attId) {
+    delete uploadedFiles[attId];
+    renderUploadCards();
+  }
+
+  // ===== SUBMIT =====
+  async function submitForm() {
+    const name = document.getElementById("f-name").value.trim();
+    const national = document.getElementById("f-national").value.trim();
+    const code = document.getElementById("f-code").value.trim();
+    const college = document.getElementById("f-college").value.trim();
+    const level = document.getElementById("f-level").value.trim();
+    const address = document.getElementById("f-address").value.trim();
+    const phone = document.getElementById("f-phone").value.trim();
+    const whatsapp = document.getElementById("f-whatsapp").value.trim();
+
+    if (!name || !national || !college || !level || !address || !phone) {
+      toast("أكمل جميع الحقول المطلوبة!", "warning");
+      return;
+    }
+
+    if (national.length !== 14) { toast("الرقم القومي يجب أن يكون 14 رقم!", "warning"); return; }
+    if (phone.length !== 11) { toast("رقم الموبايل يجب أن يكون 11 رقم!", "warning"); return; }
+    
+    // Check all required attachments are uploaded
+    if (globalConfig && globalConfig.globalAttachments) {
+      const requiredAtts = globalConfig.globalAttachments.filter(att => att.required !== false);
+      const missing = requiredAtts.filter(att => !uploadedFiles[att.id]);
+      if (missing.length > 0) {
+        toast(`يجب رفع: ${missing.map(a => a.name).join(', ')}`, "warning");
+        return;
+      }
+    }
+    if (Object.keys(uploadedFiles).length === 0) { toast("يجب رفع الملفات المطلوبة!", "warning"); return; }
+
+    const btn = document.getElementById("btn-submit");
+    btn.disabled = true;
+    btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> جاري الإرسال...';
+
+    const studentData = {
+      name, nationalId: national, code, college, level, address, phone,
+      whatsapp: whatsapp || phone,
+      attachments: uploadedFiles,
+      createdAt: new Date().toISOString()
+    };
+
+    // Try Realtime Database
+    let saved = false;
+    if (db && !isOffline) {
+      try {
+        if (code) {
+          // Check if student exists
+          const snapshot = await db.ref("students").orderByChild("code").equalTo(code).limitToFirst(1).once("value");
+          if (snapshot.exists()) {
+            // Update existing
+            const key = Object.keys(snapshot.val())[0];
+            await db.ref(`students/${key}`).update(studentData);
+          } else {
+            // Create new
+            await db.ref("students").push(studentData);
+          }
+        } else {
+          // Create new without code
+          await db.ref("students").push(studentData);
+        }
+        saved = true;
+      } catch (e) {
+        console.warn("Realtime DB save failed:", e.message);
+      }
+    }
+
+    // Always save to localStorage
+    saveLocal(studentData);
+
+    if (saved) {
+      toast("تم التسجيل بنجاح في السحابة!", "success");
+    } else {
+      toast("تم التسجيل محلياً!", "success");
+    }
+
+    document.getElementById("step-form").classList.add("hidden");
+    document.getElementById("step-success").classList.remove("hidden");
+  }
+
+  function saveLocal(data) {
+    const key = "lotus_students";
+    let students = [];
+    const c = localStorage.getItem(key);
+    if (c) try { students = JSON.parse(c); } catch(e) {}
+    const idx = data.code ? students.findIndex(s => s.code === data.code) : -1;
+    const entry = {
+      id: data.code ? "local_" + data.code : "local_" + Date.now(),
+      name: data.name,
+      code: data.code || "",
+      nationalId: data.nationalId,
+      level: data.level,
+      college: data.college,
+      address: data.address,
+      phone: data.phone,
+      whatsapp: data.whatsapp,
+      attachments: data.attachments || {},
+      customFields: {}
+    };
+    if (idx !== -1) students[idx] = entry;
+    else students.push(entry);
+    localStorage.setItem(key, JSON.stringify(students));
+  }
+
+  // ===== HELPERS =====
+  function toBase64(file) {
+    return new Promise(resolve => {
+      const r = new FileReader();
+      r.onload = () => resolve(r.result);
+      r.onerror = () => resolve(null);
+      r.readAsDataURL(file);
+    });
+  }
+
+  function esc(s) { if (!s) return ''; const d = document.createElement('div'); d.appendChild(document.createTextNode(s)); return d.innerHTML; }
+
+  function toast(msg, type = "info") {
+    const c = document.getElementById("toast-box");
+    const t = document.createElement("div");
+    t.className = `toast toast-${type}`;
+    let icon = 'fa-info-circle';
+    if (type === 'success') icon = 'fa-check-circle';
+    if (type === 'error') icon = 'fa-times-circle';
+    if (type === 'warning') icon = 'fa-exclamation-triangle';
+    t.innerHTML = `<i class="fas ${icon}" style="color:var(--${type === 'info' ? 'navy' : type});"></i><span>${esc(msg)}</span>`;
+    c.appendChild(t);
+    setTimeout(() => { t.style.opacity = '0'; t.style.transform = 'translateX(-100%)'; t.style.transition = 'all 0.3s'; setTimeout(() => t.remove(), 300); }, 4000);
+  }
+  </script>
+
+</body>
+</html>
