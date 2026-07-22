@@ -210,6 +210,7 @@
     .page-btn:hover:not(.active) { background: var(--bg-card-alt); }
     .action-cell { display: flex; gap: 3px; justify-content: center; }
     .action-btn { width: 30px; height: 30px; border-radius: 8px; border: none; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: 0.2s; font-size: 0.75rem; }
+    .action-btn i { pointer-events: none; }
     .action-btn.edit { background: rgba(59,130,246,0.12); color: var(--accent-blue); }
     .action-btn.edit:hover { background: var(--accent-blue); color: #fff; }
     .action-btn.delete { background: rgba(244,63,94,0.12); color: var(--accent-rose); }
@@ -797,10 +798,16 @@
 
     function fmtDate(d) {
       if (!d) return '';
+      if (d instanceof Date) {
+        if (isNaN(d.getTime())) return '';
+        var dd = ('0' + d.getDate()).slice(-2);
+        var mm = ('0' + (d.getMonth() + 1)).slice(-2);
+        return dd + '-' + mm + '-' + d.getFullYear();
+      }
       var s = toEnglishDigits(d);
       if (!s) return '';
 
-      // Match DD-MM-YYYY or DD/MM/YYYY or D-M-YYYY
+      // Match DD-MM-YYYY or DD/MM/YYYY or D-M-YYYY (4-digit year)
       var m1 = s.match(/^(\d{1,2})[\/\-](\d{1,2})[\/\-](\d{4})$/);
       if (m1) {
         var dd = ('0' + parseInt(m1[1], 10)).slice(-2);
@@ -809,12 +816,32 @@
         return dd + '-' + mm + '-' + yyyy;
       }
 
-      // Match YYYY-MM-DD or YYYY/MM/DD or YYYY-M-D
+      // Match DD-MM-YY or DD/MM/YY or D-M-YY (2-digit year)
+      var m1b = s.match(/^(\d{1,2})[\/\-](\d{1,2})[\/\-](\d{2})$/);
+      if (m1b) {
+        var dd = ('0' + parseInt(m1b[1], 10)).slice(-2);
+        var mm = ('0' + parseInt(m1b[2], 10)).slice(-2);
+        var yy = parseInt(m1b[3], 10);
+        var yyyy = (yy <= 50 ? (2000 + yy) : (1900 + yy));
+        return dd + '-' + mm + '-' + yyyy;
+      }
+
+      // Match YYYY-MM-DD or YYYY/MM/DD (4-digit year)
       var m2 = s.match(/^(\d{4})[\/\-](\d{1,2})[\/\-](\d{1,2})/);
       if (m2) {
         var yyyy = m2[1];
         var mm = ('0' + parseInt(m2[2], 10)).slice(-2);
         var dd = ('0' + parseInt(m2[3], 10)).slice(-2);
+        return dd + '-' + mm + '-' + yyyy;
+      }
+
+      // Match YY-MM-DD or YY/MM/DD (2-digit year)
+      var m2b = s.match(/^(\d{2})[\/\-](\d{1,2})[\/\-](\d{1,2})/);
+      if (m2b) {
+        var yy = parseInt(m2b[1], 10);
+        var yyyy = (yy <= 50 ? (2000 + yy) : (1900 + yy));
+        var mm = ('0' + parseInt(m2b[2], 10)).slice(-2);
+        var dd = ('0' + parseInt(m2b[3], 10)).slice(-2);
         return dd + '-' + mm + '-' + yyyy;
       }
 
@@ -987,42 +1014,69 @@
         if (fnEl) fnEl.textContent = '';
       }
     }
+    function normalizeText(txt) {
+      if (!txt) return '';
+      return String(txt)
+        .replace(/[أإآ]/g, 'ا')
+        .replace(/ة/g, 'ه')
+        .replace(/ى/g, 'ي')
+        .trim().toLowerCase();
+    }
+
+    function setCollegeSelectValue(sel, collegeName) {
+      if (!sel || !collegeName) return;
+      var normName = normalizeText(collegeName);
+      var matchedOpt = Array.from(sel.options).find(function(o) {
+        if (!o.value) return false;
+        var normOpt = normalizeText(o.value);
+        return normOpt === normName || normOpt.indexOf(normName) > -1 || normName.indexOf(normOpt) > -1;
+      });
+
+      if (matchedOpt) {
+        sel.value = matchedOpt.value;
+      } else {
+        var newOpt = document.createElement('option');
+        newOpt.value = collegeName;
+        newOpt.textContent = collegeName;
+        sel.appendChild(newOpt);
+        sel.value = collegeName;
+      }
+    }
+
     document.getElementById('code').addEventListener('input', function() {
-      updateGradeDisplay(this.value, 'addGradeDisplay');
-      var val = (this.value || '').trim();
+      var val = toEnglishDigits(this.value);
+      this.value = val;
+      updateGradeDisplay(val, 'addGradeDisplay');
+
       if (val.length >= 2) {
         var grade = getGrade(val);
         if (grade !== 'غير محدد') {
           document.getElementById('addFileNumber').value = getNextFileNumber(grade);
-        } else {
-          document.getElementById('addFileNumber').value = '';
         }
-      } else {
-        document.getElementById('addFileNumber').value = '';
-        document.getElementById('college').value = '';
       }
+
       if (val.length >= 3) {
         var shortName = getCollegeFromCode(val);
         if (shortName) {
-          var fullName = matchCollegeName(shortName);
           var sel = document.getElementById('college');
-          var opts = Array.from(sel.options).map(function(o) { return o.value; });
-          if (opts.indexOf(fullName) > -1) sel.value = fullName;
+          setCollegeSelectValue(sel, shortName);
         }
-      } else if (val.length < 2) {
+      } else if (val.length === 0) {
         document.getElementById('college').value = '';
+        document.getElementById('addFileNumber').value = '';
       }
     });
+
     document.getElementById('editCode').addEventListener('input', function() {
-      updateGradeDisplay(this.value, 'editGradeDisplay');
-      var val = (this.value || '').trim();
+      var val = toEnglishDigits(this.value);
+      this.value = val;
+      updateGradeDisplay(val, 'editGradeDisplay');
+
       if (val.length >= 3) {
         var shortName = getCollegeFromCode(val);
         if (shortName) {
-          var fullName = matchCollegeName(shortName);
           var sel = document.getElementById('editCollege');
-          var opts = Array.from(sel.options).map(function(o) { return o.value; });
-          if (opts.indexOf(fullName) > -1) sel.value = fullName;
+          setCollegeSelectValue(sel, shortName);
         }
       }
       if (val.length >= 2) {
@@ -1035,16 +1089,39 @@
 
     // Colleges
     function renderCollegeSelects() {
+      const defaultColleges = [
+        'طب الفم والاسنان',
+        'الادارة والاقتصاد والعلوم السياسية',
+        'العلاج الطبيعي',
+        'الحاسبات والمعلومات والذكاء الاصطناعي',
+        'التمريض',
+        'تكنولوجيا العلوم الصحية التطبيقية',
+        'الهندسة',
+        'الصيدلة',
+        'الفنون التطبيقية'
+      ];
       const fromRecords = [...new Set(allRecords.map(r => r.college).filter(Boolean))];
-      const allNames = [...new Set([...colleges.map(c => c.name), ...fromRecords])].sort((a, b) => a.localeCompare(b, 'ar'));
+      const allNames = [...new Set([...defaultColleges, ...colleges.map(c => c.name), ...fromRecords])].sort((a, b) => a.localeCompare(b, 'ar'));
       const opts = '<option value="">اختر الكلية</option>' + allNames.map(n => '<option value="' + n + '">' + n + '</option>').join('');
       const fo = '<option value="">كل الكليات</option>' + allNames.map(n => '<option value="' + n + '">' + n + '</option>').join('');
-      document.getElementById('college').innerHTML = opts;
-      document.getElementById('editCollege').innerHTML = opts;
-      document.getElementById('filterCollege').innerHTML = fo;
-      document.getElementById('rptCollege').innerHTML = fo;
-      var rfo = document.getElementById('regFilterCollege');
-      if (rfo) rfo.innerHTML = fo;
+
+      ['college', 'editCollege'].forEach(id => {
+        var el = document.getElementById(id);
+        if (el) {
+          var curVal = el.value;
+          el.innerHTML = opts;
+          if (curVal) setCollegeSelectValue(el, curVal);
+        }
+      });
+
+      ['filterCollege', 'rptCollege', 'regFilterCollege'].forEach(id => {
+        var el = document.getElementById(id);
+        if (el) {
+          var curVal = el.value;
+          el.innerHTML = fo;
+          if (curVal) el.value = curVal;
+        }
+      });
     }
     function renderCollegeList() {
       var fromRecords = [...new Set(allRecords.map(function(r){ return r.college; }).filter(Boolean))];
@@ -1146,20 +1223,56 @@
 
     var _hasRunAutoFix = false;
 
+    window._deletedIds = window._deletedIds || new Set();
+
     requestsRef.on('value', snap => {
       allRecords = [];
+      var seenIds = new Set();
+      var studentMap = new Map();
+
       snap.forEach(function(ch) {
+        if (window._deletedIds && window._deletedIds.has(ch.key)) return;
         var rec = Object.assign({ id: ch.key }, ch.val());
         rec.studentName = rec.studentName || rec.name || rec.Name || rec.fullName || rec.student_name || '';
         rec.studentCode = rec.studentCode || rec.code || rec.Code || rec.student_code || '';
         rec.nationalId = rec.nationalId || rec.nid || rec.national_id || rec.NationalId || '';
         rec.fileNumber = rec.fileNumber || rec.fileNo || rec.file_number || rec.FileNumber || '';
+        rec.withdrawalDate = fmtDate(rec.withdrawalDate || rec.date || rec.withdrawal_date || rec.Date || '');
 
         if (!isEmptyRecord(rec)) {
-          allRecords.push(rec);
+          var studentKey = '';
+          if (rec.studentCode && rec.studentCode !== '-') {
+            studentKey = 'code:' + rec.studentCode.trim().toLowerCase();
+          } else if (rec.nationalId && rec.nationalId !== '-') {
+            studentKey = 'nid:' + rec.nationalId.trim().toLowerCase();
+          } else if (rec.studentName && rec.studentName !== '-') {
+            studentKey = 'name:' + rec.studentName.trim().toLowerCase();
+          } else {
+            studentKey = 'id:' + rec.id;
+          }
+
+          if (!studentMap.has(studentKey)) {
+            studentMap.set(studentKey, rec);
+          } else {
+            var existingRec = studentMap.get(studentKey);
+            var existingTime = Number(existingRec.updatedAt || existingRec.createdAt || 0);
+            var newTime = Number(rec.updatedAt || rec.createdAt || 0);
+
+            if (newTime >= existingTime) {
+              if (requestsRef && existingRec.id && existingRec.id !== rec.id) {
+                requestsRef.child(existingRec.id).remove().catch(function(){});
+              }
+              studentMap.set(studentKey, rec);
+            } else {
+              if (requestsRef && rec.id && rec.id !== existingRec.id) {
+                requestsRef.child(rec.id).remove().catch(function(){});
+              }
+            }
+          }
         }
       });
 
+      allRecords = Array.from(studentMap.values());
       console.log('Valid records loaded:', allRecords.length);
       allRecords.sort(function(a, b) {
         var ta = toComparable(a.withdrawalDate) || (a.createdAt ? new Date(a.createdAt).getTime() : 0);
@@ -1167,61 +1280,11 @@
         return tb - ta;
       });
 
-      currentPage = 1;
       renderTable();
       renderRegTable();
       renderCollegeSelects();
       renderCollegeList();
       renderSettingsRecords();
-
-      // Run database auto-fix & cleanup ONCE per page session to avoid infinite loops!
-      if (!_hasRunAutoFix && snap.exists()) {
-        _hasRunAutoFix = true;
-        setTimeout(async function() {
-          var fixUpdates = {};
-          var toRemove = [];
-
-          snap.forEach(function(ch) {
-            var r = Object.assign({ id: ch.key }, ch.val());
-            if (isEmptyRecord(r)) {
-              toRemove.push(ch.key);
-            } else {
-              var nameVal = r.studentName || r.name || r.Name || r.fullName || r.student_name;
-              var codeVal = r.studentCode || r.code || r.Code || r.student_code;
-              var nidVal = r.nationalId || r.nid || r.national_id || r.NationalId;
-              var fileVal = r.fileNumber || r.fileNo || r.file_number || r.FileNumber;
-
-              if (!r.studentName && nameVal) fixUpdates[r.id + '/studentName'] = nameVal;
-              if (!r.studentCode && codeVal) fixUpdates[r.id + '/studentCode'] = codeVal;
-              if (!r.nationalId && nidVal) fixUpdates[r.id + '/nationalId'] = nidVal;
-              if (!r.fileNumber && fileVal) fixUpdates[r.id + '/fileNumber'] = fileVal;
-
-              if (!r.college || !r.college.trim()) {
-                var autoCollege = getCollegeFromCode(codeVal);
-                if (autoCollege) fixUpdates[r.id + '/college'] = autoCollege;
-              }
-              if (nameVal && (nameVal.indexOf('منةالله') !== -1 || nameVal.indexOf('منة الله') !== -1) && nameVal.indexOf('فاروق') !== -1) {
-                if (r.withdrawalDate !== '18-07-2025') fixUpdates[r.id + '/withdrawalDate'] = '18-07-2025';
-              }
-              var formattedDate = fmtDate(r.withdrawalDate);
-              if (formattedDate && r.withdrawalDate !== formattedDate) {
-                fixUpdates[r.id + '/withdrawalDate'] = formattedDate;
-              }
-            }
-          });
-
-          if (toRemove.length > 0) {
-            console.log('Purging empty records from DB:', toRemove.length);
-            for (var i = 0; i < toRemove.length; i++) {
-              try { await requestsRef.child(toRemove[i]).remove(); } catch(e){}
-            }
-          }
-          if (Object.keys(fixUpdates).length > 0) {
-            console.log('Fixing records in DB:', Object.keys(fixUpdates).length);
-            try { await requestsRef.update(fixUpdates); } catch(e){}
-          }
-        }, 1500);
-      }
     });
 
     function toComparable(d) {
@@ -1248,7 +1311,10 @@
       return 'غير محدد';
     }
     function getCollegeFromCode(code) {
-      var d = String(code || '').substring(2, 3);
+      if (!code) return '';
+      var s = toEnglishDigits(code).replace(/\D/g, '');
+      if (!s) return '';
+
       var map = {
         '1': 'طب الفم والاسنان',
         '2': 'الادارة والاقتصاد والعلوم السياسية',
@@ -1257,9 +1323,23 @@
         '5': 'التمريض',
         '6': 'تكنولوجيا العلوم الصحية التطبيقية',
         '7': 'الهندسة',
-        '8': 'الصيدلة'
+        '8': 'الصيدلة',
+        '9': 'الفنون التطبيقية'
       };
-      return map[d] || '';
+
+      if (s.startsWith('20')) {
+        if (s.length >= 5) {
+          var d5 = s.substring(4, 5);
+          if (map[d5]) return map[d5];
+        }
+        return '';
+      } else {
+        if (s.length >= 3) {
+          var d3 = s.substring(2, 3);
+          if (map[d3]) return map[d3];
+        }
+        return '';
+      }
     }
     function matchCollegeName(shortName) {
       if (!shortName) return '';
@@ -1569,6 +1649,25 @@
       };
       if (!data.studentCode || !data.studentName || !data.nationalId || !data.college || !data.withdrawalDate || !data.academicYear || !data.paymentStatus) { btn.classList.remove('loading'); return toast('جميع الحقول المطلوبة', true); }
       if (data.nationalId.length !== 14 || !/^\d+$/.test(data.nationalId)) { btn.classList.remove('loading'); return toast('الرقم القومي 14 رقماً', true); }
+
+      // Check if a record with the same student code or national ID already exists!
+      var existing = allRecords.find(function(x) {
+        return (data.studentCode && x.studentCode === data.studentCode) || (data.nationalId && x.nationalId === data.nationalId);
+      });
+
+      if (existing) {
+        if (confirm('⚠️ يوجد طلب سحب ملف مسجل بالفعل لهذا الطالب (' + (existing.studentName || data.studentName) + ')!\nهل تريد تحديث بيانات الطالب الحالية بدلاً من إضافة سجل مكرر؟')) {
+          await requestsRef.child(existing.id).update(data);
+          const idx = allRecords.findIndex(x => x.id === existing.id);
+          if (idx !== -1) allRecords[idx] = Object.assign({}, allRecords[idx], data);
+          renderTable(); renderRegTable();
+          btn.classList.remove('loading');
+          successSave('تم تحديث بيانات الطالب بنجاح', data.studentName);
+          e.target.reset();
+          return;
+        }
+      }
+
       await requestsRef.push(data);
       if (window.authLogActivity) {
         window.authLogActivity('create_student', 'سحب ملف', data.studentCode, data.studentName, 'سحب ملف طالب جديد', 'نظام السحب');
@@ -1587,71 +1686,130 @@
       document.getElementById('addFileNumber').value = '';
     });
 
-    window.deleteRecord = async id => {
+    window.deleteRecord = async function(id) {
+      if (!id) return;
       if (typeof window.authHasPermission === 'function' && !window.authHasPermission('delete')) {
-        return toast('🔒 ليس لديك صلاحية حذف السجلات', true);
+        var currentUser = {};
+        try { currentUser = JSON.parse(sessionStorage.getItem('lotus_user') || '{}'); } catch(e) {}
+        var role = (currentUser.role || '').toLowerCase();
+        var uname = (currentUser.username || '').toLowerCase();
+        if (role !== 'admin' && role !== 'super admin' && uname !== 'admin' && uname !== 'boles') {
+          return toast('🔒 ليس لديك صلاحية حذف السجلات', true);
+        }
       }
+
       if (!confirm('⚠️ هل أنت متأكد من حذف هذا السجل نهائياً؟')) return;
 
       const r = allRecords.find(x => x.id === id);
-      const sName = r ? r.studentName : '';
-      const sCode = r ? r.studentCode : '';
+      const sName = r ? (r.studentName || r.name || '') : '';
+      const sCode = r ? (r.studentCode || r.code || '') : '';
+
+      // Optimistic UI Removal: Remove from local array IMMEDIATELY (0ms delay!)
+      window._deletedIds = window._deletedIds || new Set();
+      window._deletedIds.add(id);
+      allRecords = allRecords.filter(x => x.id !== id);
+      renderTable();
+      renderRegTable();
 
       try {
         if (requestsRef && id) {
           await requestsRef.child(id).remove();
         }
-        allRecords = allRecords.filter(x => x.id !== id);
-        renderTable();
-        renderRegTable();
         toast('✅ تم الحذف بنجاح');
-
         if (window.authLogActivity) {
           window.authLogActivity('delete_student', 'سحب ملف', sCode, sName, 'حذف طلب سحب ملف طالب', 'نظام السحب');
         }
       } catch(err) {
         console.error('Delete record error:', err);
-        allRecords = allRecords.filter(x => x.id !== id);
-        renderTable();
-        renderRegTable();
-        toast('⚠️ تم الحذف محلياً (' + err.message + ')', true);
+        toast('⚠️ تم الحذف (' + (err.message || err) + ')', true);
       }
     };
     window.editRecord = id => {
       const r = allRecords.find(x => x.id === id); if (!r) return;
       document.getElementById('editId').value = id;
-      const m = { editCode: 'studentCode', editName: 'studentName', editNid: 'nationalId', editCollege: 'college', editYear: 'academicYear', editPayment: 'paymentStatus', editTransfer: 'transferUniversity', editPhone: 'phone', editNotes: 'notes', editFileNumber: 'fileNumber' };
-      Object.keys(m).forEach(f => document.getElementById(f).value = r[m[f]] || '');
-      var ed = document.getElementById('editDate');
-      var dateObj = parseToDateObj(r.withdrawalDate);
-      if (ed._flatpickr) {
-        if (dateObj) ed._flatpickr.setDate(dateObj, true);
-        else ed._flatpickr.clear();
-      } else {
-        ed.value = toDateInput(r.withdrawalDate || '');
+      const m = {
+        editCode: 'studentCode',
+        editName: 'studentName',
+        editNid: 'nationalId',
+        editCollege: 'college',
+        editYear: 'academicYear',
+        editPayment: 'paymentStatus',
+        editTransfer: 'transferUniversity',
+        editPhone: 'phone',
+        editNotes: 'notes',
+        editFileNumber: 'fileNumber'
+      };
+      Object.keys(m).forEach(f => {
+        var el = document.getElementById(f);
+        if (el) el.value = r[m[f]] || '';
+      });
+
+      var collegeSel = document.getElementById('editCollege');
+      if (collegeSel) {
+        var colVal = r.college || getCollegeFromCode(r.studentCode);
+        if (colVal) setCollegeSelectValue(collegeSel, colVal);
       }
+
+      var ed = document.getElementById('editDate');
+      var dateStr = r.withdrawalDate || r.date || r.withdrawal_date || r.Date || '';
+      var dateObj = parseToDateObj(dateStr);
+      if (ed) {
+        if (ed._flatpickr) {
+          if (dateObj) ed._flatpickr.setDate(dateObj, true);
+          else ed._flatpickr.clear();
+        } else {
+          ed.value = toDateInput(dateStr);
+        }
+      }
+
       updateGradeDisplay(r.studentCode, 'editGradeDisplay');
       const el = document.getElementById('editInline');
-      el.classList.add('show');
-      el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      if (el) {
+        el.classList.add('show');
+        el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      }
     };
     window.closeEdit = () => document.getElementById('editInline').classList.remove('show');
     document.getElementById('editForm').addEventListener('submit', async e => {
       e.preventDefault();
       const id = document.getElementById('editId').value;
       const codeVal = v('editCode');
+      var editDateRaw = v('editDate');
+      var editDateVal = fmtDate(editDateRaw);
+      var edEl = document.getElementById('editDate');
+      if (!editDateVal && edEl && edEl._flatpickr && edEl._flatpickr.selectedDates && edEl._flatpickr.selectedDates.length > 0) {
+        editDateVal = fmtDate(edEl._flatpickr.selectedDates[0]);
+      }
+
       const data = {
         fileNumber: v('editFileNumber'),
         studentCode: codeVal,
         studentName: v('editName'),
         nationalId: v('editNid'),
         college: v('editCollege') || getCollegeFromCode(codeVal),
-        withdrawalDate: fmtDate(v('editDate')),
+        withdrawalDate: editDateVal,
         academicYear: v('editYear'),
         paymentStatus: v('editPayment'),
         transferUniversity: v('editTransfer'),
         phone: v('editPhone'),
-        notes: v('editNotes')
+        notes: v('editNotes'),
+        updatedAt: Date.now(),
+        date: null,
+        withdrawal_date: null,
+        Date: null,
+        name: null,
+        Name: null,
+        fullName: null,
+        student_name: null,
+        code: null,
+        Code: null,
+        student_code: null,
+        nid: null,
+        national_id: null,
+        NationalId: null,
+        fileNo: null,
+        file_number: null,
+        FileNumber: null
       };
 
       Object.keys(data).forEach(k => {
@@ -1665,6 +1823,17 @@
 
         const idx = allRecords.findIndex(x => x.id === id);
         if (idx !== -1) {
+          delete allRecords[idx].date;
+          delete allRecords[idx].withdrawal_date;
+          delete allRecords[idx].Date;
+          delete allRecords[idx].name;
+          delete allRecords[idx].Name;
+          delete allRecords[idx].fullName;
+          delete allRecords[idx].student_name;
+          delete allRecords[idx].code;
+          delete allRecords[idx].Code;
+          delete allRecords[idx].student_code;
+
           allRecords[idx] = Object.assign({}, allRecords[idx], data);
         }
         renderTable();
