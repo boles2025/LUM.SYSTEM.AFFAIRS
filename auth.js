@@ -199,7 +199,23 @@ function authHasPermission(action) {
   const user = AUTH_CURRENT_USER || authGetSession();
   if (!user) return false;
   AUTH_CURRENT_USER = user;
-  if (user.username === 'boles' || user.role === 'admin') return true;
+  
+  const username = (user.username || '').trim().toLowerCase();
+
+  // Admin has full access to all systems and features
+  if (username === 'boles' || user.role === 'admin') return true;
+
+  // Employee Omar has access ONLY to certificate calculation system
+  if (username === 'omar') {
+    if (action === 'access_certificate' || action === 'view' || action === 'create' || action === 'edit') return true;
+    if (action.startsWith('access_')) return false;
+  }
+
+  // All other employees have access to all 4 main systems by default
+  if (action === 'access_file_management' || action === 'access_withdrawal' || action === 'access_certificate' || action === 'access_desk_services') {
+    return true;
+  }
+
   if (user.permissions && Array.isArray(user.permissions)) {
     return user.permissions.includes(action);
   }
