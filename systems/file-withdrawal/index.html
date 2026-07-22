@@ -735,13 +735,34 @@
       return true;
     }
 
+    function _mapStaffName(name) {
+      var map = {
+        'سمية': 'د. سمية',
+        'صفاء': 'د صافي',
+        'مي': 'د. مي',
+        'أحمد': 'أ. أحمد',
+        'محمود': 'أ. محمود',
+        'بيتر': 'أ. بيتر',
+        'مونيكا': 'أ. مونيكا'
+      };
+      if (name && map[name.trim()]) return map[name.trim()];
+      return name;
+    }
+
     function _getWithdrawalStaff(r) {
       if (!r) return '—';
-      var candidates = [r.staffName, r.processedBy, r.createdBy, r.employeeName, r.employeeUsername, r.user, r.staff];
+      // FIX: Check stored employee fields first (these are now saved with every request)
+      var candidates = [r.employeeName, r.processedBy, r.createdBy, r.staffName, r.employeeUsername, r.user, r.staff];
       for (var i = 0; i < candidates.length; i++) {
-        if (_isStaffEmp(candidates[i])) return candidates[i];
+        if (candidates[i] && String(candidates[i]).trim() && String(candidates[i]).trim() !== '—' && String(candidates[i]).trim() !== '-') {
+          var v = String(candidates[i]).trim();
+          if (v !== '' && v !== 'مدير النظام' && v !== 'المدير العام' && v.toLowerCase() !== 'admin' && v.toLowerCase() !== 'boles' && v !== 'Super Admin') {
+            return _mapStaffName(v);
+          }
+        }
       }
 
+      // Fallback: search activity logs
       var _logsList = window._cachedLogs || [];
       if (!Array.isArray(_logsList) || _logsList.length === 0) {
         try { _logsList = JSON.parse(localStorage.getItem('lotus_activity_log') || '[]'); } catch(e) { _logsList = []; }
@@ -749,31 +770,39 @@
 
       var wCode = String(r.studentCode || '').trim().toLowerCase();
       var wName = String(r.studentName || '').trim().toLowerCase();
-      var wFile = String(r.fileNumber || '').trim().toLowerCase();
+      var wNid = String(r.nationalId || '').trim().toLowerCase();
 
       if (Array.isArray(_logsList)) {
-        var match = _logsList.find(function(log) {
+        // Sort logs newest first for best match
+        var sorted = _logsList.slice().sort(function(a,b) { return new Date(b.timestamp||0) - new Date(a.timestamp||0); });
+        var match = sorted.find(function(log) {
           var emp = log.employeeName || log.employeeUsername;
-          if (!_isStaffEmp(emp)) return false;
+          if (!emp || String(emp).trim() === '') return false;
+          var v = String(emp).trim();
+          if (v === '' || v === 'مدير النظام' || v === 'المدير العام' || v.toLowerCase() === 'admin' || v.toLowerCase() === 'boles' || v === 'Super Admin') return false;
 
           var sys = String(log.system || '').toLowerCase();
-          var act = String(log.action || '').toLowerCase();
           var det = String(log.details || '').toLowerCase();
           var target = String(log.targetName || '').toLowerCase();
 
-          var isWLog = sys.includes('withdrawal') || sys.includes('سحب') || act.includes('withdrawal') || act.includes('سحب') || det.includes('سحب');
+          var isWLog = sys.includes('withdrawal') || sys.includes('سحب') || det.includes('سحب');
           if (!isWLog) return false;
 
-          var nameMatch = wName && (target.includes(wName) || det.includes(wName));
-          var codeMatch = wCode && (target.includes(wCode) || det.includes(wCode));
-          var fileMatch = wFile && det.includes(wFile);
+          var nameMatch = wName && wName.length > 2 && (target.includes(wName) || det.includes(wName));
+          var codeMatch = wCode && wCode.length > 2 && (target.includes(wCode) || det.includes(wCode));
+          var nidMatch = wNid && wNid.length > 4 && (target.includes(wNid) || det.includes(wNid));
 
-          return nameMatch || codeMatch || fileMatch;
+          return nameMatch || codeMatch || nidMatch;
         });
 
         if (match) {
-          var emp = match.employeeName || match.employeeUsername;
-          if (_isStaffEmp(emp)) return emp;
+          var empVal = match.employeeName || match.employeeUsername;
+          if (empVal && String(empVal).trim() !== '') {
+            var v2 = String(empVal).trim();
+            if (v2 !== '' && v2 !== 'مدير النظام' && v2 !== 'المدير العام' && v2.toLowerCase() !== 'admin' && v2.toLowerCase() !== 'boles' && v2 !== 'Super Admin') {
+              return _mapStaffName(v2);
+            }
+          }
         }
       }
       return '—';
@@ -1193,16 +1222,25 @@
       toast('تم التعديل');
     };
 
-    // Activity Logs Listener for retroactive staff lookup
+    // Activity Log Listener for retroactive staff lookup (FIXED: path is 'activityLog' not 'activityLogs')
     window._cachedLogs = [];
     try {
-      db.ref('activityLogs').on('value', snap => {
-        window._cachedLogs = [];
-        if (snap.exists()) {
-          snap.forEach(ch => { window._cachedLogs.push(ch.val()); });
+      (function(){
+        // Try listening on both possible databases
+        function _listenLogs(ref) {
+          if (!ref) return;
+          ref.on('value', function(snap) {
+            if (snap.exists()) {
+              snap.forEach(function(ch) { window._cachedLogs.push(ch.val()); });
+            }
+            renderRegTable();
+          });
         }
-        renderRegTable();
-      });
+        // Listen on main DB (dent-35a17) and permissions DB (loutsresults)
+        if (db) _listenLogs(db.ref('activityLog'));
+        if (window.AUTH_DB && window.AUTH_DB !== db) _listenLogs(window.AUTH_DB.ref('activityLog'));
+        if (window.PERMISSIONS_DB && window.PERMISSIONS_DB !== db && window.PERMISSIONS_DB !== window.AUTH_DB) _listenLogs(window.PERMISSIONS_DB.ref('activityLog'));
+      })();
     } catch(e) {}
 
     // Records
@@ -1223,7 +1261,15 @@
 
     var _hasRunAutoFix = false;
 
-    window._deletedIds = window._deletedIds || new Set();
+    // Persisted deleted IDs to survive page refreshes (fix: records coming back after delete)
+    (function(){
+      var _d = [];
+      try { _d = JSON.parse(localStorage.getItem('lotus_deleted_withdrawal_ids') || '[]'); } catch(e) {}
+      window._deletedIds = new Set(_d);
+    })();
+    window._saveDeletedIds = function _saveDeletedIds() {
+      try { localStorage.setItem('lotus_deleted_withdrawal_ids', JSON.stringify(Array.from(window._deletedIds))); } catch(e) {}
+    };
 
     // Instant 0ms Load from Local Cache
     try {
@@ -1267,18 +1313,19 @@
           if (!studentMap.has(studentKey)) {
             studentMap.set(studentKey, rec);
           } else {
+            // FIX: Do NOT auto-delete duplicates from Firebase (was causing records to vanish/revert)
+            // Instead, keep the newer record in memory only
             var existingRec = studentMap.get(studentKey);
             var existingTime = Number(existingRec.updatedAt || existingRec.createdAt || 0);
             var newTime = Number(rec.updatedAt || rec.createdAt || 0);
-
             if (newTime >= existingTime) {
-              if (requestsRef && existingRec.id && existingRec.id !== rec.id) {
-                requestsRef.child(existingRec.id).remove().catch(function(){});
-              }
               studentMap.set(studentKey, rec);
-            } else {
-              if (requestsRef && rec.id && rec.id !== existingRec.id) {
-                requestsRef.child(rec.id).remove().catch(function(){});
+            }
+            // Keep the older record too but with different key to avoid data loss
+            if (rec.id !== existingRec.id) {
+              var altKey = studentKey + '_alt_' + (newTime >= existingTime ? existingRec.id : rec.id);
+              if (!studentMap.has(altKey)) {
+                studentMap.set(altKey, newTime >= existingTime ? existingRec : rec);
               }
             }
           }
@@ -1457,17 +1504,13 @@
           var nb = b.studentName || b.name || '';
           return na.localeCompare(nb, 'ar');
         }
-        if (sortType === 'file_asc') {
-          var na = parseInt(toEnglishDigits(a.fileNumber).replace(/\D/g, ''), 10) || 0;
-          var nb = parseInt(toEnglishDigits(b.fileNumber).replace(/\D/g, ''), 10) || 0;
-          if (na !== nb) return na - nb;
-          return (a.fileNumber || '').localeCompare(b.fileNumber || '');
-        }
-        if (sortType === 'file_desc') {
-          var na = parseInt(toEnglishDigits(a.fileNumber).replace(/\D/g, ''), 10) || 0;
-          var nb = parseInt(toEnglishDigits(b.fileNumber).replace(/\D/g, ''), 10) || 0;
-          if (na !== nb) return nb - na;
-          return (b.fileNumber || '').localeCompare(a.fileNumber || '');
+        if (sortType === 'file_asc' || sortType === 'file_desc') {
+          var fa = toEnglishDigits(String(a.fileNumber || a.fileNo || a.file_number || a.FileNumber || '')).replace(/\s/g, '');
+          var fb = toEnglishDigits(String(b.fileNumber || b.fileNo || b.file_number || b.FileNumber || '')).replace(/\s/g, '');
+          var na = parseInt(fa.replace(/\D/g, ''), 10) || 0;
+          var nb = parseInt(fb.replace(/\D/g, ''), 10) || 0;
+          if (na !== nb) return sortType === 'file_desc' ? nb - na : na - nb;
+          return sortType === 'file_desc' ? fb.localeCompare(fa) : fa.localeCompare(fb);
         }
         return 0;
       });
@@ -1667,6 +1710,13 @@
       if (!data.studentCode || !data.studentName || !data.nationalId || !data.college || !data.withdrawalDate || !data.academicYear || !data.paymentStatus) { btn.classList.remove('loading'); return toast('جميع الحقول المطلوبة', true); }
       if (data.nationalId.length !== 14 || !/^\d+$/.test(data.nationalId)) { btn.classList.remove('loading'); return toast('الرقم القومي 14 رقماً', true); }
 
+      // Store the employee who processed this withdrawal request (FIX: staff name in registry)
+      var _cu = (function(){ try { return JSON.parse(localStorage.getItem('lotus_session') || localStorage.getItem('lotus_auth_session') || localStorage.getItem('auth_session') || '{}'); } catch(e) { return {}; } })();
+      data.createdBy = _cu.name || _cu.username || '';
+      data.processedBy = _cu.name || _cu.username || '';
+      data.employeeName = _cu.name || _cu.username || '';
+      data.employeeUsername = _cu.username || '';
+
       // Check if a record with the same student code or national ID already exists!
       var existing = allRecords.find(function(x) {
         return (data.studentCode && x.studentCode === data.studentCode) || (data.nationalId && x.nationalId === data.nationalId);
@@ -1722,8 +1772,8 @@
       const sCode = r ? (r.studentCode || r.code || '') : '';
 
       // Optimistic UI Removal: Remove from local array IMMEDIATELY (0ms delay!)
-      window._deletedIds = window._deletedIds || new Set();
       window._deletedIds.add(id);
+      if (window._saveDeletedIds) window._saveDeletedIds(); // Persist so records don't come back on page refresh
       allRecords = allRecords.filter(x => x.id !== id);
       renderTable();
       renderRegTable();
@@ -1798,6 +1848,9 @@
         editDateVal = fmtDate(edEl._flatpickr.selectedDates[0]);
       }
 
+      // Store the employee who edited this record (FIX: staff name in registry)
+      var _cu = (function(){ try { return JSON.parse(localStorage.getItem('lotus_session') || localStorage.getItem('lotus_auth_session') || localStorage.getItem('auth_session') || '{}'); } catch(e) { return {}; } })();
+
       const data = {
         fileNumber: v('editFileNumber'),
         studentCode: codeVal,
@@ -1811,6 +1864,9 @@
         phone: v('editPhone'),
         notes: v('editNotes'),
         updatedAt: Date.now(),
+        processedBy: _cu.name || _cu.username || '',
+        employeeName: _cu.name || _cu.username || '',
+        employeeUsername: _cu.username || '',
         date: null,
         withdrawal_date: null,
         Date: null,
