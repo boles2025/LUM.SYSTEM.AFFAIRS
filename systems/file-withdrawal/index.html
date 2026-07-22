@@ -1225,6 +1225,19 @@
 
     window._deletedIds = window._deletedIds || new Set();
 
+    // Instant 0ms Load from Local Cache
+    try {
+      var _cachedData = JSON.parse(localStorage.getItem('lotus_withdrawalRequests_cache') || '[]');
+      if (Array.isArray(_cachedData) && _cachedData.length > 0) {
+        allRecords = _cachedData;
+        setTimeout(function() {
+          renderTable();
+          renderRegTable();
+          renderCollegeSelects();
+        }, 0);
+      }
+    } catch(e) {}
+
     requestsRef.on('value', snap => {
       allRecords = [];
       var seenIds = new Set();
@@ -1279,6 +1292,10 @@
         var tb = toComparable(b.withdrawalDate) || (b.createdAt ? new Date(b.createdAt).getTime() : 0);
         return tb - ta;
       });
+
+      try {
+        localStorage.setItem('lotus_withdrawalRequests_cache', JSON.stringify(allRecords));
+      } catch(e) {}
 
       renderTable();
       renderRegTable();
@@ -2228,30 +2245,51 @@
 
     // Backup / Restore
     document.getElementById('backupBtn').addEventListener('click', async () => {
-      const snap = await requestsRef.once('value');
-      const data = []; snap.forEach(ch => data.push({ id: ch.key, ...ch.val() }));
-      const cs = await collegesRef.once('value');
-      const cols = []; cs.forEach(ch => cols.push({ id: ch.key, ...ch.val() }));
-      const blob = new Blob([JSON.stringify({ records: data, colleges: cols, date: new Date().toISOString() }, null, 2)], { type: 'application/json' });
-      const a = document.createElement('a'); a.href = URL.createObjectURL(blob);
-      a.download = `backup_${new Date().toISOString().split('T')[0]}.json`; a.click();
-      toast('تم التصدير');
+      try {
+        const data = window.allRecords && window.allRecords.length ? window.allRecords : [];
+        const cs = collegesRef ? await Promise.race([collegesRef.once('value'), new Promise(r => setTimeout(() => r(null), 2000))]).catch(() => null) : null;
+        const cols = []; if (cs && typeof cs.forEach === 'function') cs.forEach(ch => cols.push({ id: ch.key, ...ch.val() }));
+        const blob = new Blob([JSON.stringify({ records: data, colleges: cols, date: new Date().toISOString() }, null, 2)], { type: 'application/json' });
+        const a = document.createElement('a'); a.href = URL.createObjectURL(blob);
+        a.download = `backup_${new Date().toISOString().split('T')[0]}.json`; a.click();
+        toast('✅ تم تصدير النسخة الاحتياطية بنجاح');
+      } catch(err) {
+        toast('❌ خطأ في التصدير: ' + (err.message || err), true);
+      }
     });
     document.getElementById('restoreBtn').addEventListener('click', () => document.getElementById('restoreFile').click());
     document.getElementById('restoreFile').addEventListener('change', async e => {
       const file = e.target.files[0]; if (!file) return;
-      const backup = JSON.parse(await file.text());
-      if (!backup.records) return toast('ملف غير صالح', true);
-      if (!confirm(`استيراد ${backup.records.length} سجل؟`)) return;
-      const ru = {}, cu = {};
-      backup.records.forEach(r => { const { id, ...d } = r; ru[requestsRef.push().key] = d; });
-      if (backup.colleges) backup.colleges.forEach(c => { const { id, ...d } = c; cu[collegesRef.push().key] = d; });
-      await requestsRef.update(ru);
-      if (Object.keys(cu).length) await collegesRef.update(cu);
-      if (window.authLogActivity) {
-        window.authLogActivity('restore_database', 'سحب ملف', '', '', `استعادة قاعدة البيانات من نسخة احتياطية (عدد ${backup.records.length} سجل)`, 'نظام السحب');
+      try {
+        const backup = JSON.parse(await file.text());
+        const recordsList = backup.withdrawalRequests || backup.records || [];
+        if (!recordsList.length && !backup.employees && !backup.colleges) {
+          return toast('ملف غير صالح أو لا يحتوي على بيانات', true);
+        }
+        if (!confirm(`⚠️ استعادة النسخة الاحتياطية ستقوم بكتابة واستيراد كافة البيانات؟ هل تريد المتابعة؟`)) return;
+
+        const ru = {}, cu = {};
+        recordsList.forEach(r => { const { id, ...d } = r; ru[requestsRef.push().key] = d; });
+        if (backup.colleges) backup.colleges.forEach(c => { const { id, ...d } = c; cu[collegesRef.push().key] = d; });
+        if (Object.keys(ru).length) await requestsRef.update(ru);
+        if (Object.keys(cu).length) await collegesRef.update(cu);
+
+        if (backup.employees && Array.isArray(backup.employees)) {
+          for (var i = 0; i < backup.employees.length; i++) {
+            if (window.authSaveEmployeeToDb) {
+              await window.authSaveEmployeeToDb(backup.employees[i]);
+            }
+          }
+        }
+
+        if (window.authLogActivity) {
+          window.authLogActivity('restore_database', 'سحب ملف', '', '', `استعادة قاعدة البيانات الشاملة للنظام`, 'نظام السحب');
+        }
+        toast('✅ تم استرداد النسخة الاحتياطية بنجاح');
+        setTimeout(() => location.reload(), 1000);
+      } catch(err) {
+        toast('❌ حدث خطأ أثناء الاستيراد: ' + (err.message || err), true);
       }
-      toast('تم الاستيراد');
       e.target.value = '';
     });
     document.getElementById('clearAllBtn').addEventListener('click', async () => {

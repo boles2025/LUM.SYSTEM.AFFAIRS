@@ -2304,7 +2304,7 @@ function hashPassword(pw) {
 
 function getSession() {
   try {
-    const raw = localStorage.getItem(SESSION_KEY);
+    const raw = localStorage.getItem(SESSION_KEY) || localStorage.getItem('lotus_auth_session') || localStorage.getItem('auth_session');
     if (!raw) return null;
     const s = JSON.parse(raw);
     if (!s || !s.username || !s.role) return null;
@@ -2316,12 +2316,17 @@ function getSession() {
 
 function setSession(user) {
   const session = { username: user.username, name: user.name, role: user.role, loginTime: Date.now(), employeeId: user.employeeId || user.username };
-  localStorage.setItem(SESSION_KEY, JSON.stringify(session));
+  const jsonStr = JSON.stringify(session);
+  localStorage.setItem(SESSION_KEY, jsonStr);
+  localStorage.setItem('lotus_auth_session', jsonStr);
+  localStorage.setItem('auth_session', jsonStr);
   currentUser = session;
 }
 
 function clearSession() {
   localStorage.removeItem(SESSION_KEY);
+  localStorage.removeItem('lotus_auth_session');
+  localStorage.removeItem('auth_session');
   currentUser = null;
 }
 

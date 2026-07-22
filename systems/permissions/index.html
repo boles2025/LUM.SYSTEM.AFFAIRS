@@ -838,6 +838,8 @@ document.addEventListener('DOMContentLoaded', async function() {
 
     await loadEmployees();
     loadLogs();
+    loadCertRecords();
+    loadDeskServicesAdmin();
     setupPermissionsUploadListeners();
 });
 
@@ -1378,6 +1380,7 @@ var CERT_TAB_NAMES = {
 };
 
 function loadCertRecords() {
+    renderCertRecordsTable();
     try {
         var targetDb = window.PERMISSIONS_DB || window.AUTH_DB;
         if (targetDb && typeof targetDb.ref === 'function') {
@@ -1543,7 +1546,9 @@ var currentPermEditingService = null;
 function loadDeskServicesAdmin() {
     var tbody = document.getElementById('desk-services-tbody');
     if (!tbody) return;
-    var targetDb = window.PERMISSIONS_DB || window.AUTH_DB;
+    renderDeskServicesTable();
+
+    var targetDb = window.AUTH_DB || window.PERMISSIONS_DB;
     if (targetDb) {
         targetDb.ref('deskServices').on('value', function(snap) {
             try {
@@ -1556,9 +1561,11 @@ function loadDeskServicesAdmin() {
                 }
                 renderDeskServicesTable();
             } catch(e) {
-                tbody.innerHTML = '<tr><td colspan="6" class="text-center py-4 text-danger">حدث خطأ في تحميل الخدمات</td></tr>';
+                renderDeskServicesTable();
             }
         });
+    } else {
+        renderDeskServicesTable();
     }
 }
 
@@ -1756,7 +1763,7 @@ function escapeHtml(text) {
 
 async function savePermService(event) {
     event.preventDefault();
-    var targetDb = window.PERMISSIONS_DB || window.AUTH_DB;
+    var targetDb = window.AUTH_DB || window.PERMISSIONS_DB;
     if (!targetDb) { alert('تعذر الاتصال بقاعدة البيانات.'); return; }
     var serviceId = document.getElementById('perm-form-service-id').value || ("service_" + Math.random().toString(36).substring(2, 11) + "_" + Date.now());
     var name = document.getElementById('perm-form-name').value.trim();
@@ -1772,6 +1779,9 @@ async function savePermService(event) {
 
     try {
         await targetDb.ref('deskServices/' + serviceId).set(serviceMeta);
+        if (window.PERMISSIONS_DB && window.PERMISSIONS_DB !== targetDb) {
+            try { await window.PERMISSIONS_DB.ref('deskServices/' + serviceId).set(serviceMeta); } catch(e) {}
+        }
         alert("✅ تم حفظ الخدمة المكتبية بنجاح!");
         closePermServiceModal();
     } catch (err) {
@@ -1782,55 +1792,147 @@ async function savePermService(event) {
 async function deletePermService(serviceId) {
     var service = cachedDeskServices.find(function(s) { return s.id === serviceId; });
     if (!service || !confirm('حذف الخدمة المكتبية (' + service.name + ')؟')) return;
-    var targetDb = window.PERMISSIONS_DB || window.AUTH_DB;
+    var targetDb = window.AUTH_DB || window.PERMISSIONS_DB;
     if (targetDb) {
         await targetDb.ref('deskServices/' + serviceId).remove();
+        if (window.PERMISSIONS_DB && window.PERMISSIONS_DB !== targetDb) {
+            try { await window.PERMISSIONS_DB.ref('deskServices/' + serviceId).remove(); } catch(e) {}
+        }
         alert('✅ تم الحذف بنجاح.');
     }
 }
 
 // Backup Export & Import
+// Backup Export & Import (Full System Backup & Restore)
 async function manualExportBackup() {
-    if (!confirm('تصدير نسخة احتياطية من كافة بيانت وصلاحيات النظام؟')) return;
+    if (!confirm('تصدير نسخة احتياطية شاملة من كافة بيانات ونظم النظام بالكامل؟')) return;
     try {
-        var employees = await window.authGetAllEmployees();
+        var db = window.AUTH_DB || window.WITHDRAWAL_DB || (typeof firebase !== 'undefined' ? firebase.database() : null);
+
+        var fetchTimeout = function(promise, ms) {
+            return Promise.race([
+                promise,
+                new Promise(function(resolve) { setTimeout(function() { resolve(null); }, ms); })
+            ]);
+        };
+
+        var requestsTask = db ? fetchTimeout(db.ref('withdrawalRequests').once('value'), 2000).catch(function(){ return null; }) : Promise.resolve(null);
+        var collegesTask = db ? fetchTimeout(db.ref('colleges').once('value'), 2000).catch(function(){ return null; }) : Promise.resolve(null);
+        var deskServicesTask = db ? fetchTimeout(db.ref('deskServices').once('value'), 2000).catch(function(){ return null; }) : Promise.resolve(null);
+        var employeesTask = fetchTimeout(window.authGetAllEmployees(), 2000).catch(function(){ return null; });
+
+        var results = await Promise.all([requestsTask, collegesTask, deskServicesTask, employeesTask]);
+        var reqSnap = results[0];
+        var colSnap = results[1];
+        var deskSnap = results[2];
+        var empList = results[3];
+
+        var requests = [];
+        if (reqSnap && typeof reqSnap.forEach === 'function') {
+            reqSnap.forEach(function(ch) { requests.push(Object.assign({ id: ch.key }, ch.val())); });
+        } else if (window.allRecords && Array.isArray(window.allRecords)) {
+            requests = window.allRecords.slice();
+        }
+
+        var colleges = [];
+        if (colSnap && typeof colSnap.forEach === 'function') {
+            colSnap.forEach(function(ch) { colleges.push(Object.assign({ id: ch.key }, ch.val())); });
+        }
+
+        var deskServices = [];
+        if (deskSnap && typeof deskSnap.forEach === 'function') {
+            deskSnap.forEach(function(ch) { deskServices.push(Object.assign({ id: ch.key }, ch.val())); });
+        } else if (window.cachedDeskServices && Array.isArray(window.cachedDeskServices)) {
+            deskServices = window.cachedDeskServices.slice();
+        }
+
+        var employees = Array.isArray(empList) && empList.length ? empList : (window.cachedEmployees || []);
         var logs = JSON.parse(localStorage.getItem('lotus_activity_log') || '[]');
         var certRecords = getCertRecords();
+
         var backup = {
+            system: 'Lotus System AFFAIRS',
+            version: '3.5',
+            backupTime: new Date().toISOString(),
+            records: requests,
+            withdrawalRequests: requests,
+            colleges: colleges,
             employees: employees,
             activityLog: logs,
             certificateRecords: certRecords,
-            backupTime: new Date().toISOString(),
-            version: '3.0'
+            deskServices: deskServices
         };
+
         var blob = new Blob([JSON.stringify(backup, null, 2)], { type: 'application/json' });
         var a = document.createElement('a');
         a.href = URL.createObjectURL(blob);
-        a.download = 'نسخة_الصلاحيات_والمستخدمين_' + new Date().toISOString().split('T')[0] + '.json';
+        a.download = 'نسخة_احتياطية_شاملة_للنظام_' + new Date().toISOString().split('T')[0] + '.json';
         document.body.appendChild(a);
         a.click();
         document.body.removeChild(a);
-        alert('✅ تم تصدير النسخة الاحتياطية بنجاح!');
+        alert('✅ تم تصدير النسخة الاحتياطية الشاملة للنظام بنجاح!');
     } catch(e) {
         alert('حدث خطأ أثناء التصدير: ' + e.message);
     }
 }
 
 async function manualImportBackup(input) {
-    var file = input.files[0];
-    if (!file || !confirm('⚠️ استعادة النسخة الاحتياطية ستقوم باستبدال الصلاحيات بالحالية. هل تريد الاستمرار؟')) return;
+    var file = input.files ? input.files[0] : input;
+    if (!file) return;
+    if (!confirm('⚠️ تحذير هام جداً:\n\nسيقوم هذا الإجراء باستعادة كافة بيانات النظام (السجلات، الموظفين، الصلاحيات، الخدمات، والكليات) من النسخة الاحتياطية المحددة.\n\nهل أنت متأكد من استكمال الاسترداد الشامل؟')) return;
+
     try {
         var text = await file.text();
         var backup = JSON.parse(text);
+        var db = window.AUTH_DB || window.WITHDRAWAL_DB || (typeof firebase !== 'undefined' ? firebase.database() : null);
+
+        var requestsList = backup.withdrawalRequests || backup.records || [];
+        if (requestsList.length > 0 && db) {
+            var ru = {};
+            requestsList.forEach(r => {
+                var { id, ...d } = r;
+                var key = id || db.ref('withdrawalRequests').push().key;
+                ru[key] = d;
+            });
+            await db.ref('withdrawalRequests').update(ru);
+        }
+
+        if (backup.colleges && backup.colleges.length > 0 && db) {
+            var cu = {};
+            backup.colleges.forEach(c => {
+                var { id, ...d } = c;
+                var key = id || db.ref('colleges').push().key;
+                cu[key] = d;
+            });
+            await db.ref('colleges').update(cu);
+        }
+
         if (backup.employees && Array.isArray(backup.employees)) {
             for (var i = 0; i < backup.employees.length; i++) {
-                await window.authSaveEmployeeToDb(backup.employees[i]);
+                if (window.authSaveEmployeeToDb) {
+                    await window.authSaveEmployeeToDb(backup.employees[i]);
+                }
             }
         }
-        alert('✅ تم استعادة البيانات بنجاح!');
+
+        if (backup.deskServices && Array.isArray(backup.deskServices) && db) {
+            var du = {};
+            backup.deskServices.forEach(s => {
+                var { id, ...d } = s;
+                var key = id || db.ref('deskServices').push().key;
+                du[key] = d;
+            });
+            await db.ref('deskServices').update(du);
+        }
+
+        if (window.authLogActivity) {
+            window.authLogActivity('import_full_backup', 'نظام الشؤون', '', '', 'استرداد شامل لقاعدة بيانات ونظام الشؤون بالكامل', 'النظام');
+        }
+
+        alert('✅ تم استرداد النسخة الاحتياطية الشاملة للنظام بالكامل بنجاح!\n\nسيتم إعادة تحميل الصفحة الآن لتطبيق البيانات.');
         location.reload();
     } catch(e) {
-        alert('حدث خطأ أثناء الاستيراد: ' + e.message);
+        alert('❌ حدث خطأ أثناء الاسترداد: ' + e.message);
     }
 }
 
