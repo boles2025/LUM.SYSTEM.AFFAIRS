@@ -3,149 +3,539 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>إدارة الصلاحيات والسجل - جامعة اللوتس</title>
+    <title>إدارة الصلاحيات والمستخدمين - جامعة اللوتس</title>
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.rtl.min.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700;800;900&family=Changa:wght@500;600;700;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="../../styles.css">
     <style>
         :root {
-            --bg-main: #0f1119;
-            --bg-card: #1a1d2e;
-            --bg-card-alt: #1e2133;
-            --text-primary: #e8eaf0;
-            --text-secondary: #9ca3b8;
-            --text-muted: #6b7280;
-            --border: #2a2d3e;
-            --accent-amber: #f59e0b;
+            --bg-main: #0b0f19;
+            --bg-card: #151a28;
+            --bg-card-hover: #1e2436;
+            --bg-glass: rgba(21, 26, 40, 0.85);
+            --border: #262d42;
+            --border-glow: rgba(245, 158, 11, 0.3);
+            --text-primary: #f1f5f9;
+            --text-secondary: #94a3b8;
+            --text-muted: #64748b;
+            --accent-gold: #f59e0b;
+            --accent-amber: #d97706;
             --accent-blue: #3b82f6;
             --accent-emerald: #10b981;
             --accent-rose: #f43f5e;
             --accent-purple: #8b5cf6;
             --accent-cyan: #06b6d4;
-            --shadow: 0 4px 6px rgba(0,0,0,0.2);
+            --shadow-lg: 0 10px 30px -5px rgba(0, 0, 0, 0.5);
+            --shadow-glow: 0 0 20px rgba(245, 158, 11, 0.15);
         }
-        body { background: var(--bg-main); color: var(--text-primary); font-family: 'Tajawal', sans-serif; margin: 0; }
-        .page-header { background: var(--bg-card); border-bottom: 1px solid var(--border); padding: 16px 20px; display: flex; justify-content: space-between; align-items: center; box-shadow: var(--shadow); }
-        .page-title { font-family: 'Changa', sans-serif; font-weight: 800; font-size: 1.4rem; color: var(--accent-amber); margin: 0; display: flex; align-items: center; gap: 10px; }
-        .btn-back { background: transparent; border: 1px solid var(--border); color: var(--text-primary); padding: 6px 14px; border-radius: 8px; text-decoration: none; font-size: 0.9rem; transition: all 0.3s; display: inline-block; }
-        .btn-back:hover { background: rgba(255,255,255,0.05); color: var(--text-primary); }
-        
-        .tabs { display: flex; gap: 10px; border-bottom: 2px solid var(--border); margin-top: 24px; padding-bottom: 0; flex-wrap: wrap; }
-        .tab-btn { background: transparent; border: none; color: var(--text-secondary); font-size: 1rem; font-weight: 700; padding: 10px 20px; cursor: pointer; border-bottom: 2px solid transparent; margin-bottom: -2px; transition: all 0.3s; white-space: nowrap; }
-        .tab-btn.active { color: var(--accent-amber); border-bottom-color: var(--accent-amber); }
-        .tab-content { display: none; padding: 24px 0; }
-        .tab-content.active { display: block; animation: fadeIn 0.4s ease; }
-        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
 
-        .card { background: var(--bg-card); border: 1px solid var(--border); border-radius: 12px; padding: 20px; margin-bottom: 20px; box-shadow: var(--shadow); }
-        .input-main { background: var(--bg-main); border: 1px solid var(--border); border-radius: 8px; padding: 8px 12px; color: var(--text-primary); width: 100%; font-family: 'Tajawal', sans-serif; box-sizing: border-box; }
-        .input-main:focus { border-color: var(--accent-amber); outline: none; }
-        .btn-action { background: linear-gradient(135deg, var(--accent-amber), #d97706); border: none; color: white; padding: 8px 16px; border-radius: 8px; font-weight: 700; cursor: pointer; transition: all 0.3s; font-family: 'Tajawal', sans-serif; }
-        .btn-action:hover { box-shadow: 0 4px 12px rgba(245,158,11,0.3); transform: translateY(-2px); }
-        
-        .perm-section { margin-bottom: 16px; }
-        .perm-section-title { font-size: 0.9rem; font-weight: 800; color: var(--accent-amber); margin-bottom: 8px; padding-bottom: 6px; border-bottom: 1px solid var(--border); display: flex; align-items: center; gap: 8px; }
-        .perm-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 10px; margin-top: 8px; }
-        .perm-item { display: flex; align-items: center; gap: 8px; font-size: 0.85rem; font-weight: 700; color: #ffffff; background: var(--bg-main); padding: 8px 12px; border-radius: 8px; border: 1px solid var(--border); }
-        .perm-item input[type="checkbox"] { width: 18px; height: 18px; accent-color: var(--accent-amber); cursor: pointer; flex-shrink: 0; }
-        .perm-item.system-access { border-color: rgba(16,185,129,0.3); background: rgba(16,185,129,0.05); }
-        .perm-item.system-access input[type="checkbox"] { accent-color: var(--accent-emerald); }
+        body {
+            background: linear-gradient(135deg, #090c15 0%, #0f1422 50%, #0b0f19 100%);
+            color: var(--text-primary);
+            font-family: 'Tajawal', sans-serif;
+            margin: 0;
+            min-height: 100vh;
+        }
 
-        table { width: 100%; border-collapse: collapse; font-size: 0.9rem; color: #ffffff; }
-        th, td { border-bottom: 1px solid var(--border); padding: 10px 12px; text-align: right; color: #ffffff; }
-        th { color: #ffffff; font-weight: 700; background: rgba(0,0,0,0.2); }
+        /* Glassmorphic Navbar */
+        .page-header {
+            background: var(--bg-glass);
+            backdrop-filter: blur(12px);
+            border-bottom: 1px solid var(--border);
+            padding: 18px 30px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            position: sticky;
+            top: 0;
+            z-index: 1000;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.4);
+        }
+        .page-title {
+            font-family: 'Changa', sans-serif;
+            font-weight: 800;
+            font-size: 1.5rem;
+            color: var(--accent-gold);
+            margin: 0;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            text-shadow: 0 0 15px rgba(245, 158, 11, 0.3);
+        }
+        .btn-back {
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid var(--border);
+            color: var(--text-primary);
+            padding: 8px 18px;
+            border-radius: 10px;
+            text-decoration: none;
+            font-size: 0.9rem;
+            font-weight: 700;
+            transition: all 0.3s ease;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .btn-back:hover {
+            background: rgba(245, 158, 11, 0.15);
+            border-color: var(--accent-gold);
+            color: var(--accent-gold);
+            transform: translateY(-2px);
+        }
+
+        /* KPI Dashboard Stats */
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+            gap: 16px;
+            margin-bottom: 24px;
+        }
+        .stat-card {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 14px;
+            padding: 16px 20px;
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+        }
+        .stat-card:hover {
+            border-color: var(--border-glow);
+            transform: translateY(-3px);
+            box-shadow: var(--shadow-glow);
+        }
+        .stat-icon {
+            width: 48px;
+            height: 48px;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.4rem;
+            flex-shrink: 0;
+        }
+        .stat-info .stat-value {
+            font-family: 'Changa', sans-serif;
+            font-size: 1.6rem;
+            font-weight: 800;
+            color: var(--text-primary);
+            line-height: 1.1;
+        }
+        .stat-info .stat-label {
+            font-size: 0.8rem;
+            color: var(--text-secondary);
+            font-weight: 600;
+        }
+
+        /* Navigation Tabs */
+        .tabs-wrapper {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 16px;
+            padding: 8px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 24px;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+        .tabs-list {
+            display: flex;
+            gap: 6px;
+            flex-wrap: wrap;
+        }
+        .tab-btn {
+            background: transparent;
+            border: none;
+            color: var(--text-secondary);
+            font-size: 0.92rem;
+            font-weight: 700;
+            padding: 10px 18px;
+            border-radius: 10px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .tab-btn:hover {
+            color: var(--text-primary);
+            background: rgba(255, 255, 255, 0.05);
+        }
+        .tab-btn.active {
+            background: linear-gradient(135deg, var(--accent-gold), var(--accent-amber));
+            color: #000;
+            font-weight: 800;
+            box-shadow: 0 4px 12px rgba(245, 158, 11, 0.3);
+        }
+        .tab-content {
+            display: none;
+        }
+        .tab-content.active {
+            display: block;
+            animation: fadeIn 0.35s ease-in-out;
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(12px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* Controls / Filter Bar */
+        .filter-bar {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 14px;
+            padding: 14px 20px;
+            margin-bottom: 20px;
+            display: flex;
+            gap: 12px;
+            align-items: center;
+            flex-wrap: wrap;
+        }
+
+        /* Forms & Inputs */
+        .input-main {
+            background: #0d111c;
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            padding: 9px 14px;
+            color: var(--text-primary);
+            width: 100%;
+            font-family: 'Tajawal', sans-serif;
+            font-size: 0.9rem;
+            transition: all 0.25s ease;
+        }
+        .input-main:focus {
+            border-color: var(--accent-gold);
+            outline: none;
+            box-shadow: 0 0 10px rgba(245, 158, 11, 0.2);
+            background: #111625;
+        }
+        .btn-action {
+            background: linear-gradient(135deg, var(--accent-gold), var(--accent-amber));
+            border: none;
+            color: #000;
+            padding: 9px 18px;
+            border-radius: 10px;
+            font-weight: 800;
+            font-size: 0.88rem;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+        }
+        .btn-action:hover {
+            box-shadow: 0 6px 16px rgba(245,158,11,0.35);
+            transform: translateY(-2px);
+        }
+
+        /* Employee Glass Cards Grid */
+        .users-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(420px, 1fr));
+            gap: 20px;
+        }
+        .user-card {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 18px;
+            padding: 22px;
+            transition: all 0.3s ease;
+            box-shadow: var(--shadow-lg);
+            position: relative;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+        }
+        .user-card:hover {
+            border-color: rgba(245, 158, 11, 0.35);
+            transform: translateY(-4px);
+            box-shadow: 0 15px 35px -5px rgba(0, 0, 0, 0.6);
+        }
+        .user-card-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 16px;
+            padding-bottom: 12px;
+            border-bottom: 1px solid rgba(255,255,255,0.06);
+        }
+        .user-avatar {
+            width: 44px;
+            height: 44px;
+            border-radius: 12px;
+            background: rgba(245, 158, 11, 0.12);
+            border: 1px solid rgba(245, 158, 11, 0.3);
+            color: var(--accent-gold);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.2rem;
+            font-weight: 800;
+        }
+        .user-details-header {
+            flex: 1;
+            margin-right: 12px;
+        }
+        .user-full-name {
+            font-family: 'Changa', sans-serif;
+            font-weight: 700;
+            font-size: 1.15rem;
+            color: #fff;
+            margin: 0;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            flex-wrap: wrap;
+        }
+        .user-username-tag {
+            color: var(--accent-cyan);
+            font-size: 0.82rem;
+            font-weight: 700;
+            margin-top: 2px;
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
+
+        /* Password Field Box */
+        .password-box {
+            background: rgba(13, 17, 28, 0.8);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 12px 14px;
+            margin-bottom: 16px;
+        }
+        .password-display-row {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            font-size: 0.84rem;
+            font-weight: 700;
+            color: var(--text-secondary);
+            margin-bottom: 8px;
+        }
+        .current-pw-val {
+            font-family: monospace;
+            font-size: 0.95rem;
+            color: var(--accent-gold);
+            background: rgba(0,0,0,0.3);
+            padding: 2px 8px;
+            border-radius: 6px;
+            direction: ltr;
+            display: inline-block;
+        }
+
+        /* Permission Checkboxes Grid */
+        .perm-section {
+            margin-bottom: 16px;
+        }
+        .perm-section-title {
+            font-size: 0.85rem;
+            font-weight: 800;
+            color: var(--accent-gold);
+            margin-bottom: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+        .perm-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+            gap: 8px;
+        }
+        .perm-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 0.82rem;
+            font-weight: 700;
+            color: #fff;
+            background: #0e121e;
+            padding: 7px 10px;
+            border-radius: 8px;
+            border: 1px solid var(--border);
+            cursor: pointer;
+            user-select: none;
+            transition: all 0.2s ease;
+        }
+        .perm-item:hover {
+            border-color: rgba(245, 158, 11, 0.4);
+            background: #131828;
+        }
+        .perm-item input[type="checkbox"] {
+            width: 16px;
+            height: 16px;
+            accent-color: var(--accent-gold);
+            cursor: pointer;
+            flex-shrink: 0;
+        }
+        .perm-item.system-access {
+            border-color: rgba(16, 185, 129, 0.3);
+            background: rgba(16, 185, 129, 0.05);
+        }
+        .perm-item.system-access input[type="checkbox"] {
+            accent-color: var(--accent-emerald);
+        }
+
+        /* Badges */
+        .badge-role {
+            padding: 4px 10px;
+            border-radius: 8px;
+            font-size: 0.75rem;
+            font-weight: 800;
+        }
+        .badge-admin { background: rgba(245,158,11,0.2); color: var(--accent-gold); border: 1px solid rgba(245,158,11,0.4); }
+        .badge-supervisor { background: rgba(139,92,246,0.2); color: var(--accent-purple); border: 1px solid rgba(139,92,246,0.4); }
+        .badge-emp { background: rgba(59,130,246,0.2); color: var(--accent-blue); border: 1px solid rgba(59,130,246,0.4); }
+        .badge-viewer { background: rgba(6,182,212,0.2); color: var(--accent-cyan); border: 1px solid rgba(6,182,212,0.4); }
+        .badge-protected { background: linear-gradient(135deg, #ef4444, #dc2626); color: #fff; border: none; font-size: 0.7rem; }
+
+        /* Tables */
+        table { width: 100%; border-collapse: collapse; font-size: 0.88rem; color: #ffffff; }
+        th, td { border-bottom: 1px solid var(--border); padding: 12px 14px; text-align: right; color: #ffffff; }
+        th { color: var(--accent-gold); font-weight: 800; background: rgba(0,0,0,0.3); font-family: 'Changa', sans-serif; }
         tr:hover { background: rgba(255,255,255,0.03); }
-        
-        .badge { padding: 4px 10px; border-radius: 6px; font-size: 0.75rem; font-weight: 700; }
-        .badge-admin { background: rgba(245,158,11,0.15); color: var(--accent-amber); border: 1px solid rgba(245,158,11,0.3); }
-        .badge-emp { background: rgba(59,130,246,0.15); color: var(--accent-blue); border: 1px solid rgba(59,130,246,0.3); }
-        .badge-protected { background: rgba(245,158,11,0.3); color: #fff; border: 1px solid rgba(245,158,11,0.5); }
 
-        .modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.7); display: none; justify-content: center; align-items: center; backdrop-filter: blur(4px); z-index: 20000; }
+        /* Modal Overlay */
+        .modal-overlay {
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0, 0, 0, 0.75);
+            display: none;
+            justify-content: center;
+            align-items: center;
+            backdrop-filter: blur(6px);
+            z-index: 20000;
+        }
         .modal-overlay.active { display: flex; }
-        .modal-box { background: var(--bg-card); border: 1px solid var(--border); border-radius: 20px; padding: 24px; box-shadow: 0 20px 60px rgba(0,0,0,0.5); width: 90%; max-width: 700px; max-height: 85vh; overflow-y: auto; }
-        
-        .text-white { color: #fff !important; }
-        .text-danger { color: var(--accent-rose) !important; }
-        .text-center { text-align: center; }
-        .py-4 { padding-top: 1.5rem; padding-bottom: 1.5rem; }
-        .w-100 { width: 100%; }
-        .mt-2 { margin-top: 0.5rem; }
-        .mt-3 { margin-top: 1rem; }
-        .mt-4 { margin-top: 1.5rem; }
-        .mt-5 { margin-top: 3rem; }
-        .mb-3 { margin-bottom: 1rem; }
-        .mb-4 { margin-bottom: 1.5rem; }
-        .me-1 { margin-left: 0.25rem; }
-        .g-2 { gap: 0.5rem; }
-        .d-flex { display: flex; }
-        .gap-3 { gap: 1rem; }
-        .flex-wrap { flex-wrap: wrap; }
-        .pill-tag { background: var(--bg-card-alt); border: 1px solid var(--border); color: var(--text-primary); padding: 4px 10px; border-radius: 6px; font-size: 0.72rem; font-weight: 600; display: inline-flex; align-items: center; gap: 6px; }
-        .pill-tag i { color: var(--text-muted); cursor: pointer; }
-        .pill-tag i:hover { color: var(--accent-rose); }
-        
+        .modal-box {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 20px;
+            padding: 28px;
+            box-shadow: 0 25px 70px rgba(0,0,0,0.6);
+            width: 90%;
+            max-width: 650px;
+            max-height: 88vh;
+            overflow-y: auto;
+        }
+        .pill-tag {
+            background: #0f1422;
+            border: 1px solid var(--border);
+            color: var(--text-primary);
+            padding: 4px 10px;
+            border-radius: 8px;
+            font-size: 0.75rem;
+            font-weight: 700;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+        }
+        .pill-tag i { color: var(--accent-rose); cursor: pointer; }
+
         @media (max-width: 768px) {
+            .users-grid { grid-template-columns: 1fr; }
             .perm-grid { grid-template-columns: 1fr; }
-            .col-md-3, .col-md-6 { width: 100%; }
         }
     </style>
 </head>
 <body data-theme="dark">
 
 <div class="page-header">
-    <h1 class="page-title"><i class="fas fa-users-cog"></i> إدارة الصلاحيات والسجل</h1>
-    <a href="../../index.html" class="btn-back"><i class="fas fa-arrow-right me-1"></i> العودة للرئيسية</a>
+    <h1 class="page-title"><i class="fas fa-user-shield"></i> لوحة إدارة الصلاحيات والمستخدمين</h1>
+    <a href="../../index.html" class="btn-back"><i class="fas fa-arrow-right"></i> العودة للرئيسية</a>
 </div>
 
-<div class="container mt-4" style="max-width:1400px;margin:0 auto;padding:0 20px;">
-    <div class="tabs" style="display:flex; justify-content:space-between; align-items:center; width:100%;">
-        <div style="display:flex; gap:10px; flex-wrap:wrap;">
-            <button class="tab-btn active" onclick="switchTab('users', this)"><i class="fas fa-users me-1"></i> المستخدمين والصلاحيات</button>
+<div class="container-fluid py-4 px-4" style="max-width: 1550px; margin: 0 auto;">
+    
+    <!-- Top Stats Overview -->
+    <div class="stats-grid">
+        <div class="stat-card">
+            <div class="stat-icon" style="background:rgba(245,158,11,0.15); color:var(--accent-gold);"><i class="fas fa-users"></i></div>
+            <div class="stat-info">
+                <div class="stat-value" id="stat-total-users">0</div>
+                <div class="stat-label">إجمالي المستخدمين</div>
+            </div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-icon" style="background:rgba(139,92,246,0.15); color:var(--accent-purple);"><i class="fas fa-user-tie"></i></div>
+            <div class="stat-info">
+                <div class="stat-value" id="stat-total-admins">0</div>
+                <div class="stat-label">المدراء والأشراف</div>
+            </div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-icon" style="background:rgba(16,185,129,0.15); color:var(--accent-emerald);"><i class="fas fa-cubes"></i></div>
+            <div class="stat-info">
+                <div class="stat-value" id="stat-total-systems">4</div>
+                <div class="stat-label">الأنظمة المتاحة</div>
+            </div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-icon" style="background:rgba(59,130,246,0.15); color:var(--accent-blue);"><i class="fas fa-database"></i></div>
+            <div class="stat-info">
+                <div class="stat-value" style="font-size:1rem; font-weight:800; color:var(--accent-emerald);" id="stat-db-status">متصل (louts)</div>
+                <div class="stat-label">قاعدة الصلاحيات النشطة</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Tabs Header & Actions -->
+    <div class="tabs-wrapper">
+        <div class="tabs-list">
+            <button class="tab-btn active" onclick="switchTab('users', this)"><i class="fas fa-users-cog me-1"></i> المستخدمين والصلاحيات</button>
             <button class="tab-btn" onclick="switchTab('logs', this)"><i class="fas fa-history me-1"></i> سجل النشاطات</button>
             <button class="tab-btn" onclick="switchTab('certificates', this)"><i class="fas fa-certificate me-1"></i> سجل الشهادات</button>
-            <button class="tab-btn" onclick="switchTab('desk-services', this)"><i class="fas fa-print me-1"></i> إدارة الخدمات المكتبية</button>
+            <button class="tab-btn" onclick="switchTab('desk-services', this)"><i class="fas fa-print me-1"></i> الخدمات المكتبية</button>
         </div>
-        <div style="display:flex; gap:8px; flex-wrap:wrap;">
-            <button class="btn-action" style="background:var(--accent-blue); padding:6px 12px; font-size:0.8rem;" onclick="manualExportBackup()"><i class="fas fa-file-export me-1"></i> تصدير نسخة احتياطية</button>
-            <button class="btn-action" style="background:var(--accent-purple); padding:6px 12px; font-size:0.8rem;" onclick="document.getElementById('manual-import-file').click()"><i class="fas fa-file-import me-1"></i> استيراد نسخة احتياطية</button>
+        <div style="display:flex; gap:8px;">
+            <button class="btn-action" style="background:linear-gradient(135deg, var(--accent-emerald), #059669); color:#fff;" onclick="openAddUserModal()"><i class="fas fa-user-plus me-1"></i> إضافة موظف جديد</button>
+            <button class="btn-action" style="background:rgba(255,255,255,0.08); color:#fff;" onclick="manualExportBackup()"><i class="fas fa-file-export me-1"></i> تصدير النسخة</button>
+            <button class="btn-action" style="background:rgba(255,255,255,0.08); color:#fff;" onclick="document.getElementById('manual-import-file').click()"><i class="fas fa-file-import me-1"></i> استيراد</button>
             <input type="file" id="manual-import-file" style="display:none;" accept=".json" onchange="manualImportBackup(this)">
         </div>
     </div>
 
-    <!-- Users Tab -->
+    <!-- TAB 1: USERS & PERMISSIONS -->
     <div id="tab-users" class="tab-content active">
-        <div class="card mb-4" style="border: 1px solid var(--accent-emerald);">
-            <h4 style="margin:0 0 16px 0; font-size:1.1rem; color:var(--accent-emerald); font-weight:700;"><i class="fas fa-user-plus me-1"></i> إضافة موظف جديد</h4>
-            <div class="row g-2" style="display:flex; flex-wrap:wrap; gap:8px;">
-                <div style="flex:1; min-width:180px;">
-                    <input type="text" id="new_username" class="input-main" placeholder="اسم المستخدم بالانجليزية">
-                </div>
-                <div style="flex:1; min-width:180px;">
-                    <input type="text" id="new_name" class="input-main" placeholder="الاسم بالكامل (بالعربية)">
-                </div>
-                <div style="flex:1; min-width:180px;">
-                    <input type="password" id="new_password" class="input-main" style="direction:ltr; text-align:left;" placeholder="كلمة المرور">
-                </div>
-                <div style="flex:0 0 auto;">
-                    <button class="btn-action" style="background:var(--accent-emerald); height:100%;" onclick="addNewEmployee()"><i class="fas fa-plus me-1"></i> إضافة الموظف</button>
-                </div>
+        
+        <!-- Search & Filter Controls -->
+        <div class="filter-bar">
+            <div style="flex: 2; min-width: 250px;">
+                <input type="text" id="user-search-input" class="input-main" placeholder="🔍 بحث باسم الموظف أو اسم المستخدم..." onkeyup="filterUsersGrid()">
             </div>
-            <div id="new_emp_msg" style="font-size:0.85rem; font-weight:bold; margin-top:10px; text-align:center; min-height:20px;"></div>
+            <div style="flex: 1; min-width: 180px;">
+                <select id="user-role-filter" class="input-main" onchange="filterUsersGrid()">
+                    <option value="all">جميع الرتب (الكل)</option>
+                    <option value="admin">مدير النظام (Admin)</option>
+                    <option value="supervisor">مشرف (Supervisor)</option>
+                    <option value="employee">موظف (Employee)</option>
+                    <option value="viewer">مشاهد (Viewer)</option>
+                </select>
+            </div>
+            <div>
+                <button class="btn-action" onclick="saveAllModifiedUsers()" style="background: linear-gradient(135deg, var(--accent-purple), #7c3aed); color:#fff;"><i class="fas fa-save me-1"></i> حفظ كافة التعديلات</button>
+            </div>
         </div>
 
-        <div class="row" id="users-container" style="display:flex; flex-wrap:wrap; gap:16px;">
-            <div class="text-center mt-5" style="width:100%;"><i class="fas fa-spinner fa-spin fa-2x"></i> <span style="color:var(--text-secondary);">جاري التحميل...</span></div>
+        <!-- Users Grid Container -->
+        <div class="users-grid" id="users-container">
+            <div style="grid-column: 1 / -1; text-align:center; padding:50px;"><i class="fas fa-spinner fa-spin fa-3x text-warning mb-3"></i><br>جاري تحميل الموظفين والصلاحيات من قاعدة بيانات louts...</div>
         </div>
     </div>
 
-    <!-- Logs Tab -->
+    <!-- TAB 2: ACTIVITY LOGS -->
     <div id="tab-logs" class="tab-content">
-        <div class="card">
-            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:16px;">
-                <h4 style="margin:0; font-size:1.1rem;"><i class="fas fa-list me-1"></i> آخر العمليات في النظام</h4>
-                <button class="btn-action" style="background:var(--accent-rose);" onclick="clearLogs()"><i class="fas fa-trash me-1"></i> مسح السجل</button>
+        <div class="user-card" style="margin-bottom:0;">
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:16px; flex-wrap:wrap; gap:10px;">
+                <h4 style="margin:0; font-family:'Changa',sans-serif; color:var(--accent-gold);"><i class="fas fa-history me-2"></i> سجل العمليات وحركات النظام</h4>
+                <button class="btn-action" style="background:var(--accent-rose); color:#fff;" onclick="clearLogs()"><i class="fas fa-trash me-1"></i> مسح السجل كامل</button>
             </div>
             <div style="overflow-x:auto;">
                 <table>
@@ -156,7 +546,7 @@
                             <th>العملية</th>
                             <th>الهدف</th>
                             <th>النظام</th>
-                            <th>تفاصيل</th>
+                            <th>التفاصيل</th>
                         </tr>
                     </thead>
                     <tbody id="logs-tbody">
@@ -167,18 +557,18 @@
         </div>
     </div>
 
-    <!-- Certificates Tab -->
+    <!-- TAB 3: CERTIFICATES RECORDS -->
     <div id="tab-certificates" class="tab-content">
-        <div class="card">
-            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:16px; flex-wrap:wrap; gap:8px;">
-                <h4 style="margin:0; font-size:1.1rem; color:var(--accent-amber);"><i class="fas fa-certificate me-1"></i> سجل الشهادات المحفوظة</h4>
+        <div class="user-card">
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:16px; flex-wrap:wrap; gap:10px;">
+                <h4 style="margin:0; font-family:'Changa',sans-serif; color:var(--accent-gold);"><i class="fas fa-certificate me-2"></i> سجل الشهادات المحفوظة لكل موظف</h4>
                 <div style="display:flex; gap:8px;">
-                    <button class="btn-action" style="background:var(--accent-emerald);" onclick="window.exportEmployeeCertRecordsToExcel()"><i class="fas fa-file-excel me-1"></i> تصدير Excel</button>
-                    <button class="btn-action" style="background:var(--accent-rose);" onclick="clearCertRecords()"><i class="fas fa-trash me-1"></i> مسح الكل</button>
+                    <button class="btn-action" style="background:var(--accent-emerald); color:#fff;" onclick="window.exportEmployeeCertRecordsToExcel()"><i class="fas fa-file-excel me-1"></i> تصدير Excel</button>
+                    <button class="btn-action" style="background:var(--accent-rose); color:#fff;" onclick="clearCertRecords()"><i class="fas fa-trash me-1"></i> مسح الكل</button>
                 </div>
             </div>
-            <div style="margin-bottom:12px; display:flex; gap:8px;">
-                <input type="text" id="certRecordsSearch" class="input-main" placeholder="بحث باسم الموظف أو الطالب..." style="flex:1; min-width:200px;">
+            <div style="margin-bottom:14px; display:flex; gap:10px;">
+                <input type="text" id="certRecordsSearch" class="input-main" placeholder="بحث باسم الموظف أو الطالب..." style="flex:1;">
                 <button class="btn-action" onclick="renderCertRecordsTable()"><i class="fas fa-search me-1"></i> بحث</button>
             </div>
             <div style="overflow-x:auto;">
@@ -191,7 +581,7 @@
                             <th>المجموع</th>
                             <th>المجموع المكافئ</th>
                             <th>النسبة</th>
-                            <th>الموظف</th>
+                            <th>الموظف المسؤول</th>
                             <th>حذف</th>
                         </tr>
                     </thead>
@@ -203,23 +593,23 @@
         </div>
     </div>
 
-    <!-- Desk Services Tab -->
+    <!-- TAB 4: DESK SERVICES -->
     <div id="tab-desk-services" class="tab-content">
-        <div class="card mb-4" style="border: 1px solid var(--accent-cyan);">
-            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:16px;">
-                <h4 style="margin:0; font-size:1.1rem; color:var(--accent-cyan); font-weight:700;"><i class="fas fa-print me-1"></i> إدارة الخدمات المكتبية للطلاب</h4>
-                <button class="btn-action" style="background:var(--accent-cyan);" onclick="openPermissionsAddService()"><i class="fas fa-plus me-1"></i> إضافة خدمة جديدة</button>
+        <div class="user-card">
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:16px; flex-wrap:wrap; gap:10px;">
+                <h4 style="margin:0; font-family:'Changa',sans-serif; color:var(--accent-gold);"><i class="fas fa-print me-2"></i> إدارة قائمة الخدمات المكتبية</h4>
+                <button class="btn-action" style="background:var(--accent-cyan); color:#000;" onclick="openPermissionsAddService()"><i class="fas fa-plus me-1"></i> إضافة خدمة مكتبية جديدة</button>
             </div>
             <div style="overflow-x:auto;">
                 <table>
                     <thead>
                         <tr>
-                            <th>الخدمة</th>
+                            <th>اسم الخدمة</th>
                             <th>التصنيف</th>
-                            <th>السعر</th>
-                            <th>المدة الزمنية</th>
+                            <th>الرسوم / السعر</th>
+                            <th>المدة المحددة</th>
                             <th>آخر تحديث</th>
-                            <th style="width: 160px; text-align: center;">إجراءات</th>
+                            <th>الإجراءات</th>
                         </tr>
                     </thead>
                     <tbody id="desk-services-tbody">
@@ -229,151 +619,172 @@
             </div>
         </div>
     </div>
+</div>
 
-    <!-- Desk Service Edit/Add Modal in Permissions -->
-    <div class="modal-overlay" id="permDeskServiceModal" style="z-index:25000;">
-        <div class="modal-box" style="max-width:800px;">
-            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;border-bottom:1px solid var(--border);padding-bottom:10px;">
-                <h3 style="font-family:Changa,sans-serif;font-weight:800;color:var(--text-primary);margin:0;" id="perm-service-modal-title">
-                    <i class="fas fa-file-pen me-1" style="color:var(--accent-cyan);"></i> إضافة خدمة جديدة
-                </h3>
-                <button onclick="closePermServiceModal()" style="background:none;border:none;color:var(--text-muted);font-size:1.4rem;cursor:pointer;">&times;</button>
-            </div>
-            <form id="perm-service-form" onsubmit="savePermService(event)">
-                <input type="hidden" id="perm-form-service-id">
-                
-                <div style="display:flex; gap:12px; margin-bottom:12px; flex-wrap:wrap;">
-                    <div style="flex:1; min-width:200px;">
-                        <label style="font-size:0.8rem; font-weight:700; color:#fff; display:block; margin-bottom:4px;">اسم الخدمة *</label>
-                        <input type="text" id="perm-form-name" class="input-main" required placeholder="مثال: إثبات قيد للطلاب">
-                    </div>
-                    <div style="flex:1; min-width:200px;">
-                        <label style="font-size:0.8rem; font-weight:700; color:#fff; display:block; margin-bottom:4px;">التصنيف *</label>
-                        <select id="perm-form-category" class="input-main" required>
-                            <option value="proofs">إثباتات وقيد</option>
-                            <option value="transfers">تحويلات</option>
-                            <option value="cards">بطاقات جامعية</option>
-                            <option value="withdrawal">سحب ملفات</option>
-                            <option value="others">أخرى</option>
-                        </select>
-                    </div>
-                </div>
-
-                <div style="display:flex; gap:12px; margin-bottom:12px; flex-wrap:wrap;">
-                    <div style="flex:1; min-width:200px;">
-                        <label style="font-size:0.8rem; font-weight:700; color:#fff; display:block; margin-bottom:4px;">السعر بالجنيه *</label>
-                        <input type="number" id="perm-form-price" class="input-main" required min="0" placeholder="مثال: 50">
-                    </div>
-                    <div style="flex:1; min-width:200px;">
-                        <label style="font-size:0.8rem; font-weight:700; color:#fff; display:block; margin-bottom:4px;">المدة الزمنية للاستخراج *</label>
-                        <input type="text" id="perm-form-duration" class="input-main" required placeholder="مثال: 1-2 أيام عمل، فوري">
-                    </div>
-                </div>
-
-                <div style="margin-bottom:12px;">
-                    <label style="font-size:0.8rem; font-weight:700; color:#fff; display:block; margin-bottom:4px;">وصف تفصيلي للخدمة *</label>
-                    <textarea id="perm-form-description" class="input-main" rows="3" required placeholder="اكتب وصفاً مفصلاً ودقيقاً عن الخدمة والغرض منها..."></textarea>
-                </div>
-                
-                <div style="display:flex; gap:12px; margin-bottom:12px; flex-wrap:wrap;">
-                    <div style="flex:1; min-width:200px;">
-                        <label style="font-size:0.8rem; font-weight:700; color:#fff; display:block; margin-bottom:4px;">المستندات المطلوبة (اضغط Enter للإضافة)</label>
-                        <input type="text" id="perm-form-doc-input" class="input-main" placeholder="مثال: صورة البطاقة">
-                        <div id="perm-form-docs-tags" style="display:flex; flex-wrap:wrap; gap:4px; margin-top:6px; max-height:80px; overflow-y:auto;"></div>
-                    </div>
-                    <div style="flex:1; min-width:200px;">
-                        <label style="font-size:0.8rem; font-weight:700; color:#fff; display:block; margin-bottom:4px;">خطوات استخراج الخدمة (اضغط Enter للإضافة)</label>
-                        <input type="text" id="perm-form-step-input" class="input-main" placeholder="مثال: التوجه لشؤون الطلاب">
-                        <div id="perm-form-steps-tags" style="display:flex; flex-wrap:wrap; gap:4px; margin-top:6px; max-height:80px; overflow-y:auto;"></div>
-                    </div>
-                </div>
-
-                <!-- Drag and drop zone inside Permissions admin form -->
-                <div style="margin-bottom:16px;">
-                    <label style="font-size:0.8rem; font-weight:700; color:#fff; display:block; margin-bottom:4px;">الملفات المرفقة والنماذج الورقية</label>
-                    <div id="perm-upload-drag-zone" style="border: 2px dashed var(--border); background: var(--bg-main); border-radius: 12px; padding: 20px; text-align: center; cursor: pointer; transition: all 0.3s;">
-                        <i class="fas fa-cloud-arrow-up" style="font-size: 2rem; color: var(--text-muted); margin-bottom: 8px;"></i>
-                        <div style="font-size: 0.85rem; font-weight: 700;">اسحب وأفلت الملفات هنا أو اضغط للتصفح</div>
-                        <div style="font-size: 0.68rem; color: var(--text-muted); margin-top:4px;">PDF, Word, Images (أقصى 10 ميجا)</div>
-                        <input type="file" id="perm-file-upload-input" style="display:none;" multiple>
-                    </div>
-                    
-                    <!-- Progress Bar -->
-                    <div id="perm-upload-progress-container" style="display:none; margin-top:12px;">
-                        <div style="display:flex; justify-content:space-between; font-size:0.75rem; margin-bottom:4px;">
-                            <span id="perm-upload-progress-filename" style="color:var(--text-secondary); text-overflow:ellipsis; overflow:hidden; white-space:nowrap; max-width:80%;">—</span>
-                            <span id="perm-upload-progress-percent" style="font-weight:700; color:var(--accent-cyan);">0%</span>
-                        </div>
-                        <div style="width:100%; height:8px; background:var(--bg-main); border-radius:50px; overflow:hidden; border:1px solid var(--border);">
-                            <div id="perm-upload-progress-fill" style="width:0%; height:100%; background:linear-gradient(90deg, var(--accent-blue), var(--accent-cyan)); border-radius:50px; transition:width 0.2s;"></div>
-                        </div>
-                    </div>
-
-                    <!-- Files Table -->
-                    <div id="perm-form-files-list-wrapper" style="display:none; margin-top:12px;">
-                        <table style="font-size:0.78rem;">
-                            <thead>
-                                <tr>
-                                    <th>اسم الملف</th>
-                                    <th>الحجم</th>
-                                    <th>نوع الملف</th>
-                                    <th>الاستخدام</th>
-                                    <th style="width:60px; text-align:center;">حذف</th>
-                                </tr>
-                            </thead>
-                            <tbody id="perm-form-files-tbody"></tbody>
-                        </table>
-                    </div>
-                </div>
-
-                <div style="display:flex; gap:10px; justify-content:flex-end; margin-top:20px; border-top:1px solid var(--border); padding-top:14px;">
-                    <button type="submit" class="btn-action" style="background:linear-gradient(135deg, var(--accent-cyan), #0891b2);"><i class="fas fa-save me-1"></i> حفظ الخدمة</button>
-                    <button type="button" class="btn-action" style="background:transparent; border:1px solid var(--border); color:var(--text-secondary);" onclick="closePermServiceModal()">إلغاء</button>
-                </div>
-            </form>
+<!-- Modal: Add New Employee -->
+<div class="modal-overlay" id="addUserModal">
+    <div class="modal-box">
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px; border-bottom:1px solid var(--border); padding-bottom:12px;">
+            <h3 style="margin:0; font-family:'Changa',sans-serif; color:var(--accent-gold); font-size:1.3rem;"><i class="fas fa-user-plus me-2"></i> إضافة موظف جديد</h3>
+            <button style="background:transparent; border:none; color:var(--text-secondary); font-size:1.2rem; cursor:pointer;" onclick="closeAddUserModal()"><i class="fas fa-times"></i></button>
         </div>
-    </div>
-
-    <!-- Cert Detail Modal -->
-    <div class="modal-overlay" id="certDetailModal">
-        <div class="modal-box">
-            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;">
-                <h3 style="font-family:Changa,sans-serif;font-weight:800;color:var(--text-primary);margin:0;">
-                    <i class="fas fa-file-invoice me-1" style="color:var(--accent-amber);"></i> تفاصيل حساب الشهادة
-                </h3>
-                <button onclick="closeCertDetailModal()" style="background:none;border:none;color:var(--text-muted);font-size:1.4rem;cursor:pointer;">&times;</button>
+        <div>
+            <div style="margin-bottom:14px;">
+                <label style="font-size:0.85rem; font-weight:700; color:var(--text-secondary); margin-bottom:6px; display:block;">اسم المستخدم (بالأحرف الإنجليزية)</label>
+                <input type="text" id="new_username" class="input-main" placeholder="مثال: ahmed_samir">
             </div>
-            <div id="certDetailBody">
-                <div style="text-align:center;padding:20px;color:var(--text-muted);">جاري تحميل التفاصيل...</div>
+            <div style="margin-bottom:14px;">
+                <label style="font-size:0.85rem; font-weight:700; color:var(--text-secondary); margin-bottom:6px; display:block;">الاسم بالكامل (بالعربية)</label>
+                <input type="text" id="new_name" class="input-main" placeholder="مثال: أحمد سمير علي">
             </div>
-        </div>
-    </div>
-
-    <!-- Export Progress Overlay -->
-    <div id="export-progress-overlay" style="display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.8);z-index:99999;justify-content:center;align-items:center;backdrop-filter:blur(6px);">
-        <div style="background:var(--bg-card);border:1px solid var(--border);border-radius:20px;padding:32px 40px;text-align:center;min-width:320px;box-shadow:0 20px 60px rgba(0,0,0,0.5);">
-            <div style="font-size:2rem;margin-bottom:12px;"><i class="fas fa-database" style="color:var(--accent-amber);"></i></div>
-            <div style="font-weight:800;color:#fff;font-size:1.1rem;margin-bottom:8px;">جاري أخذ نسخة احتياطية...</div>
-            <div id="export-progress-text" style="font-size:0.85rem;color:var(--text-muted);margin-bottom:16px;">جاري التحميل...</div>
-            <div style="width:100%;height:10px;background:var(--bg-main);border-radius:50px;overflow:hidden;border:1px solid var(--border);">
-                <div id="export-progress-fill" style="width:0%;height:100%;background:linear-gradient(90deg,var(--accent-amber),var(--accent-emerald));border-radius:50px;transition:width 0.5s;"></div>
+            <div style="margin-bottom:14px;">
+                <label style="font-size:0.85rem; font-weight:700; color:var(--text-secondary); margin-bottom:6px; display:block;">كلمة المرور</label>
+                <input type="password" id="new_password" class="input-main" placeholder="أدخل كلمة المرور" style="direction:ltr;">
+            </div>
+            <div style="margin-bottom:20px;">
+                <label style="font-size:0.85rem; font-weight:700; color:var(--text-secondary); margin-bottom:6px; display:block;">الرتبة (الصفة)</label>
+                <select id="new_role" class="input-main">
+                    <option value="employee" selected>موظف (Employee)</option>
+                    <option value="supervisor">مشرف (Supervisor)</option>
+                    <option value="admin">مدير (Admin)</option>
+                    <option value="viewer">مشاهد (Viewer)</option>
+                </select>
+            </div>
+            <div id="new_emp_msg" style="font-size:0.85rem; font-weight:bold; margin-bottom:14px; text-align:center;"></div>
+            <div style="display:flex; justify-content:flex-end; gap:10px;">
+                <button class="btn-action" style="background:transparent; border:1px solid var(--border); color:#fff;" onclick="closeAddUserModal()">إلغاء</button>
+                <button class="btn-action" style="background:var(--accent-emerald); color:#fff;" onclick="addNewEmployee()"><i class="fas fa-check me-1"></i> حفظ وإضافة الموظف</button>
             </div>
         </div>
     </div>
 </div>
 
+<!-- Modal: Desk Services Edit/Add -->
+<div class="modal-overlay" id="permDeskServiceModal">
+    <div class="modal-box">
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:16px;">
+            <h3 id="perm-service-modal-title" style="margin:0; font-family:'Changa',sans-serif; color:var(--accent-cyan); font-size:1.2rem;">إضافة/تعديل خدمة</h3>
+            <button style="background:transparent; border:none; color:var(--text-secondary); font-size:1.2rem; cursor:pointer;" onclick="closePermServiceModal()"><i class="fas fa-times"></i></button>
+        </div>
+        <form id="perm-service-form" onsubmit="savePermService(event)">
+            <input type="hidden" id="perm-form-service-id">
+            <div style="margin-bottom:12px;">
+                <label style="font-size:0.82rem; font-weight:700;">اسم الخدمة</label>
+                <input type="text" id="perm-form-name" class="input-main" required>
+            </div>
+            <div style="display:flex; gap:10px; margin-bottom:12px;">
+                <div style="flex:1;">
+                    <label style="font-size:0.82rem; font-weight:700;">التصنيف</label>
+                    <select id="perm-form-category" class="input-main">
+                        <option value="proofs">إثباتات وقيد</option>
+                        <option value="transfers">تحويلات</option>
+                        <option value="cards">بطاقات جامعية</option>
+                        <option value="withdrawal">سحب ملفات</option>
+                        <option value="others">أخرى</option>
+                    </select>
+                </div>
+                <div style="flex:1;">
+                    <label style="font-size:0.82rem; font-weight:700;">الرسوم (ج.م)</label>
+                    <input type="number" id="perm-form-price" class="input-main" min="0" step="0.5" value="0">
+                </div>
+            </div>
+            <div style="margin-bottom:12px;">
+                <label style="font-size:0.82rem; font-weight:700;">المدة المحددة</label>
+                <input type="text" id="perm-form-duration" class="input-main" placeholder="مثال: 24 ساعة / 3 أيام" required>
+            </div>
+            <div style="margin-bottom:12px;">
+                <label style="font-size:0.82rem; font-weight:700;">وصف الخدمة</label>
+                <textarea id="perm-form-description" class="input-main" rows="3"></textarea>
+            </div>
+
+            <!-- Documents needed -->
+            <div style="margin-bottom:12px;">
+                <label style="font-size:0.82rem; font-weight:700;">الأوراق والمستندات المطلوبة (اضغط Enter للإضافة)</label>
+                <input type="text" id="perm-form-doc-input" class="input-main" placeholder="اكتب واضغط Enter">
+                <div id="perm-form-docs-tags" style="display:flex; gap:6px; flex-wrap:wrap; margin-top:6px;"></div>
+            </div>
+
+            <!-- Execution Steps -->
+            <div style="margin-bottom:12px;">
+                <label style="font-size:0.82rem; font-weight:700;">خطوات التنفيذ (اضغط Enter للإضافة)</label>
+                <input type="text" id="perm-form-step-input" class="input-main" placeholder="اكتب واضغط Enter">
+                <div id="perm-form-steps-tags" style="display:flex; gap:6px; flex-wrap:wrap; margin-top:6px;"></div>
+            </div>
+
+            <!-- Files Attachment -->
+            <div style="margin-bottom:16px;">
+                <label style="font-size:0.82rem; font-weight:700;">مرفقات ونماذج قابلة للتحميل</label>
+                <div id="perm-upload-drag-zone" style="border:2px dashed var(--border); border-radius:10px; padding:15px; text-align:center; cursor:pointer; background:rgba(0,0,0,0.2);">
+                    <i class="fas fa-cloud-upload-alt fa-2x text-info mb-2"></i>
+                    <div style="font-size:0.8rem; color:var(--text-secondary);">اسحب الملفات هنا أو اضغط للاختيار</div>
+                </div>
+                <input type="file" id="perm-file-upload-input" multiple style="display:none;">
+                <div id="perm-form-files-list-wrapper" style="margin-top:10px; display:none;">
+                    <table style="font-size:0.78rem;">
+                        <thead>
+                            <tr>
+                                <th>اسم الملف</th>
+                                <th class="text-center">الحجم</th>
+                                <th class="text-center">النوع</th>
+                                <th>الغرض</th>
+                                <th class="text-center">إزالة</th>
+                            </tr>
+                        </thead>
+                        <tbody id="perm-form-files-tbody"></tbody>
+                    </table>
+                </div>
+                <div id="perm-upload-progress-container" style="display:none; margin-top:8px;">
+                    <div id="perm-upload-progress-filename" style="font-size:0.75rem; color:var(--accent-gold);"></div>
+                    <div style="height:6px; background:#000; border-radius:3px; overflow:hidden; margin-top:4px;">
+                        <div id="perm-upload-progress-fill" style="width:0%; height:100%; background:var(--accent-emerald); transition:width 0.2s;"></div>
+                    </div>
+                    <span id="perm-upload-progress-percent" style="font-size:0.7rem; color:var(--text-muted);">0%</span>
+                </div>
+            </div>
+
+            <div style="display:flex; justify-content:flex-end; gap:8px;">
+                <button type="button" class="btn-action" style="background:transparent; border:1px solid var(--border); color:#fff;" onclick="closePermServiceModal()">إلغاء</button>
+                <button type="submit" class="btn-action" style="background:var(--accent-cyan); color:#000;"><i class="fas fa-save me-1"></i> حفظ الخدمة</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Modal: Cert Detail View -->
+<div class="modal-overlay" id="certDetailModal">
+    <div class="modal-box">
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:14px;">
+            <h3 style="margin:0; font-family:'Changa',sans-serif; color:var(--accent-gold); font-size:1.1rem;"><i class="fas fa-info-circle me-1"></i> تفاصيل الشهادة</h3>
+            <button style="background:transparent; border:none; color:var(--text-secondary); font-size:1.2rem; cursor:pointer;" onclick="closeCertDetailModal()"><i class="fas fa-times"></i></button>
+        </div>
+        <div id="certDetailBody"></div>
+    </div>
+</div>
+
+<!-- Export Progress Overlay -->
+<div class="modal-overlay" id="export-progress-overlay">
+    <div class="modal-box" style="text-align:center; max-width:400px;">
+        <h4 style="color:var(--accent-gold); font-family:'Changa',sans-serif; margin-bottom:12px;">جاري إعداد النسخة الاحتياطية...</h4>
+        <div style="height:10px; background:#000; border-radius:5px; overflow:hidden; margin-bottom:12px;">
+            <div id="export-progress-fill" style="width:0%; height:100%; background:var(--accent-gold); transition:width 0.3s;"></div>
+        </div>
+        <div id="export-progress-text" style="font-size:0.85rem; color:var(--text-secondary);">جاري التحضير...</div>
+    </div>
+</div>
+
+<!-- Scripts -->
 <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
 <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-auth.js"></script>
 <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
 <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-storage.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
 <script src="../../auth.js"></script>
-<script>
-// ============================
-// ✅ PERMISSIONS SYSTEM (FIXED - باستخدام authSaveEmployeeToDb الموحدة)
-// ============================
 
-// الصلاحيات الوظيفية
+<script>
+// ==========================================
+// ✅ PERMISSIONS & USER MANAGEMENT DASHBOARD
+// ==========================================
+
 var FUNCTIONAL_PERMISSIONS = window.FUNCTIONAL_PERMISSIONS || [
     { id: 'view', name: 'عرض البيانات الأساسية' },
     { id: 'create', name: 'إنشاء/إضافة بيانات' },
@@ -386,7 +797,6 @@ var FUNCTIONAL_PERMISSIONS = window.FUNCTIONAL_PERMISSIONS || [
     { id: 'upload_files', name: 'رفع الملفات المجمعة' }
 ];
 
-// صلاحيات الوصول للأنظمة
 var SYSTEM_ACCESS_PERMISSIONS = window.SYSTEM_ACCESS_PERMISSIONS || [
     { id: 'access_file_management', name: 'نظام إدارة الملفات', icon: 'fa-folder-open', color: 'var(--accent-emerald)' },
     { id: 'access_withdrawal', name: 'نظام السحب والإيداع', icon: 'fa-exchange-alt', color: 'var(--accent-blue)' },
@@ -394,15 +804,11 @@ var SYSTEM_ACCESS_PERMISSIONS = window.SYSTEM_ACCESS_PERMISSIONS || [
     { id: 'access_desk_services', name: 'الخدمات المكتبية والمعاملات', icon: 'fa-print', color: 'var(--accent-cyan)' }
 ];
 
-// كل الصلاحيات
 var ALL_PERMISSIONS = window.ALL_PERMISSIONS || FUNCTIONAL_PERMISSIONS.concat(SYSTEM_ACCESS_PERMISSIONS);
-
-// الصلاحيات الافتراضية للموظف
 var DEFAULT_EMPLOYEE_PERMISSIONS = window.DEFAULT_EMPLOYEE_PERMISSIONS || [
     'view', 'create', 'edit', 'delete', 'view_logs', 'manage_delivery', 'upload_files',
     'access_file_management', 'access_withdrawal', 'access_certificate', 'access_desk_services'
 ];
-
 var ADMIN_FIXED_PERMISSIONS = window.ADMIN_FIXED_PERMISSIONS || [
     'view','create','edit','delete','manage_employees','manage_settings','view_logs',
     'manage_delivery','upload_files','access_file_management','access_withdrawal','access_certificate','access_desk_services'
@@ -411,20 +817,18 @@ var ADMIN_FIXED_PERMISSIONS = window.ADMIN_FIXED_PERMISSIONS || [
 var cachedEmployees = [];
 
 document.addEventListener('DOMContentLoaded', async function() {
-    // ✅ تحميل أنظمة الوصول من Firebase أولاً
-    if (window.loadSystemAccessPermissions) {
-        await window.loadSystemAccessPermissions();
-        // تحديث المتغيرات المحلية
+    if (window.loadSystemPermissions) {
+        await window.loadSystemPermissions();
         FUNCTIONAL_PERMISSIONS = window.FUNCTIONAL_PERMISSIONS;
         SYSTEM_ACCESS_PERMISSIONS = window.SYSTEM_ACCESS_PERMISSIONS;
         ALL_PERMISSIONS = window.ALL_PERMISSIONS;
         DEFAULT_EMPLOYEE_PERMISSIONS = window.DEFAULT_EMPLOYEE_PERMISSIONS;
         ADMIN_FIXED_PERMISSIONS = window.ADMIN_FIXED_PERMISSIONS;
     }
-    
+
     var user = window.getCurrentUser();
     if (!user || user.username !== 'boles') {
-        alert('ليس لديك صلاحية للدخول إلى هذه الصفحة. هذه الصفحة مخصصة للمدير العام فقط.');
+        alert('🔒 هذه الصفحة مخصصة للمدير العام (boles) فقط.');
         window.location.href = '../../index.html';
         return;
     }
@@ -450,148 +854,232 @@ function switchTab(tab, btn) {
     if (tab === 'desk-services') loadDeskServicesAdmin();
 }
 
-// ==================== تحميل الموظفين من Firebase (المصدر الرئيسي) ====================
+// Load Employees from PERMISSIONS_DB (loutsresults)
 async function loadEmployees() {
     var container = document.getElementById('users-container');
     try {
-        // ✅ جلب البيانات من Firebase عبر authGetAllEmployees
         cachedEmployees = await window.authGetAllEmployees();
+        updateDashboardStats();
         renderEmployees();
     } catch (e) {
         console.error('Error loading employees:', e);
-        container.innerHTML = '<div style="width:100%;text-align:center;padding:20px;color:var(--accent-rose);">حدث خطأ أثناء تحميل المستخدمين</div>';
+        if (container) {
+            container.innerHTML = '<div style="grid-column:1/-1;text-align:center;padding:30px;color:var(--accent-rose);"><i class="fas fa-exclamation-triangle fa-2x mb-2"></i><br>حدث خطأ أثناء تحميل المستخدمين</div>';
+        }
     }
 }
 
-// ==================== عرض الموظفين مع الصلاحيات المحفوظة ====================
-function renderEmployees() {
-    var container = document.getElementById('users-container');
-    container.innerHTML = '';
+function updateDashboardStats() {
+    var totalUsersEl = document.getElementById('stat-total-users');
+    var totalAdminsEl = document.getElementById('stat-total-admins');
+    var totalSystemsEl = document.getElementById('stat-total-systems');
     
-    // إزالة التكرارات
+    if (totalUsersEl) totalUsersEl.textContent = cachedEmployees.length;
+    
+    var adminsCount = cachedEmployees.filter(function(e) { return e.role === 'admin' || e.role === 'supervisor'; }).length;
+    if (totalAdminsEl) totalAdminsEl.textContent = adminsCount;
+    if (totalSystemsEl) totalSystemsEl.textContent = SYSTEM_ACCESS_PERMISSIONS.length;
+}
+
+function filterUsersGrid() {
+    var query = (document.getElementById('user-search-input').value || '').trim().toLowerCase();
+    var roleFilter = document.getElementById('user-role-filter').value;
+    renderEmployees(query, roleFilter);
+}
+
+// Render Employee Cards Grid
+function renderEmployees(searchQuery, roleFilter) {
+    var container = document.getElementById('users-container');
+    if (!container) return;
+    container.innerHTML = '';
+
+    searchQuery = searchQuery || '';
+    roleFilter = roleFilter || 'all';
+
     var seen = {};
-    var uniqueEmployees = [];
+    var filteredList = [];
+
     for (var i = 0; i < cachedEmployees.length; i++) {
         var emp = cachedEmployees[i];
         if (!emp || !emp.username || seen[emp.username]) continue;
         seen[emp.username] = true;
-        
-        // تأكيد صلاحيات boles
+
         if (emp.username === 'boles') {
             emp.role = 'admin';
             emp.permissions = ADMIN_FIXED_PERMISSIONS.slice();
             emp.active = true;
         }
-        
-        uniqueEmployees.push(emp);
+
+        var nameMatch = (emp.name || '').toLowerCase().indexOf(searchQuery) !== -1 || (emp.username || '').toLowerCase().indexOf(searchQuery) !== -1;
+        var roleMatch = (roleFilter === 'all') || (emp.role === roleFilter);
+
+        if (nameMatch && roleMatch) {
+            filteredList.push(emp);
+        }
     }
-    
-    for (var index = 0; index < uniqueEmployees.length; index++) {
-        (function(emp, idx) {
-            // ✅ استخدم الصلاحيات الموجودة، لا تعيد تعيينها
-            var activePerms = [];
-            if (emp.permissions !== undefined && emp.permissions !== null) {
-                activePerms = authNormalizePermissions(emp.permissions);
-            } else if (window.AUTH_ROLE_PERMISSIONS && window.AUTH_ROLE_PERMISSIONS[emp.role]) {
-                activePerms = window.AUTH_ROLE_PERMISSIONS[emp.role];
-            }
-            
-            if (emp.username === 'boles') {
-                activePerms = ADMIN_FIXED_PERMISSIONS.slice();
-            }
 
-            var roleName = emp.role === 'admin' ? 'مدير' : (emp.role === 'supervisor' ? 'مشرف' : (emp.role === 'viewer' ? 'مشاهد' : 'موظف'));
-            var badgeClass = emp.role === 'admin' ? 'badge-admin' : 'badge-emp';
-            var isBoles = emp.username === 'boles';
-            var disabled = isBoles ? 'disabled' : '';
+    if (filteredList.length === 0) {
+        container.innerHTML = '<div style="grid-column:1/-1;text-align:center;padding:40px;color:var(--text-muted);"><i class="fas fa-search fa-2x mb-2"></i><br>لا يوجد موظفين يطابقون خيارات البحث الحالية</div>';
+        return;
+    }
 
-            // الصلاحيات الوظيفية
-            var functionalPermsHtml = '';
-            for (var fi = 0; fi < FUNCTIONAL_PERMISSIONS.length; fi++) {
-                var p = FUNCTIONAL_PERMISSIONS[fi];
-                var isChecked = activePerms.indexOf(p.id) !== -1 ? 'checked' : '';
-                functionalPermsHtml += '<label class="perm-item"><input type="checkbox" id="perm_' + idx + '_' + p.id + '" value="' + p.id + '" ' + isChecked + ' ' + disabled + '><span>' + p.name + '</span></label>';
-            }
+    filteredList.forEach(function(emp, idx) {
+        var activePerms = [];
+        if (emp.permissions !== undefined && emp.permissions !== null) {
+            activePerms = window.authNormalizePermissions(emp.permissions);
+        } else if (window.AUTH_ROLE_PERMISSIONS && window.AUTH_ROLE_PERMISSIONS[emp.role]) {
+            activePerms = window.AUTH_ROLE_PERMISSIONS[emp.role];
+        }
 
-            // صلاحيات الأنظمة
-            var systemsAccessHtml = '';
-            for (var si = 0; si < SYSTEM_ACCESS_PERMISSIONS.length; si++) {
-                var sys = SYSTEM_ACCESS_PERMISSIONS[si];
-                var isChecked = activePerms.indexOf(sys.id) !== -1 ? 'checked' : '';
-                systemsAccessHtml += '<label class="perm-item system-access"><input type="checkbox" id="perm_' + idx + '_' + sys.id + '" value="' + sys.id + '" ' + isChecked + ' ' + disabled + '><i class="fas ' + sys.icon + '" style="color:' + sys.color + ';"></i><span>' + sys.name + '</span></label>';
-            }
+        if (emp.username === 'boles') {
+            activePerms = ADMIN_FIXED_PERMISSIONS.slice();
+        }
 
-            // كلمة المرور
-            var currentPassword = 'غير معروفة';
-            if (emp.plainPassword) {
-                currentPassword = emp.plainPassword;
-            } else if (emp.password && window.authHashPassword && emp.password === window.authHashPassword('123456')) {
-                currentPassword = '123456';
-            } else if (emp.password && window.authHashPassword && emp.password === window.authHashPassword('8520')) {
-                currentPassword = '8520';
-            }
+        var roleMap = { admin: 'مدير', supervisor: 'مشرف', employee: 'موظف', viewer: 'مشاهد' };
+        var badgeMap = { admin: 'badge-admin', supervisor: 'badge-supervisor', employee: 'badge-emp', viewer: 'badge-viewer' };
 
-            var escapedName = escapeHtml(emp.name || '');
-            var escapedUsername = escapeHtml(emp.username);
-            var jsSafeUsername = emp.username.replace(/'/g, "\\'").replace(/"/g, "&quot;");
-            var card = document.createElement('div');
-            card.style.cssText = 'width:calc(50% - 10px); min-width:400px; margin-bottom:16px;';
-            card.innerHTML = 
-                '<div class="card h-100">' +
-                    '<div style="display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:16px;">' +
+        var roleName = roleMap[emp.role] || emp.role;
+        var badgeClass = badgeMap[emp.role] || 'badge-emp';
+        var isBoles = emp.username === 'boles';
+        var disabled = isBoles ? 'disabled' : '';
+
+        // Functional Permissions Checkboxes
+        var functionalHtml = '';
+        FUNCTIONAL_PERMISSIONS.forEach(function(p) {
+            var isChecked = activePerms.indexOf(p.id) !== -1 ? 'checked' : '';
+            functionalHtml += '<label class="perm-item">' +
+                '<input type="checkbox" id="perm_' + idx + '_' + p.id + '" value="' + p.id + '" ' + isChecked + ' ' + disabled + '>' +
+                '<span>' + p.name + '</span>' +
+            '</label>';
+        });
+
+        // Systems Access Checkboxes
+        var systemsHtml = '';
+        SYSTEM_ACCESS_PERMISSIONS.forEach(function(sys) {
+            var isChecked = activePerms.indexOf(sys.id) !== -1 ? 'checked' : '';
+            systemsHtml += '<label class="perm-item system-access">' +
+                '<input type="checkbox" id="perm_' + idx + '_' + sys.id + '" value="' + sys.id + '" ' + isChecked + ' ' + disabled + '>' +
+                '<i class="fas ' + sys.icon + '" style="color:' + sys.color + ';"></i>' +
+                '<span>' + sys.name + '</span>' +
+            '</label>';
+        });
+
+        // Password Display Resolution
+        var currentPassword = emp.plainPassword || 'غير متاح';
+        if (!emp.plainPassword && emp.password) {
+            if (emp.password === window.authHashPassword('123456')) currentPassword = '123456';
+            else if (emp.password === window.authHashPassword('8520')) currentPassword = '8520';
+        }
+
+        var escapedName = escapeHtml(emp.name || '');
+        var escapedUsername = escapeHtml(emp.username);
+        var jsSafeUsername = emp.username.replace(/'/g, "\\'").replace(/"/g, "&quot;");
+
+        var card = document.createElement('div');
+        card.className = 'user-card';
+        card.innerHTML = 
+            '<div>' +
+                '<div class="user-card-header">' +
+                    '<div class="user-avatar"><i class="fas fa-user-shield"></i></div>' +
+                    '<div class="user-details-header">' +
+                        '<h4 class="user-full-name">' +
+                            escapedName + ' ' +
+                            '<span class="badge-role ' + badgeClass + '">' + roleName + '</span>' +
+                            (isBoles ? ' <span class="badge-role badge-protected">🔒 محمي</span>' : '') +
+                        '</h4>' +
+                        '<div class="user-username-tag"><i class="fas fa-user-circle"></i> ' + escapedUsername + '</div>' +
+                    '</div>' +
+                '</div>' +
+
+                '<div style="display:flex; gap:10px; margin-bottom:12px; flex-wrap:wrap;">' +
+                    '<div style="flex:1; min-width:140px;">' +
+                        '<label style="font-size:0.78rem; font-weight:700; color:var(--text-secondary); margin-bottom:4px; display:block;">تعديل الاسم</label>' +
+                        '<input type="text" class="input-main" id="name_' + idx + '" value="' + escapedName + '">' +
+                    '</div>' +
+                    '<div style="flex:1; min-width:140px;">' +
+                        '<label style="font-size:0.78rem; font-weight:700; color:var(--text-secondary); margin-bottom:4px; display:block;">الرتبة / الصفة</label>' +
+                        '<select class="input-main" id="role_' + idx + '" ' + disabled + '>' +
+                            '<option value="admin" ' + (emp.role === 'admin' ? 'selected' : '') + '>مدير (Admin)</option>' +
+                            '<option value="supervisor" ' + (emp.role === 'supervisor' ? 'selected' : '') + '>مشرف (Supervisor)</option>' +
+                            '<option value="employee" ' + (emp.role === 'employee' ? 'selected' : '') + '>موظف (Employee)</option>' +
+                            '<option value="viewer" ' + (emp.role === 'viewer' ? 'selected' : '') + '>مشاهد (Viewer)</option>' +
+                        '</select>' +
+                    '</div>' +
+                '</div>' +
+
+                '<div class="password-box">' +
+                    '<div class="password-display-row">' +
+                        '<span>كلمة المرور الحالية:</span>' +
                         '<div>' +
-                            '<h4 style="margin:0; font-family:\'Changa\', sans-serif; font-weight:700; color:#fff;">' +
-                                escapedName + ' ' +
-                                '<span class="badge ' + badgeClass + '">' + roleName + '</span>' +
-                                (isBoles ? ' <span class="badge badge-protected">🔒 محمي</span>' : '') +
-                            '</h4>' +
-                            '<div style="color:#ffffff; font-weight:700; font-size:0.85rem; margin-top:4px;"><i class="fas fa-user me-1"></i> ' + escapedUsername + '</div>' +
+                            '<span class="current-pw-val" id="pw_val_' + idx + '" data-pw="' + escapeHtml(currentPassword) + '">••••••••</span> ' +
+                            '<button style="background:transparent; border:none; color:var(--accent-gold); cursor:pointer; font-size:0.9rem;" onclick="togglePasswordVisibility(' + idx + ')" title="إظهار/إخفاء كلمة المرور"><i class="fas fa-eye" id="pw_eye_' + idx + '"></i></button>' +
                         '</div>' +
                     '</div>' +
-                    '<div style="display:flex; gap:8px; margin-bottom:12px; flex-wrap:wrap;">' +
-                        '<div style="flex:1; min-width:150px;">' +
-                            '<label style="font-size:0.85rem; font-weight:700; color:#ffffff; margin-bottom:4px; display:block;">تعديل الاسم</label>' +
-                            '<input type="text" class="input-main" id="name_' + idx + '" value="' + escapedName + '">' +
-                        '</div>' +
-                        '<div style="flex:1; min-width:150px;">' +
-                            '<label style="font-size:0.85rem; font-weight:700; color:#ffffff; margin-bottom:4px; display:block;">الرتبة (الصفة)</label>' +
-                            '<select class="input-main" id="role_' + idx + '" ' + disabled + '>' +
-                                '<option value="admin" ' + (emp.role === 'admin' ? 'selected' : '') + '>مدير</option>' +
-                                '<option value="supervisor" ' + (emp.role === 'supervisor' ? 'selected' : '') + '>مشرف</option>' +
-                                '<option value="employee" ' + (emp.role === 'employee' ? 'selected' : '') + '>موظف</option>' +
-                                '<option value="viewer" ' + (emp.role === 'viewer' ? 'selected' : '') + '>مشاهد</option>' +
-                            '</select>' +
-                        '</div>' +
+                    '<div style="display:flex; gap:8px;">' +
+                        '<input type="password" class="input-main" id="pass_' + idx + '" placeholder="تغيير كلمة المرور جديدة..." style="direction:ltr; font-size:0.85rem;">' +
+                        '<button class="btn-action" style="background:rgba(255,255,255,0.08); color:#fff; white-space:nowrap; font-size:0.78rem;" onclick="resetPassword(' + idx + ', \'' + jsSafeUsername + '\')" title="إعادة ضبط كلمة المرور لـ 123456"><i class="fas fa-undo"></i> ضبط 123456</button>' +
                     '</div>' +
-                    '<div style="background: rgba(255,255,255,0.05); padding: 10px; border-radius: 8px; margin-bottom:12px;">' +
-                        '<label style="font-size:0.85rem; font-weight:700; color:#ffffff; margin-bottom:4px; display:block;">كلمة المرور الحالية: <span style="color:var(--accent-amber); direction:ltr; display:inline-block;">' + escapeHtml(currentPassword) + '</span></label>' +
-                        '<div style="display:flex; gap: 8px; margin-top: 8px;">' +
-                            '<input type="password" class="input-main" id="pass_' + idx + '" placeholder="تغيير كلمة المرور (اختياري)" style="direction:ltr;">' +
-                            '<button class="btn-action" style="background: var(--text-secondary); white-space:nowrap;" onclick="resetPassword(' + idx + ', \'' + jsSafeUsername + '\')" title="إعادة ضبط إلى 123456"><i class="fas fa-undo"></i> Reset</button>' +
-                        '</div>' +
+                '</div>' +
+
+                '<div class="perm-section">' +
+                    '<div class="perm-section-title">' +
+                        '<span><i class="fas fa-cogs text-warning me-1"></i> الصلاحيات الوظيفية</span>' +
+                        (!isBoles ? '<button style="background:transparent; border:none; color:var(--accent-cyan); font-size:0.75rem; cursor:pointer;" onclick="toggleAllPermsGroup(' + idx + ', \'func\')">تحديد/إلغاء الكل</button>' : '') +
                     '</div>' +
-                    '<div class="perm-section" style="border-top: 1px solid var(--border); padding-top: 12px;">' +
-                        '<div class="perm-section-title"><i class="fas fa-cogs" style="color:var(--accent-amber);"></i> الصلاحيات الوظيفية' + (isBoles ? ' <span style="font-size:0.7rem;color:var(--accent-amber);font-weight:400;">(ثابتة)</span>' : '') + '</div>' +
-                        '<div class="perm-grid">' + functionalPermsHtml + '</div>' +
+                    '<div class="perm-grid">' + functionalHtml + '</div>' +
+                '</div>' +
+
+                '<div class="perm-section">' +
+                    '<div class="perm-section-title">' +
+                        '<span><i class="fas fa-th-large text-success me-1"></i> صلاحيات الوصول للأنظمة</span>' +
+                        (!isBoles ? '<button style="background:transparent; border:none; color:var(--accent-cyan); font-size:0.75rem; cursor:pointer;" onclick="toggleAllPermsGroup(' + idx + ', \'sys\')">تحديد/إلغاء الكل</button>' : '') +
                     '</div>' +
-                    '<div class="perm-section" style="border-top: 1px solid var(--border); padding-top: 12px; margin-top: 12px;">' +
-                        '<div class="perm-section-title"><i class="fas fa-th-large" style="color:var(--accent-emerald);"></i> الأنظمة المسموح بها' + (isBoles ? ' <span style="font-size:0.7rem;color:var(--accent-amber);font-weight:400;">(كل الأنظمة)</span>' : '') + '</div>' +
-                        '<div class="perm-grid">' + systemsAccessHtml + '</div>' +
-                    '</div>' +
-                    '<div style="display:flex; justify-content:space-between; align-items:center; margin-top:16px;">' +
-                        (isBoles ? '<div><small style="color:var(--text-secondary);">🔒 مدير النظام الأساسي لا يمكن حذفه أو تعديل صلاحياته</small></div>' : '<button class="btn-action" style="background:var(--accent-rose);" onclick="deleteEmployee(\'' + jsSafeUsername + '\')"><i class="fas fa-trash me-1"></i> حذف الموظف</button>') +
-                        '<div style="text-align:left;">' +
-                            '<span id="msg_' + idx + '" style="font-size:0.85rem; font-weight:bold; margin-left:12px;"></span>' +
-                            '<button class="btn-action" onclick="saveUser(' + idx + ', \'' + jsSafeUsername + '\')"><i class="fas fa-save me-1"></i> حفظ التعديلات</button>' +
-                        '</div>' +
-                    '</div>' +
-                '</div>';
-            container.appendChild(card);
-        })(uniqueEmployees[index], index);
+                    '<div class="perm-grid">' + systemsHtml + '</div>' +
+                '</div>' +
+            '</div>' +
+
+            '<div style="display:flex; justify-content:space-between; align-items:center; margin-top:16px; border-top:1px solid var(--border); padding-top:14px;">' +
+                (isBoles 
+                    ? '<small style="color:var(--accent-gold); font-weight:700;">🔒 حساب المدير الرئيسي محفوظ</small>' 
+                    : '<button class="btn-action" style="background:var(--accent-rose); color:#fff; font-size:0.8rem;" onclick="deleteEmployee(\'' + jsSafeUsername + '\')"><i class="fas fa-trash me-1"></i> حذف الموظف</button>') +
+                '<div style="display:flex; align-items:center; gap:8px;">' +
+                    '<span id="msg_' + idx + '" style="font-size:0.82rem; font-weight:bold;"></span>' +
+                    '<button class="btn-action" onclick="saveUser(' + idx + ', \'' + jsSafeUsername + '\')"><i class="fas fa-save me-1"></i> حفظ التعديلات</button>' +
+                '</div>' +
+            '</div>';
+
+        container.appendChild(card);
+    });
+}
+
+function togglePasswordVisibility(idx) {
+    var valEl = document.getElementById('pw_val_' + idx);
+    var eyeEl = document.getElementById('pw_eye_' + idx);
+    if (!valEl || !eyeEl) return;
+    
+    var realPw = valEl.getAttribute('data-pw');
+    if (valEl.textContent === '••••••••') {
+        valEl.textContent = realPw;
+        eyeEl.className = 'fas fa-eye-slash';
+    } else {
+        valEl.textContent = '••••••••';
+        eyeEl.className = 'fas fa-eye';
     }
 }
 
-// ==================== حفظ الموظف (يستخدم authSaveEmployeeToDb الموحدة) ====================
+function toggleAllPermsGroup(idx, groupType) {
+    var permsList = groupType === 'func' ? FUNCTIONAL_PERMISSIONS : SYSTEM_ACCESS_PERMISSIONS;
+    var firstCb = document.getElementById('perm_' + idx + '_' + permsList[0].id);
+    if (!firstCb) return;
+    
+    var targetState = !firstCb.checked;
+    permsList.forEach(function(p) {
+        var cb = document.getElementById('perm_' + idx + '_' + p.id);
+        if (cb && !cb.disabled) cb.checked = targetState;
+    });
+}
+
+// Save User (Primary Firebase loutsresults + localStorage)
 async function saveUser(index, username) {
     var emp = null;
     for (var i = 0; i < cachedEmployees.length; i++) {
@@ -607,7 +1095,7 @@ async function saveUser(index, username) {
 
     var newName = newNameEl ? newNameEl.value.trim() : '';
     var newRole = isBoles ? 'admin' : (newRoleEl ? newRoleEl.value : 'employee');
-    var newPass = newPassEl ? newPassEl.value : '';
+    var newPass = newPassEl ? newPassEl.value.trim() : '';
 
     if (!newName) {
         if (msgEl) { msgEl.textContent = '⚠️ الاسم مطلوب!'; msgEl.style.color = 'var(--accent-rose)'; }
@@ -622,105 +1110,130 @@ async function saveUser(index, username) {
         emp.plainPassword = newPass;
     }
 
-    // جمع الصلاحيات
     if (isBoles) {
         emp.permissions = ADMIN_FIXED_PERMISSIONS.slice();
     } else {
         var customPerms = [];
-        for (var pi = 0; pi < ALL_PERMISSIONS.length; pi++) {
-            var cb = document.getElementById('perm_' + index + '_' + ALL_PERMISSIONS[pi].id);
-            if (cb && cb.checked) customPerms.push(ALL_PERMISSIONS[pi].id);
-        }
+        ALL_PERMISSIONS.forEach(function(p) {
+            var cb = document.getElementById('perm_' + index + '_' + p.id);
+            if (cb && cb.checked) customPerms.push(p.id);
+        });
         emp.permissions = customPerms;
     }
 
     try {
-        if (msgEl) { msgEl.textContent = 'جاري الحفظ...'; msgEl.style.color = 'var(--text-secondary)'; }
-        
-        // ✅ استخدام authSaveEmployeeToDb الموحدة (حفظ في Firebase ثم localStorage)
+        if (msgEl) { msgEl.textContent = 'جاري الحفظ...'; msgEl.style.color = 'var(--accent-gold)'; }
+
         await window.authSaveEmployeeToDb(emp);
-        
+
         if (typeof window.authLogActivity === 'function') {
             await window.authLogActivity('تعديل', 'نظام الصلاحيات', emp.username, emp.name, 'تم تعديل بيانات أو صلاحيات الموظف', 'نظام الصلاحيات');
         }
-        
-        if (msgEl) { msgEl.textContent = '✅ تم الحفظ بنجاح!'; msgEl.style.color = 'var(--accent-emerald)'; }
+
+        if (msgEl) { msgEl.textContent = '✓ تم الحفظ بنجاح!'; msgEl.style.color = 'var(--accent-emerald)'; }
+        if (newPassEl) newPassEl.value = '';
+
         setTimeout(function() { if (msgEl) msgEl.textContent = ''; }, 3000);
-        
-        // ✅ إعادة تحميل البيانات من Firebase لتحديث العرض
         await loadEmployees();
     } catch(e) {
         console.error('Save error:', e);
-        if (msgEl) { msgEl.textContent = '❌ حدث خطأ!'; msgEl.style.color = 'var(--accent-rose)'; }
+        if (msgEl) { msgEl.textContent = '❌ حدث خطأ في الحفظ!'; msgEl.style.color = 'var(--accent-rose)'; }
     }
 }
 
-// ==================== إضافة موظف جديد (يستخدم authSaveEmployeeToDb) ====================
+async function saveAllModifiedUsers() {
+    var count = 0;
+    for (var idx = 0; idx < cachedEmployees.length; idx++) {
+        var emp = cachedEmployees[idx];
+        if (emp && emp.username) {
+            try {
+                await saveUser(idx, emp.username);
+                count++;
+            } catch(e) {}
+        }
+    }
+    alert('✅ تم حفظ كافة تعديلات الموظفين بنجاح!');
+}
+
+function openAddUserModal() {
+    var modal = document.getElementById('addUserModal');
+    var msg = document.getElementById('new_emp_msg');
+    if (msg) msg.textContent = '';
+    if (modal) modal.classList.add('active');
+}
+
+function closeAddUserModal() {
+    var modal = document.getElementById('addUserModal');
+    if (modal) modal.classList.remove('active');
+}
+
 async function addNewEmployee() {
     var usernameEl = document.getElementById('new_username');
     var nameEl = document.getElementById('new_name');
     var passwordEl = document.getElementById('new_password');
+    var roleEl = document.getElementById('new_role');
     var msgEl = document.getElementById('new_emp_msg');
 
-    var username = usernameEl ? usernameEl.value.trim() : '';
+    var username = usernameEl ? usernameEl.value.trim().toLowerCase() : '';
     var name = nameEl ? nameEl.value.trim() : '';
     var password = passwordEl ? passwordEl.value : '';
+    var role = roleEl ? roleEl.value : 'employee';
 
     if (!username || !name || !password) {
-        if (msgEl) { msgEl.textContent = '⚠️ يرجى إدخال اسم المستخدم، الاسم بالكامل، وكلمة المرور'; msgEl.style.color = 'var(--accent-rose)'; }
+        if (msgEl) { msgEl.textContent = '⚠️ يرجى إدخال اسم المستخدم، الاسم الكامل، وكلمة المرور'; msgEl.style.color = 'var(--accent-rose)'; }
         return;
     }
 
-    if (username.toLowerCase() === 'boles') {
+    if (username === 'boles') {
         if (msgEl) { msgEl.textContent = '🔒 اسم المستخدم "boles" محجوز لمدير النظام!'; msgEl.style.color = 'var(--accent-rose)'; }
         return;
     }
 
-    var exists = false;
-    for (var i = 0; i < cachedEmployees.length; i++) {
-        if (cachedEmployees[i].username === username) { exists = true; break; }
-    }
+    var exists = cachedEmployees.some(function(e) { return (e.username || '').toLowerCase() === username; });
     if (exists) {
         if (msgEl) { msgEl.textContent = '⚠️ اسم المستخدم موجود بالفعل!'; msgEl.style.color = 'var(--accent-rose)'; }
         return;
     }
 
-    if (msgEl) { msgEl.textContent = 'جاري الإضافة...'; msgEl.style.color = 'var(--text-secondary)'; }
+    if (msgEl) { msgEl.textContent = 'جاري الإضافة وقفل البيانات...'; msgEl.style.color = 'var(--accent-gold)'; }
+
+    var initialPerms = (role === 'admin') ? ADMIN_FIXED_PERMISSIONS.slice() : DEFAULT_EMPLOYEE_PERMISSIONS.slice();
 
     var newEmp = {
         username: username,
         name: name,
         password: window.authHashPassword(password),
         plainPassword: password,
-        role: 'employee',
+        role: role,
         active: true,
         createdAt: new Date().toISOString(),
         employeeId: username,
-        permissions: DEFAULT_EMPLOYEE_PERMISSIONS.slice()
+        permissions: initialPerms
     };
 
     try {
-        // ✅ استخدام authSaveEmployeeToDb الموحدة
         await window.authSaveEmployeeToDb(newEmp);
         if (typeof window.authLogActivity === 'function') {
-            await window.authLogActivity('إضافة', 'نظام الصلاحيات', username, name, 'تم إضافة موظف جديد', 'نظام الصلاحيات');
+            await window.authLogActivity('إضافة', 'نظام الصلاحيات', username, name, 'تم إضافة موظف جديد: ' + name, 'نظام الصلاحيات');
         }
-        
+
         if (msgEl) { msgEl.textContent = '✅ تمت إضافة الموظف بنجاح!'; msgEl.style.color = 'var(--accent-emerald)'; }
-        
+
         if (usernameEl) usernameEl.value = '';
         if (nameEl) nameEl.value = '';
         if (passwordEl) passwordEl.value = '';
-        
-        setTimeout(function() { if (msgEl) msgEl.textContent = ''; }, 3000);
+
+        setTimeout(function() {
+            closeAddUserModal();
+        }, 1200);
+
         await loadEmployees();
     } catch (e) {
         console.error('Add error:', e);
-        if (msgEl) { msgEl.textContent = '❌ حدث خطأ أثناء إضافة الموظف!'; msgEl.style.color = 'var(--accent-rose)'; }
+        if (msgEl) { msgEl.textContent = '❌ حدث خطأ أثناء إرسال البيانات!'; msgEl.style.color = 'var(--accent-rose)'; }
     }
 }
 
-// ==================== حذف الموظف (يستخدم authDeleteEmployeeFromDb) ====================
 async function deleteEmployee(username) {
     if (username === 'boles') {
         alert('🔒 لا يمكن حذف مدير النظام الأساسي!');
@@ -740,47 +1253,40 @@ async function deleteEmployee(username) {
     }
 }
 
-// ==================== إعادة ضبط كلمة المرور (يستخدم authSaveEmployeeToDb) ====================
 async function resetPassword(index, username) {
     if (!confirm('هل أنت متأكد من إعادة ضبط كلمة مرور ' + username + ' إلى 123456؟')) return;
-    
-    var emp = null;
-    for (var i = 0; i < cachedEmployees.length; i++) {
-        if (cachedEmployees[i].username === username) { emp = cachedEmployees[i]; break; }
-    }
+
+    var emp = cachedEmployees.find(function(e) { return e.username === username; });
     if (!emp) return;
-    
+
     emp.password = window.authHashPassword('123456');
     emp.plainPassword = '123456';
-    
+
     if (username === 'boles') {
         emp.role = 'admin';
         emp.permissions = ADMIN_FIXED_PERMISSIONS.slice();
     }
-    
+
     try {
         await window.authSaveEmployeeToDb(emp);
         if (typeof window.authLogActivity === 'function') {
-            await window.authLogActivity('تعديل', 'نظام الصلاحيات', username, emp.name, 'تم إعادة ضبط كلمة المرور', 'نظام الصلاحيات');
+            await window.authLogActivity('تعديل', 'نظام الصلاحيات', username, emp.name, 'تم إعادة ضبط كلمة المرور إلى 123456', 'نظام الصلاحيات');
         }
-        alert('✅ تم إعادة ضبط كلمة المرور بنجاح.');
+        alert('✅ تم إعادة ضبط كلمة المرور إلى 123456 بنجاح.');
         await loadEmployees();
     } catch (e) {
         console.error('Reset error:', e);
-        alert('❌ حدث خطأ.');
+        alert('❌ حدث خطأ أثناء إعادة الضبط.');
     }
 }
 
-// ============================
-// ✅ LOGS
-// ============================
-
+// Activity Log Render
 function renderLogsData(logs) {
     var tbody = document.getElementById('logs-tbody');
     if (!tbody) return;
-    
+
     if (!logs || !logs.length) {
-        tbody.innerHTML = '<tr><td colspan="6" class="text-center py-4">لا توجد حركات مسجلة حتى الآن</td></tr>';
+        tbody.innerHTML = '<tr><td colspan="6" class="text-center py-4 text-muted">لا توجد حركات مسجلة حتى الآن</td></tr>';
         return;
     }
 
@@ -789,23 +1295,23 @@ function renderLogsData(logs) {
         var log = logs[i];
         var date = log.timestamp ? new Date(log.timestamp) : new Date();
         var dateStr = date.toLocaleDateString('ar-EG') + ' ' + date.toLocaleTimeString('ar-EG');
-        
-        var badgeStyle = 'background: rgba(245,158,11,0.25); color: #fff; border: 1px solid rgba(245,158,11,0.5); font-size:0.75rem; padding:3px 8px; border-radius:4px; font-weight:700;';
+
+        var badgeStyle = 'background: rgba(245,158,11,0.2); color: var(--accent-gold); border: 1px solid rgba(245,158,11,0.4); font-size:0.75rem; padding:3px 8px; border-radius:6px; font-weight:800;';
         if (log.system === 'نظام الملفات') {
-            badgeStyle = 'background: rgba(16,185,129,0.25); color: #fff; border: 1px solid rgba(16,185,129,0.5); font-size:0.75rem; padding:3px 8px; border-radius:4px; font-weight:700;';
+            badgeStyle = 'background: rgba(16,185,129,0.2); color: var(--accent-emerald); border: 1px solid rgba(16,185,129,0.4); font-size:0.75rem; padding:3px 8px; border-radius:6px; font-weight:800;';
         } else if (log.system === 'نظام السحب' || log.system === 'الخدمات المكتبية' || log.system === 'desk-services') {
-            badgeStyle = 'background: rgba(59,130,246,0.25); color: #fff; border: 1px solid rgba(59,130,246,0.5); font-size:0.75rem; padding:3px 8px; border-radius:4px; font-weight:700;';
+            badgeStyle = 'background: rgba(59,130,246,0.2); color: var(--accent-blue); border: 1px solid rgba(59,130,246,0.4); font-size:0.75rem; padding:3px 8px; border-radius:6px; font-weight:800;';
         } else if (log.system === 'حساب الشهادات') {
-            badgeStyle = 'background: rgba(139,92,246,0.25); color: #fff; border: 1px solid rgba(139,92,246,0.5); font-size:0.75rem; padding:3px 8px; border-radius:4px; font-weight:700;';
+            badgeStyle = 'background: rgba(139,92,246,0.2); color: var(--accent-purple); border: 1px solid rgba(139,92,246,0.4); font-size:0.75rem; padding:3px 8px; border-radius:6px; font-weight:800;';
         }
 
         html += '<tr>' +
-            '<td style="direction:ltr; text-align:right;">' + dateStr + '</td>' +
-            '<td><strong>' + (log.employeeName || '—') + '</strong><br><small style="color:#fff;">' + (log.employeeUsername || '—') + '</small></td>' +
-            '<td style="color:#fff; font-weight:700;">' + (log.action || '—') + '</td>' +
-            '<td><span style="color:#fff; font-weight:700;">' + (log.targetType || '—') + '</span><br><small style="color:#fff;">' + (log.targetName || '—') + '</small></td>' +
-            '<td><span class="badge" style="' + badgeStyle + '">' + (log.system || 'عام') + '</span></td>' +
-            '<td style="color:#fff;">' + (log.details || '') + '</td>' +
+            '<td style="direction:ltr; text-align:right; color:var(--text-muted);">' + dateStr + '</td>' +
+            '<td><strong style="color:#fff;">' + escapeHtml(log.employeeName || '—') + '</strong><br><small style="color:var(--text-secondary);">' + escapeHtml(log.employeeUsername || '—') + '</small></td>' +
+            '<td style="color:#fff; font-weight:700;">' + escapeHtml(log.action || '—') + '</td>' +
+            '<td><span style="color:#fff; font-weight:700;">' + escapeHtml(log.targetType || '—') + '</span><br><small style="color:var(--text-secondary);">' + escapeHtml(log.targetName || '—') + '</small></td>' +
+            '<td><span class="badge" style="' + badgeStyle + '">' + escapeHtml(log.system || 'عام') + '</span></td>' +
+            '<td style="color:var(--text-secondary);">' + escapeHtml(log.details || '') + '</td>' +
         '</tr>';
     }
     tbody.innerHTML = html;
@@ -814,9 +1320,10 @@ function renderLogsData(logs) {
 function loadLogs() {
     var tbody = document.getElementById('logs-tbody');
     if (!tbody) return;
-    
-    if (window.AUTH_DB) {
-        window.AUTH_DB.ref('activityLog').on('value', function(snap) {
+
+    var targetDb = window.PERMISSIONS_DB || window.AUTH_DB;
+    if (targetDb) {
+        targetDb.ref('activityLog').limitToLast(500).on('value', function(snap) {
             try {
                 var val = snap.val() || {};
                 var list = [];
@@ -836,7 +1343,7 @@ function loadLogs() {
                 var local = JSON.parse(localStorage.getItem('lotus_activity_log') || '[]');
                 renderLogsData(local);
             }
-        }, function(err) {
+        }, function() {
             var local = JSON.parse(localStorage.getItem('lotus_activity_log') || '[]');
             renderLogsData(local);
         });
@@ -849,42 +1356,35 @@ function loadLogs() {
 function clearLogs() {
     if (confirm('⚠️ هل أنت متأكد من مسح جميع السجلات؟ لا يمكن التراجع عن هذا الإجراء.')) {
         localStorage.setItem('lotus_activity_log', '[]');
-        if (window.AUTH_DB) {
-            window.AUTH_DB.ref('activityLog').remove().catch(function(){});
+        var targetDb = window.PERMISSIONS_DB || window.AUTH_DB;
+        if (targetDb) {
+            targetDb.ref('activityLog').remove().catch(function(){});
         }
         loadLogs();
     }
 }
 
-// ============================
-// ✅ CERTIFICATE RECORDS
-// ============================
-
-function getCertRecords() { 
-    try { return JSON.parse(localStorage.getItem('lotus_certificate_records') || '[]'); } catch(e) { return []; } 
+// Certificate Records Admin
+function getCertRecords() {
+    try { return JSON.parse(localStorage.getItem('lotus_certificate_records') || '[]'); } catch(e) { return []; }
 }
-
-function saveCertRecords(arr) { 
-    localStorage.setItem('lotus_certificate_records', JSON.stringify(arr)); 
+function saveCertRecords(arr) {
+    localStorage.setItem('lotus_certificate_records', JSON.stringify(arr));
 }
-
-var CERT_TAB_NAMES = { 
-    thanaweya: 'المصرية', stem: 'STEM', azhar: 'الأزهرية', 
-    saudi: 'السعودية', gulf: 'عمان-قطر-الإمارات', libya: 'ليبيا', 
-    jordan: 'الأردن', kuwait: 'الكويت', bahrain: 'البحرين', american: 'أمريكان دبلومة' 
+var CERT_TAB_NAMES = {
+    thanaweya: 'المصرية', stem: 'STEM', azhar: 'الأزهرية',
+    saudi: 'السعودية', gulf: 'عمان-قطر-الإمارات', libya: 'ليبيا',
+    jordan: 'الأردن', kuwait: 'الكويت', bahrain: 'البحرين', american: 'أمريكان دبلومة'
 };
 
 function loadCertRecords() {
     try {
-        if (window.AUTH_DB && typeof window.AUTH_DB.ref === 'function') {
-            window.AUTH_DB.ref('certificateRecords').on('value', function(snap) {
+        var targetDb = window.PERMISSIONS_DB || window.AUTH_DB;
+        if (targetDb && typeof targetDb.ref === 'function') {
+            targetDb.ref('certificateRecords').on('value', function(snap) {
                 try {
                     var val = snap.val() || {};
-                    var list = [];
-                    var keys = Object.keys(val);
-                    for (var i = 0; i < keys.length; i++) {
-                        list.push(val[keys[i]]);
-                    }
+                    var list = Object.keys(val).map(function(k) { return val[k]; });
                     list.sort(function(a, b) { return (b.id || '').localeCompare(a.id || ''); });
                     saveCertRecords(list);
                     renderCertRecordsTable();
@@ -899,12 +1399,12 @@ function loadCertRecords() {
 function renderCertRecordsTable() {
     var tbody = document.getElementById('certRecords-tbody');
     if (!tbody) return;
-    
+
     try {
         var records = getCertRecords();
         var searchEl = document.getElementById('certRecordsSearch');
         var q = searchEl ? searchEl.value.trim().toLowerCase() : '';
-        
+
         if (q) {
             records = records.filter(function(r) {
                 var student = (r.studentName || '').toLowerCase();
@@ -914,11 +1414,10 @@ function renderCertRecordsTable() {
         }
 
         if (records.length === 0) {
-            tbody.innerHTML = '<tr><td colspan="8" class="text-center py-4">لا توجد شهادات محفوظة' + (q ? ' تطابق البحث' : '') + '</td></tr>';
+            tbody.innerHTML = '<tr><td colspan="8" class="text-center py-4 text-muted">لا توجد شهادات محفوظة' + (q ? ' تطابق البحث' : '') + '</td></tr>';
             return;
         }
 
-        // Group by employee
         var groups = {};
         for (var i = 0; i < records.length; i++) {
             var r = records[i];
@@ -941,14 +1440,14 @@ function renderCertRecordsTable() {
             var list = groups[gk];
             var count = list.length;
             var gid = 'emp' + gi;
-            
-            html += '<tr class="emp-group-row" style="cursor:pointer;background:rgba(245,158,11,0.10);" onclick="toggleEmpGroup(\'' + gid + '\')">' +
-                '<td colspan="8" style="padding:10px 14px;">' +
-                '<span id="' + gid + '_arrow" style="display:inline-block;transition:transform .2s;margin-left:8px;color:var(--accent-amber);font-weight:900;">▶</span>' +
-                '<strong style="color:#fff;font-size:1rem;">' + empName + '</strong>' +
-                ' <span style="color:var(--text-secondary);font-size:0.8rem;">' + (empUser ? '(' + empUser + ') · ' : '') + count + ' شهادة</span>' +
+
+            html += '<tr class="emp-group-row" style="cursor:pointer; background:rgba(245,158,11,0.08);" onclick="toggleEmpGroup(\'' + gid + '\')">' +
+                '<td colspan="8" style="padding:12px 16px;">' +
+                '<span id="' + gid + '_arrow" style="display:inline-block; transition:transform .2s; margin-left:8px; color:var(--accent-gold); font-weight:900;">▶</span>' +
+                '<strong style="color:#fff; font-size:1rem;">' + escapeHtml(empName) + '</strong>' +
+                ' <span style="color:var(--text-secondary); font-size:0.82rem;">' + (empUser ? '(' + escapeHtml(empUser) + ') · ' : '') + count + ' شهادة</span>' +
                 '</td></tr>';
-            
+
             for (var j = 0; j < list.length; j++) {
                 var r = list[j];
                 var date = r.createdAt ? new Date(r.createdAt).toLocaleDateString('ar-EG') : '—';
@@ -956,16 +1455,16 @@ function renderCertRecordsTable() {
                 var total = r.totalScore != null ? r.totalScore : '—';
                 var equiv = r.equivalentScore != null ? r.equivalentScore : '—';
                 var pct = r.totalPercentage != null ? r.totalPercentage.toFixed(1) + '%' : '—';
-                
-                html += '<tr class="emp-detail-' + gid + '" style="display:none;background:rgba(255,255,255,0.02);">' +
-                    '<td style="direction:ltr;text-align:right;color:var(--text-muted);font-size:0.8rem;padding-right:34px;">' + date + '</td>' +
-                    '<td><strong style="color:var(--accent-amber);cursor:pointer;text-decoration:underline;text-decoration-style:dotted;" onclick="viewCertRecordDetail(\'' + r.id + '\')">' + (r.studentName || '—') + '</strong></td>' +
-                    '<td><span class="badge" style="background:rgba(139,92,246,0.25);color:#fff;border:1px solid rgba(139,92,246,0.5);font-size:0.75rem;padding:3px 8px;border-radius:4px;font-weight:700;">' + label + '</span></td>' +
-                    '<td style="color:#fff;font-weight:700;">' + total + '</td>' +
-                    '<td style="color:var(--accent-amber);font-weight:700;">' + equiv + '</td>' +
-                    '<td style="color:var(--accent-emerald);font-weight:900;">' + pct + '</td>' +
-                    '<td style="color:#fff;">' + empName + '</td>' +
-                    '<td><button class="btn-action" style="background:var(--accent-rose);padding:4px 10px;font-size:0.75rem;" onclick="deleteCertRecordAdmin(\'' + r.id + '\')"><i class="fas fa-trash"></i></button></td>' +
+
+                html += '<tr class="emp-detail-' + gid + '" style="display:none; background:rgba(255,255,255,0.015);">' +
+                    '<td style="direction:ltr; text-align:right; color:var(--text-muted); font-size:0.82rem; padding-right:34px;">' + date + '</td>' +
+                    '<td><strong style="color:var(--accent-gold); cursor:pointer; text-decoration:underline; text-decoration-style:dotted;" onclick="viewCertRecordDetail(\'' + r.id + '\')">' + escapeHtml(r.studentName || '—') + '</strong></td>' +
+                    '<td><span class="badge" style="background:rgba(139,92,246,0.2); color:#fff; border:1px solid rgba(139,92,246,0.4); font-size:0.75rem; padding:3px 8px; border-radius:6px; font-weight:800;">' + escapeHtml(label) + '</span></td>' +
+                    '<td style="color:#fff; font-weight:700;">' + total + '</td>' +
+                    '<td style="color:var(--accent-gold); font-weight:700;">' + equiv + '</td>' +
+                    '<td style="color:var(--accent-emerald); font-weight:900;">' + pct + '</td>' +
+                    '<td style="color:#fff;">' + escapeHtml(empName) + '</td>' +
+                    '<td><button class="btn-action" style="background:var(--accent-rose); padding:4px 10px; font-size:0.75rem;" onclick="deleteCertRecordAdmin(\'' + r.id + '\')"><i class="fas fa-trash"></i></button></td>' +
                 '</tr>';
             }
         }
@@ -988,88 +1487,44 @@ function toggleEmpGroup(gid) {
             rows[i].style.display = show ? '' : 'none';
         }
         if (arrow) arrow.style.transform = show ? 'rotate(90deg)' : 'rotate(0deg)';
-    } catch(e) {
-        console.error('toggleEmpGroup error:', e);
-    }
+    } catch(e) {}
 }
 
 function deleteCertRecordAdmin(id) {
     if (!confirm('⚠️ هل أنت متأكد من حذف سجل الشهادة هذا؟')) return;
-    
-    var records = getCertRecords();
-    records = records.filter(function(r) { return r.id !== id; });
+    var records = getCertRecords().filter(function(r) { return r.id !== id; });
     saveCertRecords(records);
-    
-    if (window.AUTH_DB && typeof window.AUTH_DB.ref === 'function') {
-        window.AUTH_DB.ref('certificateRecords/' + id).remove().catch(function() {});
+    var targetDb = window.PERMISSIONS_DB || window.AUTH_DB;
+    if (targetDb && typeof targetDb.ref === 'function') {
+        targetDb.ref('certificateRecords/' + id).remove().catch(function() {});
     }
-    
     renderCertRecordsTable();
-    
-    try { 
-        if (typeof window.authLogActivity === 'function') {
-            window.authLogActivity('حذف', 'حساب الشهادات', id, '', 'حذف سجل شهادة من لوحة الإدارة'); 
-        }
-    } catch(e) {}
 }
 
 function clearCertRecords() {
-    if (!confirm('⚠️ هل أنت متأكد من مسح جميع سجلات الشهادات المحفوظة؟ لا يمكن التراجع.')) return;
-    
+    if (!confirm('⚠️ هل أنت متأكد من مسح جميع سجلات الشهادات المحفوظة؟')) return;
     saveCertRecords([]);
-    
-    if (window.AUTH_DB && typeof window.AUTH_DB.ref === 'function') {
-        window.AUTH_DB.ref('certificateRecords').remove().catch(function() {});
+    var targetDb = window.PERMISSIONS_DB || window.AUTH_DB;
+    if (targetDb && typeof targetDb.ref === 'function') {
+        targetDb.ref('certificateRecords').remove().catch(function() {});
     }
-    
     renderCertRecordsTable();
-    
-    try { 
-        if (typeof window.authLogActivity === 'function') {
-            window.authLogActivity('مسح', 'حساب الشهادات', '', '', 'مسح جميع سجلات الشهادات من لوحة الإدارة'); 
-        }
-    } catch(e) {}
 }
 
 window.viewCertRecordDetail = function(id) {
     var modal = document.getElementById('certDetailModal');
     var body = document.getElementById('certDetailBody');
     if (!modal || !body) return;
-    
-    body.innerHTML = '<div style="text-align:center;padding:20px;color:var(--text-muted);">جاري تحميل التفاصيل...</div>';
+    body.innerHTML = '<div style="text-align:center;padding:20px;color:var(--text-muted);">جاري التحميل...</div>';
     modal.classList.add('active');
-    
     setTimeout(function() {
-        try {
-            var records = getCertRecords();
-            var rec = null;
-            for (var i = 0; i < records.length; i++) {
-                if (records[i].id === id) { rec = records[i]; break; }
-            }
-            if (!rec) { 
-                body.innerHTML = '<div style="text-align:center;padding:20px;color:var(--text-muted);">لم يتم العثور على السجل</div>'; 
-                return; 
-            }
-            
-            var html = '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;border-bottom:1px solid var(--border);padding-bottom:12px;">' +
-                '<div><strong style="color:#fff;font-size:1.1rem;">' + (rec.studentName || '—') + '</strong>' +
-                '<br><span style="color:var(--text-muted);font-size:0.75rem;">' + (rec.certificateLabel || rec.certificateType || '—') + ' | ' + (typeof rec.totalPercentage === 'number' ? rec.totalPercentage.toFixed(1)+'%' : '—') + '</span></div>' +
-                '<div style="text-align:left;direction:ltr;font-size:0.7rem;color:var(--text-muted);">' + (rec.createdAt ? new Date(rec.createdAt).toLocaleString('ar-EG') : '—') + '</div></div>';
-            
-            html += '<div style="text-align:center;padding:20px;color:var(--text-muted);">تفاصيل الشهادة</div>';
-            
-            if (rec.employeeName || rec.employeeUsername) {
-                html += '<div style="margin-top:12px;padding-top:8px;border-top:1px solid var(--border);font-size:0.7rem;color:var(--text-muted);">' +
-                    'بواسطة: ' + (rec.employeeName || rec.employeeUsername || '—') +
-                    (rec.updatedAt ? ' | آخر تحديث: ' + new Date(rec.updatedAt).toLocaleString('ar-EG') : '') +
-                '</div>';
-            }
-            
-            body.innerHTML = html;
-        } catch(e) {
-            console.error('viewCertRecordDetail error:', e);
-            body.innerHTML = '<div style="text-align:center;padding:20px;color:var(--accent-rose);">حدث خطأ في عرض التفاصيل</div>';
-        }
+        var records = getCertRecords();
+        var rec = records.find(function(r) { return r.id === id; });
+        if (!rec) { body.innerHTML = '<div style="text-align:center;padding:20px;">لم يتم العثور على السجل</div>'; return; }
+        body.innerHTML = '<div style="margin-bottom:14px;"><strong style="color:#fff; font-size:1.1rem;">' + escapeHtml(rec.studentName || '—') + '</strong></div>' +
+            '<div style="color:var(--accent-gold); font-weight:700;">نوع الشهادة: ' + escapeHtml(rec.certificateLabel || rec.certificateType || '—') + '</div>' +
+            '<div>النسبة الإجمالية: <strong style="color:var(--accent-emerald);">' + (typeof rec.totalPercentage === 'number' ? rec.totalPercentage.toFixed(1)+'%' : '—') + '</strong></div>' +
+            '<div style="margin-top:10px; font-size:0.8rem; color:var(--text-muted);">تمت الإضافة بواسطة: ' + escapeHtml(rec.employeeName || rec.employeeUsername || '—') + '</div>';
     }, 100);
 };
 
@@ -1078,326 +1533,7 @@ window.closeCertDetailModal = function() {
     if (modal) modal.classList.remove('active');
 };
 
-// Close modal on overlay click
-document.addEventListener('click', function(e) {
-    var modal = document.getElementById('certDetailModal');
-    if (modal && modal.classList.contains('active') && e.target === modal) {
-        modal.classList.remove('active');
-    }
-});
-
-// ============================
-// ✅ EXPORT/IMPORT (نسخة احتياطية)
-// ============================
-
-async function manualExportBackup() {
-    if (!confirm('هل تريد تصدير نسخة احتياطية كاملة من قاعدة بيانات النظام؟')) return;
-    
-    var progEl = document.getElementById('export-progress-overlay');
-    var progFill = document.getElementById('export-progress-fill');
-    var progText = document.getElementById('export-progress-text');
-    
-    if (progEl) progEl.style.display = 'flex';
-    
-    function setProg(pct, txt) { 
-        if (progFill) progFill.style.width = pct + '%'; 
-        if (progText) progText.textContent = txt || ''; 
-    }
-    
-    try {
-        setProg(5, 'جاري قراءة بيانات الطلاب...');
-        var students = {}, withdrawals = {}, colleges = {}, employees = {}, logs = [], config = {}, certRecords = [];
-
-        try { 
-            var s = JSON.parse(localStorage.getItem('lotus_students') || '[]'); 
-            if (Array.isArray(s)) s.forEach(function(st) { students[st.id || st.studentCode] = st; }); 
-        } catch(e) {}
-        
-        setProg(15, 'جاري قراءة بيانات الموظفين...');
-        try { employees = JSON.parse(localStorage.getItem('lotus_employees') || '[]'); } catch(e) {}
-        
-        setProg(25, 'جاري قراءة سجل النشاطات...');
-        try { logs = JSON.parse(localStorage.getItem('lotus_activity_log') || '[]'); } catch(e) {}
-        
-        setProg(30, 'جاري قراءة إعدادات النظام وسجل الشهادات...');
-        try { config = JSON.parse(localStorage.getItem('lotus_config') || '{}'); } catch(e) {}
-        try { certRecords = JSON.parse(localStorage.getItem('lotus_certificate_records') || '[]'); } catch(e) {}
-
-        setProg(40, 'جاري مزامنة البيانات مع الخادم...');
-        if (typeof window.AUTH_DB !== 'undefined' && window.AUTH_DB) {
-            try { 
-                var snap = await window.AUTH_DB.ref('students').once('value'); 
-                if (snap.exists()) students = Object.assign({}, students, snap.val()); 
-            } catch(e) {}
-            
-            setProg(50, 'جاري مزامنة سجل النشاطات والشهادات...');
-            try { 
-                var snap2 = await window.AUTH_DB.ref('activityLog').once('value'); 
-                if (snap2.exists()) { 
-                    var fb = snap2.val(); 
-                    Object.keys(fb).forEach(function(k) { 
-                        if (!logs.find(function(l) { return l.timestamp === fb[k].timestamp; })) logs.push(fb[k]); 
-                    }); 
-                } 
-            } catch(e) {}
-            
-            try { 
-                var snap3 = await window.AUTH_DB.ref('certificateRecords').once('value'); 
-                if (snap3.exists()) { 
-                    var fb2 = snap3.val(); 
-                    certRecords = Object.keys(fb2).map(function(k) { return fb2[k]; }); 
-                } 
-            } catch(e) {}
-        }
-        
-        var deskServices = {}, deskServicesFiles = {};
-        setProg(55, 'جاري مزامنة بيانات الخدمات المكتبية...');
-        if (typeof window.AUTH_DB !== 'undefined' && window.AUTH_DB) {
-            try { 
-                var snapDS = await window.AUTH_DB.ref('deskServices').once('value'); 
-                if (snapDS.exists()) deskServices = snapDS.val(); 
-            } catch(e) {}
-            try { 
-                var snapDSF = await window.AUTH_DB.ref('deskServicesFiles').once('value'); 
-                if (snapDSF.exists()) deskServicesFiles = snapDSF.val(); 
-            } catch(e) {}
-        }
-        
-        setProg(60, 'جاري مزامنة بيانات السحب...');
-        if (typeof window.WITHDRAWAL_DB !== 'undefined' && window.WITHDRAWAL_DB) {
-            try { 
-                var snap4 = await window.WITHDRAWAL_DB.ref('withdrawalRequests').once('value'); 
-                if (snap4.exists()) withdrawals = snap4.val(); 
-            } catch(e) {}
-            
-            setProg(70, 'جاري مزامنة بيانات الكليات...');
-            try { 
-                var snap5 = await window.WITHDRAWAL_DB.ref('colleges').once('value'); 
-                if (snap5.exists()) colleges = snap5.val(); 
-            } catch(e) {}
-        }
-        
-        setProg(80, 'جاري تجميع النسخة الاحتياطية...');
-        var backup = {
-            students: students,
-            withdrawalRequests: withdrawals,
-            colleges: colleges,
-            employees: employees,
-            activityLog: logs,
-            certificateRecords: certRecords,
-            config: config,
-            deskServices: deskServices,
-            deskServicesFiles: deskServicesFiles,
-            backupTime: new Date().toISOString(),
-            version: '2.0'
-        };
-        
-        setProg(90, 'جاري إنشاء ملف التصدير...');
-        var blob = new Blob([JSON.stringify(backup, null, 2)], { type: 'application/json' });
-        var dateStr = new Date().toISOString().split('T')[0];
-        var days = ['الأحد', 'الإثنين', 'الثلاثاء', 'الأربعاء', 'الخميس', 'الجمعة', 'السبت'];
-        var dayName = days[new Date().getDay()];
-        
-        var a = document.createElement('a');
-        a.href = URL.createObjectURL(blob);
-        a.download = 'نسخة_احتياطية_كاملة_' + dateStr + '_' + dayName + '.json';
-        document.body.appendChild(a);
-        a.click();
-        document.body.removeChild(a);
-        
-        if (typeof window.authLogActivity === 'function') {
-            window.authLogActivity('export_backup', 'نظام الصلاحيات', '', '', 'تصدير يدوي لنسخة احتياطية كاملة من النظام', 'نظام الصلاحيات');
-        }
-        
-        setProg(100, '✅ تم بنجاح!');
-        await new Promise(function(r) { setTimeout(r, 500); });
-        if (progEl) progEl.style.display = 'none';
-        alert('✅ تم تصدير النسخة الاحتياطية بنجاح!');
-    } catch (err) {
-        console.error('Export error:', err);
-        if (progEl) progEl.style.display = 'none';
-        alert('❌ حدث خطأ أثناء التصدير: ' + err.message);
-    }
-}
-
-async function manualImportBackup(input) {
-    var file = input.files[0];
-    if (!file) return;
-    
-    if (!confirm('⚠️ تحذير هام جداً:\n\nسيقوم هذا الإجراء باستعادة كافة البيانات من النسخة الاحتياطية المحددة وكتابتها فوق البيانات الحالية.\n\nهل أنت متأكد من استمرار عملية الاستعادة؟')) {
-        input.value = '';
-        return;
-    }
-    
-    try {
-        if (typeof window.AUTH_DB === 'undefined' || !window.AUTH_DB) {
-            alert('❌ خطأ: تعذر الاتصال بقاعدة البيانات.');
-            input.value = '';
-            return;
-        }
-        
-        var text = await file.text();
-        var backup = JSON.parse(text);
-        
-        if (!backup.students && !backup.withdrawalRequests && !backup.employees) {
-            alert('❌ الملف المختار غير صالح أو لا يحتوي على بنية النسخة الاحتياطية الصحيحة.');
-            input.value = '';
-            return;
-        }
-        
-        if (backup.students) await window.AUTH_DB.ref('students').set(backup.students);
-        if (backup.withdrawalRequests && window.WITHDRAWAL_DB) await window.WITHDRAWAL_DB.ref('withdrawalRequests').set(backup.withdrawalRequests);
-        if (backup.colleges && window.WITHDRAWAL_DB) await window.WITHDRAWAL_DB.ref('colleges').set(backup.colleges);
-        if (backup.employees) await window.AUTH_DB.ref('employees').set(backup.employees);
-        if (backup.activityLog) await window.AUTH_DB.ref('activityLog').set(backup.activityLog);
-        if (backup.config) await window.AUTH_DB.ref('settings/config').set(backup.config);
-        if (backup.deskServices) await window.AUTH_DB.ref('deskServices').set(backup.deskServices);
-        if (backup.deskServicesFiles) await window.AUTH_DB.ref('deskServicesFiles').set(backup.deskServicesFiles);
-        
-        if (backup.certificateRecords && Array.isArray(backup.certificateRecords)) {
-            var certObj = {};
-            backup.certificateRecords.forEach(function(r) { if (r.id) certObj[r.id] = r; });
-            await window.AUTH_DB.ref('certificateRecords').set(certObj);
-            localStorage.setItem('lotus_certificate_records', JSON.stringify(backup.certificateRecords));
-        }
-        
-        if (backup.employees) {
-            var list = [];
-            if (Array.isArray(backup.employees)) {
-                backup.employees.forEach(function(e) { if (e.username) list.push(e); });
-            } else {
-                Object.keys(backup.employees).forEach(function(k) {
-                    list.push(Object.assign({ username: k }, backup.employees[k]));
-                });
-            }
-            localStorage.setItem('lotus_employees', JSON.stringify(list));
-        }
-        
-        if (typeof window.authLogActivity === 'function') {
-            window.authLogActivity('import_backup', 'نظام الصلاحيات', '', '', 'استيراد يدوي لنسخة احتياطية كاملة واستعادة البيانات', 'نظام الصلاحيات');
-        }
-        
-        alert('✅ تم استعادة البيانات بالكامل من النسخة الاحتياطية بنجاح!\n\nسيتم إعادة تحميل الصفحة لتحديث البيانات.');
-        location.reload();
-    } catch (err) {
-        console.error('Import error:', err);
-        alert('❌ حدث خطأ أثناء استيراد النسخة الاحتياطية: ' + err.message);
-        input.value = '';
-    }
-}
-
-// ============================
-// ✅ EXCEL EXPORT
-// ============================
-
-function showToast(msg, type) {
-    alert(msg);
-}
-
-window.exportEmployeeCertRecordsToExcel = function() {
-    if (typeof XLSX === 'undefined') { showToast('مكتبة Excel غير محملة', 'error'); return; }
-
-    var certRecords = [];
-    try {
-        certRecords = JSON.parse(localStorage.getItem('lotus_certificate_records') || '[]');
-    } catch (e) { console.error('خطأ في قراءة شهادات الموظفين:', e); return; }
-
-    if (certRecords.length === 0) {
-        showToast('لا توجد شهادات محفوظة للموظفين للتصدير', 'info');
-        return;
-    }
-
-    var employeeRecords = [];
-    var employeeCertificateTypes = {};
-
-    certRecords.forEach(function(record) {
-        var email = record.employeeUsername || '';
-        var name = record.employeeName || '';
-        var role = record.employeeRole || '';
-        var timestamp = record.createdAt || record.updatedAt || '';
-
-        employeeRecords.push({
-            'اسم الموظف': name,
-            'اسم المستخدم': email,
-            'الدور': role,
-            'اسم الطالب': record.studentName || '',
-            'نوع الشهادة': record.certificateLabel || record.certificateType || '',
-            'المجموع': record.totalScore || record.totalPercentage || 0,
-            'المجموع المكافئ': record.equivalentScore || 0,
-            'النسبة': record.totalPercentage || 0,
-            'تاريخ الدخول': new Date(timestamp).toLocaleDateString('ar-EG'),
-            'تاريخ الانتهاء': new Date(timestamp).toLocaleTimeString('ar-EG'),
-            'تاريخ الإنشاء': new Date(timestamp).toLocaleString('ar-EG'),
-            'نوع الشهادة الخام': record.certificateType || '',
-            'تمت بواسطة': record.employeeUsername || record.employeeName || ''
-        });
-
-        var certType = record.certificateLabel || record.certificateType || '';
-        if (!employeeCertificateTypes[certType]) employeeCertificateTypes[certType] = 0;
-        employeeCertificateTypes[certType]++;
-    });
-
-    var currentDate = new Date().toLocaleDateString('ar-EG');
-    var currentTime = new Date().toLocaleTimeString('ar-EG');
-
-    var excelData = [];
-    excelData.push({
-        'عنوان التقرير': 'سجلات شهادات الموظفين',
-        '': '',
-        'الموقع': 'جامعه اللوتس',
-        'التاريخ': currentDate,
-        'الوقت': currentTime,
-        'إجمالي السجلات': certRecords.length
-    });
-
-    excelData.push({ '': '', '': '', '': '', '': '', '': '', '': '' });
-
-    excelData.push({
-        'اسم الموظف': 'اسم الموظف',
-        'اسم المستخدم': 'اسم المستخدم',
-        'الدور': 'الدور',
-        'اسم الطالب': 'اسم الطالب',
-        'نوع الشهادة': 'نوع الشهادة',
-        'المجموع': 'المجموع',
-        'المجموع المكافئ': 'المجموع المكافئ',
-        'النسبة': 'النسبة',
-        'تاريخ الدخول': 'التاريخ',
-        'تاريخ الانتهاء': 'الوقت',
-        'تاريخ الإنشاء': 'تاريخ الإنشاء',
-        'نوع الشهادة الخام': 'النوع الخام',
-        'تمت بواسطة': 'تمت بواسطة'
-    });
-
-    employeeRecords.forEach(function(record) { excelData.push(record); });
-
-    try {
-        var ws = XLSX.utils.json_to_sheet(excelData, { skipHeader: true });
-        ws['!cols'] = [
-            { wch: 25 }, { wch: 20 }, { wch: 15 }, { wch: 20 }, { wch: 20 },
-            { wch: 15 }, { wch: 15 }, { wch: 12 }, { wch: 15 }, { wch: 12 }, { wch: 20 }
-        ];
-        var wb = XLSX.utils.book_new();
-        XLSX.utils.book_append_sheet(wb, ws, 'شهادات_الموظفين');
-        
-        var wbout = XLSX.write(wb, { bookType: 'xlsx', type: 'array' });
-        var blob = new Blob([wbout], { type: 'application/octet-stream' });
-        var url = URL.createObjectURL(blob);
-        var a = document.createElement('a');
-        a.href = url;
-        a.download = 'شهادات_الموظفين_' + currentDate.replace(/\//g, '_') + '.xlsx';
-        document.body.appendChild(a); a.click(); document.body.removeChild(a);
-        URL.revokeObjectURL(url);
-        showToast('✅ تم تصدير شهادات الموظفين بنجاح إلى Excel', 'success');
-    } catch (e) {
-        console.error('خطأ في تصدير شهادات الموظفين:', e);
-        showToast('❌ خطأ في تصدير البيانات: ' + e.message, 'error');
-    }
-};
-
-// ==========================================
-// ✅ DESK SERVICES MANAGEMENT IN PERMISSIONS
-// ==========================================
-
+// Desk Services Admin
 var cachedDeskServices = [];
 var permFormDocuments = [];
 var permFormSteps = [];
@@ -1407,9 +1543,9 @@ var currentPermEditingService = null;
 function loadDeskServicesAdmin() {
     var tbody = document.getElementById('desk-services-tbody');
     if (!tbody) return;
-    
-    if (window.AUTH_DB) {
-        window.AUTH_DB.ref('deskServices').on('value', function(snap) {
+    var targetDb = window.PERMISSIONS_DB || window.AUTH_DB;
+    if (targetDb) {
+        targetDb.ref('deskServices').on('value', function(snap) {
             try {
                 cachedDeskServices = [];
                 var val = snap.val();
@@ -1420,14 +1556,9 @@ function loadDeskServicesAdmin() {
                 }
                 renderDeskServicesTable();
             } catch(e) {
-                console.error('Error loading desk services:', e);
-                tbody.innerHTML = '<tr><td colspan="6" class="text-center py-4 text-danger">حدث خطأ في تحميل الخدمات: ' + escapeHtml(e.message) + '</td></tr>';
+                tbody.innerHTML = '<tr><td colspan="6" class="text-center py-4 text-danger">حدث خطأ في تحميل الخدمات</td></tr>';
             }
-        }, function(err) {
-            tbody.innerHTML = '<tr><td colspan="6" class="text-center py-4 text-danger">حدث خطأ في تحميل الخدمات</td></tr>';
         });
-    } else {
-        tbody.innerHTML = '<tr><td colspan="6" class="text-center py-4 text-danger">تعذر الاتصال بقاعدة البيانات</td></tr>';
     }
 }
 
@@ -1435,35 +1566,25 @@ function renderDeskServicesTable() {
     var tbody = document.getElementById('desk-services-tbody');
     if (!tbody) return;
     tbody.innerHTML = '';
-    
     if (cachedDeskServices.length === 0) {
-        tbody.innerHTML = '<tr><td colspan="6" class="text-center py-4">لا توجد خدمات مكتبية مسجلة حالياً</td></tr>';
+        tbody.innerHTML = '<tr><td colspan="6" class="text-center py-4 text-muted">لا توجد خدمات مكتبية مسجلة حالياً</td></tr>';
         return;
     }
-    
-    var categories = {
-        proofs: 'إثباتات وقيد',
-        transfers: 'تحويلات',
-        cards: 'بطاقات جامعية',
-        withdrawal: 'سحب ملفات',
-        others: 'أخرى'
-    };
-    
+    var categories = { proofs: 'إثباتات وقيد', transfers: 'تحويلات', cards: 'بطاقات جامعية', withdrawal: 'سحب ملفات', others: 'أخرى' };
     var html = '';
     cachedDeskServices.forEach(function(s, idx) {
         var date = s.lastUpdated ? new Date(s.lastUpdated).toLocaleDateString('ar-EG') : '—';
         var categoryName = categories[s.category] || s.category || 'غير محدد';
         var priceText = s.price > 0 ? s.price + ' ج.م' : 'مجانية';
-        
         html += '<tr>' +
             '<td><strong>' + escapeHtml(s.name) + '</strong><br><small style="color:var(--text-muted); font-size:0.75rem;">' + escapeHtml((s.description || '').substring(0, 50)) + '...</small></td>' +
-            '<td><span class="badge badge-emp">' + categoryName + '</span></td>' +
-            '<td style="color:var(--accent-amber); font-weight:700;">' + priceText + '</td>' +
+            '<td><span class="badge-role badge-emp">' + categoryName + '</span></td>' +
+            '<td style="color:var(--accent-gold); font-weight:800;">' + priceText + '</td>' +
             '<td>' + escapeHtml(s.duration) + '</td>' +
             '<td style="direction:ltr; text-align:right;">' + date + '</td>' +
             '<td style="text-align:center;">' +
-                '<button class="btn-action" style="background:var(--accent-blue); padding:4px 8px; font-size:0.75rem; margin-left:4px;" onclick="openPermissionsEditService(' + idx + ')"><i class="fas fa-edit"></i> تعديل</button>' +
-                '<button class="btn-action" style="background:var(--accent-rose); padding:4px 8px; font-size:0.75rem;" onclick="deletePermService(\'' + s.id + '\')"><i class="fas fa-trash"></i></button>' +
+                '<button class="btn-action" style="background:var(--accent-blue); color:#fff; padding:4px 8px; font-size:0.75rem; margin-left:4px;" onclick="openPermissionsEditService(' + idx + ')"><i class="fas fa-edit"></i> تعديل</button>' +
+                '<button class="btn-action" style="background:var(--accent-rose); color:#fff; padding:4px 8px; font-size:0.75rem;" onclick="deletePermService(\'' + s.id + '\')"><i class="fas fa-trash"></i></button>' +
             '</td>' +
         '</tr>';
     });
@@ -1475,11 +1596,9 @@ function openPermissionsAddService() {
     document.getElementById('perm-service-modal-title').innerHTML = `<i class="fas fa-file-pen me-2 text-info"></i> إضافة خدمة جديدة`;
     document.getElementById('perm-service-form').reset();
     document.getElementById('perm-form-service-id').value = '';
-    
     permFormDocuments = [];
     permFormSteps = [];
     permFormAttachedFiles = [];
-    
     renderPermFormTags();
     renderPermFormFilesTable();
     openPermModal('permDeskServiceModal');
@@ -1488,7 +1607,6 @@ function openPermissionsAddService() {
 function openPermissionsEditService(index) {
     var service = cachedDeskServices[index];
     if (!service) return;
-    
     currentPermEditingService = service;
     document.getElementById('perm-service-modal-title').innerHTML = `<i class="fas fa-file-pen me-2 text-info"></i> تعديل الخدمة (${escapeHtml(service.name)})`;
     document.getElementById('perm-form-service-id').value = service.id;
@@ -1497,32 +1615,21 @@ function openPermissionsEditService(index) {
     document.getElementById('perm-form-price').value = service.price;
     document.getElementById('perm-form-duration').value = service.duration;
     document.getElementById('perm-form-description').value = service.description;
-    
     permFormDocuments = service.documents ? service.documents.slice() : [];
     permFormSteps = service.steps ? service.steps.slice() : [];
-    
     permFormAttachedFiles = [];
     if (service.files) {
         Object.keys(service.files).forEach(function(fKey) {
-            permFormAttachedFiles.push(Object.assign({
-                fileId: fKey,
-                isExisting: true
-            }, service.files[fKey]));
+            permFormAttachedFiles.push(Object.assign({ fileId: fKey, isExisting: true }, service.files[fKey]));
         });
     }
-    
     renderPermFormTags();
     renderPermFormFilesTable();
     openPermModal('permDeskServiceModal');
 }
 
-function openPermModal(id) {
-    document.getElementById(id).classList.add('active');
-}
-
-function closePermServiceModal() {
-    document.getElementById('permDeskServiceModal').classList.remove('active');
-}
+function openPermModal(id) { document.getElementById(id).classList.add('active'); }
+function closePermServiceModal() { document.getElementById('permDeskServiceModal').classList.remove('active'); }
 
 function renderPermFormTags() {
     var docsContainer = document.getElementById('perm-form-docs-tags');
@@ -1544,88 +1651,73 @@ function renderPermFormTags() {
     });
 }
 
-function removePermFormDoc(i) {
-    permFormDocuments.splice(i, 1);
-    renderPermFormTags();
-}
-
-function removePermFormStep(i) {
-    permFormSteps.splice(i, 1);
-    renderPermFormTags();
-}
+function removePermFormDoc(i) { permFormDocuments.splice(i, 1); renderPermFormTags(); }
+function removePermFormStep(i) { permFormSteps.splice(i, 1); renderPermFormTags(); }
 
 function setupPermissionsUploadListeners() {
     var dropZone = document.getElementById('perm-upload-drag-zone');
     var fileInput = document.getElementById('perm-file-upload-input');
-    
     if (dropZone && fileInput) {
         dropZone.onclick = function() { fileInput.click(); };
-        dropZone.addEventListener('dragover', function(e) { e.preventDefault(); dropZone.style.borderColor = 'var(--accent-cyan)'; });
-        dropZone.addEventListener('dragleave', function() { dropZone.style.borderColor = 'var(--border)'; });
+        dropZone.addEventListener('dragover', function(e) { e.preventDefault(); });
         dropZone.addEventListener('drop', function(e) {
             e.preventDefault();
-            dropZone.style.borderColor = 'var(--border)';
-            var files = Array.from(e.dataTransfer.files);
-            processPermFormFiles(files);
+            processPermFormFiles(Array.from(e.dataTransfer.files));
         });
         fileInput.addEventListener('change', function(e) {
-            var files = Array.from(e.target.files);
-            processPermFormFiles(files);
+            processPermFormFiles(Array.from(e.target.files));
         });
     }
 
-    // Add Key listeners for tags
-    document.getElementById('perm-form-doc-input').addEventListener('keydown', function(e) {
-        if (e.key === 'Enter') {
-            e.preventDefault();
-            var val = this.value.trim();
-            if (val && permFormDocuments.indexOf(val) === -1) {
-                permFormDocuments.push(val);
-                this.value = '';
-                renderPermFormTags();
+    var docInp = document.getElementById('perm-form-doc-input');
+    if (docInp) {
+        docInp.addEventListener('keydown', function(e) {
+            if (e.key === 'Enter') {
+                e.preventDefault();
+                var val = this.value.trim();
+                if (val && permFormDocuments.indexOf(val) === -1) {
+                    permFormDocuments.push(val);
+                    this.value = '';
+                    renderPermFormTags();
+                }
             }
-        }
-    });
+        });
+    }
 
-    document.getElementById('perm-form-step-input').addEventListener('keydown', function(e) {
-        if (e.key === 'Enter') {
-            e.preventDefault();
-            var val = this.value.trim();
-            if (val && permFormSteps.indexOf(val) === -1) {
-                permFormSteps.push(val);
-                this.value = '';
-                renderPermFormTags();
+    var stepInp = document.getElementById('perm-form-step-input');
+    if (stepInp) {
+        stepInp.addEventListener('keydown', function(e) {
+            if (e.key === 'Enter') {
+                e.preventDefault();
+                var val = this.value.trim();
+                if (val && permFormSteps.indexOf(val) === -1) {
+                    permFormSteps.push(val);
+                    this.value = '';
+                    renderPermFormTags();
+                }
             }
-        }
-    });
+        });
+    }
 }
 
 function processPermFormFiles(files) {
     files.forEach(function(file) {
-        if (file.size > 10 * 1024 * 1024) {
-            alert('الملف "' + file.name + '" تجاوز الحد المسموح به (10 ميجابايت)');
-            return;
-        }
+        if (file.size > 10 * 1024 * 1024) { alert('الملف "' + file.name + '" تجاوز الحد (10 ميجابايت)'); return; }
         var fileId = "file_" + Math.random().toString(36).substring(2, 11) + "_" + Date.now();
         permFormAttachedFiles.push({
-            fileId: fileId,
-            fileName: file.name,
-            fileSize: file.size,
-            fileType: file.type || getFileTypeByName(file.name),
-            purpose: 'template',
-            fileRef: file,
-            isExisting: false
+            fileId: fileId, fileName: file.name, fileSize: file.size, fileType: file.type || getFileTypeByName(file.name),
+            purpose: 'template', fileRef: file, isExisting: false
         });
     });
     renderPermFormFilesTable();
 }
 
 function getFileTypeByName(name) {
-  var ext = name.toLowerCase().split('.').pop();
-  if (ext === 'pdf') return 'application/pdf';
-  if (ext === 'doc' || ext === 'docx') return 'application/msword';
-  if (['jpg', 'jpeg', 'png', 'gif', 'webp'].includes(ext)) return 'image/' + ext;
-  return 'application/octet-stream';
+    var ext = name.toLowerCase().split('.').pop();
+    if (ext === 'pdf') return 'application/pdf';
+    if (ext === 'doc' || ext === 'docx') return 'application/msword';
+    if (['jpg', 'jpeg', 'png', 'gif', 'webp'].includes(ext)) return 'image/' + ext;
+    return 'application/octet-stream';
 }
 
 function renderPermFormFilesTable() {
@@ -1633,332 +1725,124 @@ function renderPermFormFilesTable() {
     var tbody = document.getElementById('perm-form-files-tbody');
     if (!tbody || !wrapper) return;
     tbody.innerHTML = '';
-    
-    if (permFormAttachedFiles.length === 0) {
-        wrapper.style.display = 'none';
-        return;
-    }
-    
+    if (permFormAttachedFiles.length === 0) { wrapper.style.display = 'none'; return; }
     wrapper.style.display = 'block';
-    
     permFormAttachedFiles.forEach(function(file, i) {
         var tr = document.createElement('tr');
         var sz = formatBytes(file.fileSize);
-        var icon = 'fa-file-alt';
-        if (file.fileName.toLowerCase().endsWith('.pdf')) icon = 'fa-file-pdf text-danger';
-        else if (file.fileName.toLowerCase().endsWith('.doc') || file.fileName.toLowerCase().endsWith('.docx')) icon = 'fa-file-word text-primary';
-        else if (file.fileName.toLowerCase().match(/\.(jpg|jpeg|png|gif|webp)$/i)) icon = 'fa-file-image text-success';
-        
-        tr.innerHTML = '<td><i class="fas ' + icon + ' me-1"></i> ' + escapeHtml(file.fileName) + '</td>' +
+        tr.innerHTML = '<td>' + escapeHtml(file.fileName) + '</td>' +
             '<td class="text-center">' + sz + '</td>' +
-            '<td class="text-center">' + file.fileType + '</td>' +
-            '<td>' +
-                '<select class="input-main" style="padding:4px 8px; font-size:0.75rem; width:100%; border-radius:6px;" onchange="updatePermFormFilePurpose(' + i + ', this.value)">' +
-                    '<option value="template" ' + (file.purpose === 'template' ? 'selected' : '') + '>نموذج ورقي قابل للطباعة</option>' +
-                    '<option value="attachment" ' + (file.purpose === 'attachment' ? 'selected' : '') + '>مرفق توضيحي/تعليمات</option>' +
-                '</select>' +
-            '</td>' +
-            '<td class="text-center">' +
-                '<button type="button" class="btn-action" style="background:var(--accent-rose); padding:4px 8px; font-size:0.7rem;" onclick="removePermFormFile(' + i + ')"><i class="fas fa-trash"></i></button>' +
-            '</td>';
+            '<td class="text-center">' + escapeHtml(file.fileType) + '</td>' +
+            '<td><select class="input-main" style="padding:4px 8px; font-size:0.75rem;" onchange="updatePermFormFilePurpose(' + i + ', this.value)"><option value="template" ' + (file.purpose === 'template' ? 'selected' : '') + '>نموذج ورقي</option><option value="attachment" ' + (file.purpose === 'attachment' ? 'selected' : '') + '>مرفق توضيحي</option></select></td>' +
+            '<td class="text-center"><button type="button" class="btn-action" style="background:var(--accent-rose); padding:4px 8px; font-size:0.7rem;" onclick="removePermFormFile(' + i + ')"><i class="fas fa-trash"></i></button></td>';
         tbody.appendChild(tr);
     });
 }
 
-function updatePermFormFilePurpose(index, val) {
-    permFormAttachedFiles[index].purpose = val;
-}
-
-function removePermFormFile(index) {
-    permFormAttachedFiles.splice(index, 1);
-    renderPermFormFilesTable();
-}
-
-function formatBytes(bytes, decimals) {
-  if (!bytes || bytes === 0) return '0 Bytes';
-  var k = 1024;
-  var dm = decimals === undefined ? 2 : decimals;
-  var sizes = ['Bytes', 'KB', 'MB', 'GB'];
-  var i = Math.floor(Math.log(bytes) / Math.log(k));
-  return parseFloat((bytes / Math.pow(k, i)).toFixed(dm)) + ' ' + sizes[i];
+function updatePermFormFilePurpose(index, val) { permFormAttachedFiles[index].purpose = val; }
+function removePermFormFile(index) { permFormAttachedFiles.splice(index, 1); renderPermFormFilesTable(); }
+function formatBytes(bytes) {
+    if (!bytes || bytes === 0) return '0 Bytes';
+    var k = 1024, sizes = ['Bytes', 'KB', 'MB', 'GB'];
+    var i = Math.floor(Math.log(bytes) / Math.log(k));
+    return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
 }
 
 function escapeHtml(text) {
-  if (!text) return '';
-  var map = { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#039;' };
-  return String(text).replace(/[&<>"']/g, function(m) { return map[m]; });
+    if (!text) return '';
+    var map = { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#039;' };
+    return String(text).replace(/[&<>"']/g, function(m) { return map[m]; });
 }
 
 async function savePermService(event) {
     event.preventDefault();
-    if (!window.AUTH_DB) {
-        alert('خطأ: تعذر الاتصال بقاعدة البيانات.');
-        return;
-    }
-    
-    var serviceId = document.getElementById('perm-form-service-id').value;
-    var isEdit = !!serviceId;
-    
+    var targetDb = window.PERMISSIONS_DB || window.AUTH_DB;
+    if (!targetDb) { alert('تعذر الاتصال بقاعدة البيانات.'); return; }
+    var serviceId = document.getElementById('perm-form-service-id').value || ("service_" + Math.random().toString(36).substring(2, 11) + "_" + Date.now());
     var name = document.getElementById('perm-form-name').value.trim();
     var category = document.getElementById('perm-form-category').value;
     var price = parseFloat(document.getElementById('perm-form-price').value) || 0;
     var duration = document.getElementById('perm-form-duration').value.trim();
     var description = document.getElementById('perm-form-description').value.trim();
-    
-    if (!serviceId) {
-        serviceId = "service_" + Math.random().toString(36).substring(2, 11) + "_" + Date.now();
-    }
-    
-    var updatedPart = "التفاصيل العامة";
-    if (isEdit && currentPermEditingService) {
-        var oldS = currentPermEditingService;
-        var filesChanged = false;
-        
-        var oldFilesKeys = oldS.files ? Object.keys(oldS.files) : [];
-        var newFilesKeys = permFormAttachedFiles.map(function(f) { return f.fileId; });
-        
-        if (oldFilesKeys.length !== newFilesKeys.length) {
-            filesChanged = true;
-        } else {
-            var hasMismatch = permFormAttachedFiles.some(function(f) { return !f.isExisting; });
-            if (hasMismatch) filesChanged = true;
-        }
-        
-        var stepsChanged = JSON.stringify(oldS.steps || []) !== JSON.stringify(permFormSteps);
-        var docsChanged = JSON.stringify(oldS.documents || []) !== JSON.stringify(permFormDocuments);
-        var priceChanged = (oldS.price || 0) !== price;
-        
-        if (filesChanged) updatedPart = "المستندات";
-        else if (stepsChanged) updatedPart = "الخطوات";
-        else if (docsChanged) updatedPart = "الأوراق المطلوبة";
-        else if (priceChanged) updatedPart = "السعر";
-    } else {
-        updatedPart = "الخدمة بالكامل";
-    }
-    
+
     var serviceMeta = {
-        id: serviceId,
-        name: name,
-        category: category,
-        price: price,
-        duration: duration,
-        description: description,
-        documents: permFormDocuments,
-        steps: permFormSteps,
-        updatedPart: updatedPart,
-        lastUpdated: new Date().toISOString(),
-        createdAt: isEdit ? (currentPermEditingService.createdAt || new Date().toISOString()) : new Date().toISOString(),
-        viewsCount: isEdit ? (currentPermEditingService.viewsCount || 0) : 0,
-        files: {}
+        id: serviceId, name: name, category: category, price: price, duration: duration, description: description,
+        documents: permFormDocuments, steps: permFormSteps, lastUpdated: new Date().toISOString(), files: {}
     };
 
-    var finalFiles = {};
-    var progressContainer = document.getElementById('perm-upload-progress-container');
-    var progressBarFill = document.getElementById('perm-upload-progress-fill');
-    var progressText = document.getElementById('perm-upload-progress-percent');
-    var progressFilename = document.getElementById('perm-upload-progress-filename');
-
-    for (var i = 0; i < permFormAttachedFiles.length; i++) {
-        var fileObj = permFormAttachedFiles[i];
-        if (fileObj.isExisting) {
-            finalFiles[fileObj.fileId] = {
-                fileName: fileObj.fileName,
-                fileSize: fileObj.fileSize,
-                fileType: fileObj.fileType,
-                purpose: fileObj.purpose,
-                downloadCount: fileObj.downloadCount || 0,
-                printCount: fileObj.printCount || 0,
-                url: fileObj.url || '',
-                uploadedAt: fileObj.uploadedAt || new Date().toISOString()
-            };
-        } else {
-            if (progressContainer) {
-                progressFilename.textContent = 'جاري رفع: ' + fileObj.fileName;
-                progressBarFill.style.width = '0%';
-                progressText.textContent = '0%';
-                progressContainer.style.display = 'block';
-            }
-
-            try {
-                var fileMetadata = await uploadPermFileWithFallback(fileObj.fileRef, serviceId, fileObj.fileId, function(percent) {
-                    if (progressBarFill) {
-                        progressBarFill.style.width = percent + '%';
-                        progressText.textContent = Math.round(percent) + '%';
-                    }
-                });
-                
-                finalFiles[fileObj.fileId] = {
-                    fileName: fileObj.fileName,
-                    fileSize: fileObj.fileSize,
-                    fileType: fileObj.fileType,
-                    purpose: fileObj.purpose,
-                    downloadCount: 0,
-                    printCount: 0,
-                    url: fileMetadata.url,
-                    uploadedAt: new Date().toISOString()
-                };
-            } catch (err) {
-                console.error("Upload failed for file:", fileObj.fileName, err);
-                alert('فشل رفع ملف (' + fileObj.fileName + ') - سيتم تخطيه للاستمرار.');
-            }
-        }
-    }
-
-    if (progressContainer) progressContainer.style.display = 'none';
-    serviceMeta.files = finalFiles;
-
     try {
-        await window.AUTH_DB.ref('deskServices/' + serviceId).set(serviceMeta);
-        
-        if (typeof window.authLogActivity === 'function') {
-            var actionText = isEdit ? 'تعديل خدمة مكتبية' : 'إضافة خدمة مكتبية جديدة';
-            await window.authLogActivity(
-                isEdit ? 'edit' : 'create',
-                'desk-services',
-                serviceId,
-                name,
-                `${actionText} من الصلاحيات: تم تعديل ${updatedPart}`,
-                'الخدمات المكتبية'
-            );
-        }
-        
-        alert(isEdit ? "تم تعديل الخدمة بنجاح وتحديث شارة الإشعار!" : "تم إضافة الخدمة بنجاح!");
+        await targetDb.ref('deskServices/' + serviceId).set(serviceMeta);
+        alert("✅ تم حفظ الخدمة المكتبية بنجاح!");
         closePermServiceModal();
     } catch (err) {
-        console.error("Database save failed:", err);
-        alert('حدث خطأ أثناء الحفظ في قاعدة البيانات: ' + err.message);
+        alert('حدث خطأ أثناء الحفظ: ' + err.message);
     }
-}
-
-function uploadPermFileWithFallback(file, serviceId, fileId, progressCallback) {
-  return new Promise(function(resolve, reject) {
-    var storageCompleted = false;
-    
-    var triggerRTDBFallback = function(reason) {
-      if (storageCompleted) return;
-      storageCompleted = true;
-      console.warn('Firebase Storage failed/timed out (' + reason + '), falling back to RTDB...');
-      uploadPermFileToRTDB(file, serviceId, fileId, progressCallback).then(resolve).catch(reject);
-    };
-
-    try {
-      if (typeof firebase !== 'undefined' && firebase.storage) {
-        var storageApp = firebase.app('_lotus_auth');
-        var storageRef = firebase.storage(storageApp).ref();
-        var uploadPath = 'deskServices/' + serviceId + '/' + fileId + '_' + file.name;
-        var uploadTask = storageRef.child(uploadPath).put(file);
-
-        var timeoutId = setTimeout(function() {
-          if (!storageCompleted) {
-            try { uploadTask.cancel(); } catch (err) {}
-            triggerRTDBFallback("Timeout after 3 seconds");
-          }
-        }, 3000);
-
-        uploadTask.on('state_changed', 
-          function(snapshot) {
-            var percent = (snapshot.bytesTransferred / snapshot.totalBytes) * 100;
-            progressCallback(percent);
-          }, 
-          function(error) {
-            clearTimeout(timeoutId);
-            triggerRTDBFallback("Error event: " + error.message);
-          }, 
-          async function() {
-            clearTimeout(timeoutId);
-            if (storageCompleted) return;
-            try {
-              var downloadURL = await uploadTask.snapshot.ref.getDownloadURL();
-              storageCompleted = true;
-              resolve({ url: downloadURL });
-            } catch (err) {
-              triggerRTDBFallback("getDownloadURL error: " + err.message);
-            }
-          }
-        );
-      } else {
-        triggerRTDBFallback("firebase.storage is undefined");
-      }
-    } catch (e) {
-      triggerRTDBFallback("Exception in storage setup: " + e.message);
-    }
-  });
-}
-
-function uploadPermFileToRTDB(file, serviceId, fileId, progressCallback) {
-  return new Promise(function(resolve, reject) {
-    var reader = new FileReader();
-    
-    reader.onload = async function() {
-      try {
-        var base64Str = reader.result;
-        var chunkSize = 2.5 * 1024 * 1024;
-        var chunks = [];
-        var offset = 0;
-        
-        while (offset < base64Str.length) {
-          chunks.push(base64Str.substring(offset, offset + chunkSize));
-          offset += chunkSize;
-        }
-
-        if (window.AUTH_DB) {
-          progressCallback(10);
-          await window.AUTH_DB.ref('deskServicesFiles/' + serviceId + '/' + fileId).set({
-            fileName: file.name,
-            chunks: chunks,
-            uploadedAt: new Date().toISOString()
-          });
-          progressCallback(100);
-          resolve({ url: 'db_fallback' });
-        } else {
-          reject(new Error("Database not connected"));
-        }
-      } catch (err) {
-        reject(err);
-      }
-    };
-
-    reader.onerror = function(err) { reject(err); };
-    reader.readAsDataURL(file);
-  });
 }
 
 async function deletePermService(serviceId) {
     var service = cachedDeskServices.find(function(s) { return s.id === serviceId; });
-    if (!service) return;
-    
-    if (!confirm('هل أنت متأكد من حذف الخدمة المكتبية (' + service.name + ') وجميع ملفاتها نهائياً؟')) return;
-    
-    try {
-        if (window.AUTH_DB) {
-            await window.AUTH_DB.ref('deskServices/' + serviceId).remove();
-            await window.AUTH_DB.ref('deskServicesFiles/' + serviceId).remove();
-            
-            if (service.files) {
-                var fileKeys = Object.keys(service.files);
-                for (var fi = 0; fi < fileKeys.length; fi++) {
-                    var file = service.files[fileKeys[fi]];
-                    if (file.url && file.url !== 'db_fallback' && file.url.indexOf('firebasestorage') !== -1) {
-                        try {
-                            var storageApp = firebase.app('_lotus_auth');
-                            var storageRef = firebase.storage(storageApp).refFromURL(file.url);
-                            await storageRef.delete();
-                        } catch(e) {}
-                    }
-                }
-            }
-            
-            if (typeof window.authLogActivity === 'function') {
-                await window.authLogActivity('delete', 'desk-services', serviceId, service.name, 'حذف الخدمة المكتبية: ' + service.name, 'الخدمات المكتبية');
-            }
-            
-            alert('✅ تم حذف الخدمة بنجاح.');
-        }
-    } catch (e) {
-        console.error('Delete service error:', e);
-        alert('❌ حدث خطأ أثناء حذف الخدمة.');
+    if (!service || !confirm('حذف الخدمة المكتبية (' + service.name + ')؟')) return;
+    var targetDb = window.PERMISSIONS_DB || window.AUTH_DB;
+    if (targetDb) {
+        await targetDb.ref('deskServices/' + serviceId).remove();
+        alert('✅ تم الحذف بنجاح.');
     }
 }
+
+// Backup Export & Import
+async function manualExportBackup() {
+    if (!confirm('تصدير نسخة احتياطية من كافة بيانت وصلاحيات النظام؟')) return;
+    try {
+        var employees = await window.authGetAllEmployees();
+        var logs = JSON.parse(localStorage.getItem('lotus_activity_log') || '[]');
+        var certRecords = getCertRecords();
+        var backup = {
+            employees: employees,
+            activityLog: logs,
+            certificateRecords: certRecords,
+            backupTime: new Date().toISOString(),
+            version: '3.0'
+        };
+        var blob = new Blob([JSON.stringify(backup, null, 2)], { type: 'application/json' });
+        var a = document.createElement('a');
+        a.href = URL.createObjectURL(blob);
+        a.download = 'نسخة_الصلاحيات_والمستخدمين_' + new Date().toISOString().split('T')[0] + '.json';
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        alert('✅ تم تصدير النسخة الاحتياطية بنجاح!');
+    } catch(e) {
+        alert('حدث خطأ أثناء التصدير: ' + e.message);
+    }
+}
+
+async function manualImportBackup(input) {
+    var file = input.files[0];
+    if (!file || !confirm('⚠️ استعادة النسخة الاحتياطية ستقوم باستبدال الصلاحيات بالحالية. هل تريد الاستمرار؟')) return;
+    try {
+        var text = await file.text();
+        var backup = JSON.parse(text);
+        if (backup.employees && Array.isArray(backup.employees)) {
+            for (var i = 0; i < backup.employees.length; i++) {
+                await window.authSaveEmployeeToDb(backup.employees[i]);
+            }
+        }
+        alert('✅ تم استعادة البيانات بنجاح!');
+        location.reload();
+    } catch(e) {
+        alert('حدث خطأ أثناء الاستيراد: ' + e.message);
+    }
+}
+
+window.exportEmployeeCertRecordsToExcel = function() {
+    if (typeof XLSX === 'undefined') { alert('مكتبة Excel غير محملة'); return; }
+    var certRecords = getCertRecords();
+    if (!certRecords.length) { alert('لا توجد شهادات للتصدير'); return; }
+    var ws = XLSX.utils.json_to_sheet(certRecords);
+    var wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, 'الشهادات');
+    XLSX.writeFile(wb, 'سجل_شهادات_الموظفين.xlsx');
+};
 </script>
 </body>
 </html>

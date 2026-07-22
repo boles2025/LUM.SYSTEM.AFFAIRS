@@ -478,7 +478,16 @@
           <select id="filterGrade"><option value="">كل الفرق</option><option value="الفرقة الأولى">الفرقة الأولى</option><option value="الفرقة الثانية">الفرقة الثانية</option><option value="الفرقة الثالثة">الفرقة الثالثة</option></select>
           <input type="date" id="filterDateFrom" title="من تاريخ">
           <input type="date" id="filterDateTo" title="إلى تاريخ">
-          <button class="btn btn-ghost btn-sm" id="resetFilters"><i class="fas fa-redo"></i></button>
+          <select id="sortRecords" title="ترتيب السجلات" style="border-color:var(--accent-amber); font-weight:700;">
+            <option value="date_desc">📅 الأحدث إلى الأقدم (تاريخ السحب)</option>
+            <option value="date_asc">📅 الأقدم إلى الأحدث (تاريخ السحب)</option>
+            <option value="name_asc">🔤 ترتيب أبجدي (اسم الطالب أ - ي)</option>
+            <option value="name_desc">🔤 ترتيب أبجدي (اسم الطالب ي - أ)</option>
+            <option value="college_asc">🏛️ ترتيب بحسب الكلية</option>
+            <option value="file_asc">🔢 رقم الملف (تصاعدي)</option>
+            <option value="file_desc">🔢 رقم الملف (تنازلي)</option>
+          </select>
+          <button class="btn btn-ghost btn-sm" id="resetFilters" title="إعادة الترتيب والتصفية"><i class="fas fa-redo"></i></button>
           <button class="btn btn-accent btn-sm" id="exportExcel"><i class="fas fa-file-excel"></i> تصدير</button>
           <button class="btn btn-success btn-sm" id="printRecords"><i class="fas fa-print"></i></button>
           <span class="filter-count" id="filterCount">0 سجل</span>
@@ -511,6 +520,15 @@
           <select id="regFilterGrade"><option value="">كل الفرق</option><option value="الفرقة الأولى">الفرقة الأولى</option><option value="الفرقة الثانية">الفرقة الثانية</option><option value="الفرقة الثالثة">الفرقة الثالثة</option><option value="الفرقة الرابعة">الفرقة الرابعة</option><option value="الفرقة الخامسة">الفرقة الخامسة</option><option value="الفرقة السادسة">الفرقة السادسة</option></select>
           <input type="date" id="regFilterDateFrom" title="من تاريخ">
           <input type="date" id="regFilterDateTo" title="إلى تاريخ">
+          <select id="regSortRecords" title="ترتيب السجلات" style="border-color:var(--accent-amber); font-weight:700;">
+            <option value="date_desc">📅 الأحدث إلى الأقدم (تاريخ السحب)</option>
+            <option value="date_asc">📅 الأقدم إلى الأحدث (تاريخ السحب)</option>
+            <option value="name_asc">🔤 ترتيب أبجدي (اسم الطالب أ - ي)</option>
+            <option value="name_desc">🔤 ترتيب أبجدي (اسم الطالب ي - أ)</option>
+            <option value="college_asc">🏛️ ترتيب بحسب الكلية</option>
+            <option value="file_asc">🔢 رقم الملف (تصاعدي)</option>
+            <option value="file_desc">🔢 رقم الملف (تنازلي)</option>
+          </select>
           <button class="btn btn-ghost btn-sm" id="regResetFilters" title="إعادة تصفية"><i class="fas fa-redo"></i></button>
           <span class="filter-count" id="regFilterCount">0 سجل</span>
         </div>
@@ -709,31 +727,142 @@
 
     let allRecords = [], colleges = [], currentPage = 1, reportData = [];
 
+    function _isStaffEmp(n) {
+      if (!n) return false;
+      var s = String(n).trim();
+      if (!s || s === 'مدير النظام' || s === 'المدير العام' || s.toLowerCase() === 'admin' || s.toLowerCase() === 'boles' || s === 'Super Admin') return false;
+      return true;
+    }
+
+    function _getWithdrawalStaff(r) {
+      if (!r) return '—';
+      var candidates = [r.staffName, r.processedBy, r.createdBy, r.employeeName, r.employeeUsername, r.user, r.staff];
+      for (var i = 0; i < candidates.length; i++) {
+        if (_isStaffEmp(candidates[i])) return candidates[i];
+      }
+
+      var _logsList = window._cachedLogs || [];
+      if (!Array.isArray(_logsList) || _logsList.length === 0) {
+        try { _logsList = JSON.parse(localStorage.getItem('lotus_activity_log') || '[]'); } catch(e) { _logsList = []; }
+      }
+
+      var wCode = String(r.studentCode || '').trim().toLowerCase();
+      var wName = String(r.studentName || '').trim().toLowerCase();
+      var wFile = String(r.fileNumber || '').trim().toLowerCase();
+
+      if (Array.isArray(_logsList)) {
+        var match = _logsList.find(function(log) {
+          var emp = log.employeeName || log.employeeUsername;
+          if (!_isStaffEmp(emp)) return false;
+
+          var sys = String(log.system || '').toLowerCase();
+          var act = String(log.action || '').toLowerCase();
+          var det = String(log.details || '').toLowerCase();
+          var target = String(log.targetName || '').toLowerCase();
+
+          var isWLog = sys.includes('withdrawal') || sys.includes('سحب') || act.includes('withdrawal') || act.includes('سحب') || det.includes('سحب');
+          if (!isWLog) return false;
+
+          var nameMatch = wName && (target.includes(wName) || det.includes(wName));
+          var codeMatch = wCode && (target.includes(wCode) || det.includes(wCode));
+          var fileMatch = wFile && det.includes(wFile);
+
+          return nameMatch || codeMatch || fileMatch;
+        });
+
+        if (match) {
+          var emp = match.employeeName || match.employeeUsername;
+          if (_isStaffEmp(emp)) return emp;
+        }
+      }
+      return '—';
+    }
+
+    function _getLevel(code) {
+      var _stuList = [];
+      try { _stuList = JSON.parse(localStorage.getItem('lotus_students') || '[]'); } catch(e) {}
+      var _s = _stuList.find(function(x) { return x.studentCode === code || x.code === code; });
+      if (_s && _s.level) return _s.level;
+      return typeof getGrade === 'function' ? getGrade(code) : '—';
+    }
+
+    function toEnglishDigits(str) {
+      if (str === null || str === undefined) return '';
+      return String(str).replace(/[٠-٩]/g, function(d) {
+        return d.charCodeAt(0) - 1632;
+      }).replace(/[۰-۹]/g, function(d) {
+        return d.charCodeAt(0) - 1776;
+      }).trim();
+    }
+
     function fmtDate(d) {
       if (!d) return '';
-      if (/^\d{2}-\d{2}-\d{4}$/.test(d)) return d;
-      if (/^\d{4}-\d{2}-\d{2}$/.test(d)) return d.split('-').reverse().join('-');
-      if (/^\d{4,5}$/.test(String(d))) {
+      var s = toEnglishDigits(d);
+      if (!s) return '';
+
+      // Match DD-MM-YYYY or DD/MM/YYYY or D-M-YYYY
+      var m1 = s.match(/^(\d{1,2})[\/\-](\d{1,2})[\/\-](\d{4})$/);
+      if (m1) {
+        var dd = ('0' + parseInt(m1[1], 10)).slice(-2);
+        var mm = ('0' + parseInt(m1[2], 10)).slice(-2);
+        var yyyy = m1[3];
+        return dd + '-' + mm + '-' + yyyy;
+      }
+
+      // Match YYYY-MM-DD or YYYY/MM/DD or YYYY-M-D
+      var m2 = s.match(/^(\d{4})[\/\-](\d{1,2})[\/\-](\d{1,2})/);
+      if (m2) {
+        var yyyy = m2[1];
+        var mm = ('0' + parseInt(m2[2], 10)).slice(-2);
+        var dd = ('0' + parseInt(m2[3], 10)).slice(-2);
+        return dd + '-' + mm + '-' + yyyy;
+      }
+
+      // Excel Serial Date Number (e.g., 45123)
+      if (/^\d{4,5}$/.test(s)) {
         var epoch = new Date(1900, 0, 1);
         epoch.setDate(epoch.getDate() - 2);
-        var xlDate = new Date(epoch.getTime() + parseInt(d) * 86400000);
+        var xlDate = new Date(epoch.getTime() + parseInt(s, 10) * 86400000);
         var dd = ('0' + xlDate.getDate()).slice(-2);
         var mm = ('0' + (xlDate.getMonth() + 1)).slice(-2);
         return dd + '-' + mm + '-' + xlDate.getFullYear();
       }
-      var dt = new Date(d);
-      if (!isNaN(dt)) {
-        var dd2 = ('0' + dt.getDate()).slice(-2);
-        var mm2 = ('0' + (dt.getMonth() + 1)).slice(-2);
-        return dd2 + '-' + mm2 + '-' + dt.getFullYear();
+
+      // Standard JS Date parse fallback
+      var dt = new Date(s);
+      if (!isNaN(dt.getTime())) {
+        var dd = ('0' + dt.getDate()).slice(-2);
+        var mm = ('0' + (dt.getMonth() + 1)).slice(-2);
+        return dd + '-' + mm + '-' + dt.getFullYear();
+      }
+
+      return s;
+    }
+
+    function toDateInput(d) {
+      if (!d) return '';
+      var formatted = fmtDate(d);
+      var parts = formatted.split('-');
+      if (parts.length === 3 && parts[2].length === 4) {
+        return parts[2] + '-' + parts[1] + '-' + parts[0];
       }
       return d;
     }
-    function toDateInput(d) {
-      if (!d) return '';
-      var parts = d.split('-');
-      if (parts.length === 3 && parts[2].length === 4) return parts[2] + '-' + parts[1] + '-' + parts[0];
-      return d;
+
+    function parseToDateObj(d) {
+      if (!d) return null;
+      var formatted = fmtDate(d);
+      if (!formatted) return null;
+      var parts = formatted.split('-');
+      if (parts.length === 3 && parts[2].length === 4) {
+        var dd = parseInt(parts[0], 10);
+        var mm = parseInt(parts[1], 10) - 1;
+        var yyyy = parseInt(parts[2], 10);
+        var dt = new Date(yyyy, mm, dd);
+        if (!isNaN(dt.getTime())) return dt;
+      }
+      var dt = new Date(d);
+      return isNaN(dt.getTime()) ? null : dt;
     }
     const perPage = 15;
 
@@ -822,8 +951,11 @@
       const sel = document.getElementById('acYear');
       if ([...sel.options].some(o => o.value === ac)) sel.value = ac;
     });
-    document.getElementById('date').valueAsDate = new Date();
-    document.getElementById('date').dispatchEvent(new Event('change'));
+    var dateEl = document.getElementById('date');
+    if (dateEl) {
+      if (dateEl._flatpickr) dateEl._flatpickr.setDate(new Date());
+      else dateEl.value = fmtDate(new Date());
+    }
     document.getElementById('editDate').addEventListener('change', function() {
       var y = parseYearFromStr(this.value);
       if (!y) return;
@@ -997,37 +1129,116 @@
     } catch(e) {}
 
     // Records
+    function isEmptyRecord(r) {
+      if (!r) return true;
+      var name = String(r.studentName || r.name || r.Name || r.fullName || r.student_name || '').trim();
+      var code = String(r.studentCode || r.code || r.Code || r.student_code || '').trim();
+      var nid = String(r.nationalId || r.nid || r.national_id || r.NationalId || '').trim();
+      var fileNo = String(r.fileNumber || r.fileNo || r.file_number || r.FileNumber || '').trim();
+
+      var isNameEmpty = !name || name === '-';
+      var isCodeEmpty = !code || code === '-';
+      var isNidEmpty = !nid || nid === '-';
+      var isFileNoEmpty = !fileNo || fileNo === '-';
+
+      return isNameEmpty && isCodeEmpty && isNidEmpty && isFileNoEmpty;
+    }
+
+    var _hasRunAutoFix = false;
+
     requestsRef.on('value', snap => {
-      allRecords = []; snap.forEach(function(ch) { allRecords.push(Object.assign({ id: ch.key }, ch.val())); });
-      console.log('Records loaded:', allRecords.length);
+      allRecords = [];
+      snap.forEach(function(ch) {
+        var rec = Object.assign({ id: ch.key }, ch.val());
+        rec.studentName = rec.studentName || rec.name || rec.Name || rec.fullName || rec.student_name || '';
+        rec.studentCode = rec.studentCode || rec.code || rec.Code || rec.student_code || '';
+        rec.nationalId = rec.nationalId || rec.nid || rec.national_id || rec.NationalId || '';
+        rec.fileNumber = rec.fileNumber || rec.fileNo || rec.file_number || rec.FileNumber || '';
+
+        if (!isEmptyRecord(rec)) {
+          allRecords.push(rec);
+        }
+      });
+
+      console.log('Valid records loaded:', allRecords.length);
       allRecords.sort(function(a, b) {
         var ta = toComparable(a.withdrawalDate) || (a.createdAt ? new Date(a.createdAt).getTime() : 0);
         var tb = toComparable(b.withdrawalDate) || (b.createdAt ? new Date(b.createdAt).getTime() : 0);
         return tb - ta;
       });
+
       currentPage = 1;
       renderTable();
       renderRegTable();
       renderCollegeSelects();
       renderCollegeList();
       renderSettingsRecords();
-      var fixUpdates = {};
-      allRecords.forEach(function(r) {
-        if (!r.academicYear || r.academicYear.indexOf('1969') > -1 || r.academicYear.indexOf('1970-') === 0) {
-          var y = parseYearFromStr(r.withdrawalDate);
-          if (y && y > 2000) fixUpdates[r.id + '/academicYear'] = (y - 1) + '-' + y;
-        }
-        if (r.studentCode && typeof r.studentCode === 'number') fixUpdates[r.id + '/studentCode'] = String(r.studentCode);
-      });
-      if (Object.keys(fixUpdates).length) requestsRef.update(fixUpdates);
+
+      // Run database auto-fix & cleanup ONCE per page session to avoid infinite loops!
+      if (!_hasRunAutoFix && snap.exists()) {
+        _hasRunAutoFix = true;
+        setTimeout(async function() {
+          var fixUpdates = {};
+          var toRemove = [];
+
+          snap.forEach(function(ch) {
+            var r = Object.assign({ id: ch.key }, ch.val());
+            if (isEmptyRecord(r)) {
+              toRemove.push(ch.key);
+            } else {
+              var nameVal = r.studentName || r.name || r.Name || r.fullName || r.student_name;
+              var codeVal = r.studentCode || r.code || r.Code || r.student_code;
+              var nidVal = r.nationalId || r.nid || r.national_id || r.NationalId;
+              var fileVal = r.fileNumber || r.fileNo || r.file_number || r.FileNumber;
+
+              if (!r.studentName && nameVal) fixUpdates[r.id + '/studentName'] = nameVal;
+              if (!r.studentCode && codeVal) fixUpdates[r.id + '/studentCode'] = codeVal;
+              if (!r.nationalId && nidVal) fixUpdates[r.id + '/nationalId'] = nidVal;
+              if (!r.fileNumber && fileVal) fixUpdates[r.id + '/fileNumber'] = fileVal;
+
+              if (!r.college || !r.college.trim()) {
+                var autoCollege = getCollegeFromCode(codeVal);
+                if (autoCollege) fixUpdates[r.id + '/college'] = autoCollege;
+              }
+              if (nameVal && (nameVal.indexOf('منةالله') !== -1 || nameVal.indexOf('منة الله') !== -1) && nameVal.indexOf('فاروق') !== -1) {
+                if (r.withdrawalDate !== '18-07-2025') fixUpdates[r.id + '/withdrawalDate'] = '18-07-2025';
+              }
+              var formattedDate = fmtDate(r.withdrawalDate);
+              if (formattedDate && r.withdrawalDate !== formattedDate) {
+                fixUpdates[r.id + '/withdrawalDate'] = formattedDate;
+              }
+            }
+          });
+
+          if (toRemove.length > 0) {
+            console.log('Purging empty records from DB:', toRemove.length);
+            for (var i = 0; i < toRemove.length; i++) {
+              try { await requestsRef.child(toRemove[i]).remove(); } catch(e){}
+            }
+          }
+          if (Object.keys(fixUpdates).length > 0) {
+            console.log('Fixing records in DB:', Object.keys(fixUpdates).length);
+            try { await requestsRef.update(fixUpdates); } catch(e){}
+          }
+        }, 1500);
+      }
     });
 
     function toComparable(d) {
       if (!d) return 0;
-      if (/^\d{2}-\d{2}-\d{4}$/.test(d)) { var p = d.split('-'); return parseInt(p[2]+p[1]+p[0], 10); }
-      if (/^\d{4}-\d{2}-\d{2}$/.test(d)) return parseInt(d.replace(/-/g,''), 10);
-      var dt = new Date(d).getTime();
-      return isNaN(dt) ? 0 : dt;
+      var formatted = fmtDate(d);
+      if (formatted) {
+        var parts = formatted.split('-');
+        if (parts.length === 3 && parts[2].length === 4) {
+          var dd = parseInt(parts[0], 10);
+          var mm = parseInt(parts[1], 10) - 1;
+          var yyyy = parseInt(parts[2], 10);
+          var dt = new Date(yyyy, mm, dd);
+          if (!isNaN(dt.getTime())) return dt.getTime();
+        }
+      }
+      var dt = new Date(d);
+      return isNaN(dt.getTime()) ? 0 : dt.getTime();
     }
     function getGrade(code) {
       var c = String(code || '').substring(0, 2);
@@ -1111,14 +1322,58 @@
         return true;
       });
 
-      // Sort Newest to Oldest (الأحدث إلى الأقدم)
-      filtered.sort((a, b) => {
-        var ta = toComparable(a.withdrawalDate) || (a.createdAt ? new Date(a.createdAt).getTime() : 0);
-        var tb = toComparable(b.withdrawalDate) || (b.createdAt ? new Date(b.createdAt).getTime() : 0);
-        return tb - ta;
-      });
+      const sortType = document.getElementById('sortRecords') ? document.getElementById('sortRecords').value : 'date_desc';
+      applySorting(filtered, sortType);
 
       return filtered;
+    }
+
+    function applySorting(list, sortType) {
+      sortType = sortType || 'date_desc';
+      list.sort((a, b) => {
+        if (sortType === 'date_desc') {
+          var ta = toComparable(a.withdrawalDate) || (a.createdAt ? new Date(a.createdAt).getTime() : 0);
+          var tb = toComparable(b.withdrawalDate) || (b.createdAt ? new Date(b.createdAt).getTime() : 0);
+          return tb - ta;
+        }
+        if (sortType === 'date_asc') {
+          var ta = toComparable(a.withdrawalDate) || (a.createdAt ? new Date(a.createdAt).getTime() : 0);
+          var tb = toComparable(b.withdrawalDate) || (b.createdAt ? new Date(b.createdAt).getTime() : 0);
+          return ta - tb;
+        }
+        if (sortType === 'name_asc') {
+          var na = a.studentName || a.name || '';
+          var nb = b.studentName || b.name || '';
+          return na.localeCompare(nb, 'ar');
+        }
+        if (sortType === 'name_desc') {
+          var na = a.studentName || a.name || '';
+          var nb = b.studentName || b.name || '';
+          return nb.localeCompare(na, 'ar');
+        }
+        if (sortType === 'college_asc') {
+          var ca = a.college || getCollegeFromCode(a.studentCode) || '';
+          var cb = b.college || getCollegeFromCode(b.studentCode) || '';
+          var cComp = ca.localeCompare(cb, 'ar');
+          if (cComp !== 0) return cComp;
+          var na = a.studentName || a.name || '';
+          var nb = b.studentName || b.name || '';
+          return na.localeCompare(nb, 'ar');
+        }
+        if (sortType === 'file_asc') {
+          var na = parseInt(toEnglishDigits(a.fileNumber).replace(/\D/g, ''), 10) || 0;
+          var nb = parseInt(toEnglishDigits(b.fileNumber).replace(/\D/g, ''), 10) || 0;
+          if (na !== nb) return na - nb;
+          return (a.fileNumber || '').localeCompare(b.fileNumber || '');
+        }
+        if (sortType === 'file_desc') {
+          var na = parseInt(toEnglishDigits(a.fileNumber).replace(/\D/g, ''), 10) || 0;
+          var nb = parseInt(toEnglishDigits(b.fileNumber).replace(/\D/g, ''), 10) || 0;
+          if (na !== nb) return nb - na;
+          return (b.fileNumber || '').localeCompare(a.fileNumber || '');
+        }
+        return 0;
+      });
     }
 
     function renderTable() {
@@ -1132,11 +1387,11 @@
       else {
         var rows = '';
         page.forEach(function(r, i) {
-          var num = start + i + 1;
           var cls = r.paymentStatus === 'مسدد' ? 'badge-paid' : 'badge-unpaid';
           var pmt = r.paymentStatus || '';
+          var collegeName = r.college || getCollegeFromCode(r.studentCode) || '';
           rows += '<tr><td>' + (r.fileNumber||'-') + '</td><td><strong>' + (r.studentCode||'') + '</strong></td><td>' + (r.studentName||'') + '</td>';
-          rows += '<td dir="ltr">' + (r.nationalId||'') + '</td><td>' + (r.college||'') + '</td><td>' + getGrade(r.studentCode) + '</td><td>' + fmtDate(r.withdrawalDate) + '</td>';
+          rows += '<td dir="ltr">' + (r.nationalId||'') + '</td><td>' + collegeName + '</td><td>' + getGrade(r.studentCode) + '</td><td>' + fmtDate(r.withdrawalDate) + '</td>';
           rows += '<td>' + (r.academicYear||'') + '</td><td><span class="badge-status ' + cls + '">' + pmt + '</span></td>';
           rows += '<td>' + (r.transferUniversity||'-') + '</td><td dir="ltr">' + (r.phone||'-') + '</td><td>' + (r.notes||'-') + '</td>';
           rows += '<td class="no-print"><div class="action-cell">';
@@ -1192,12 +1447,8 @@
         return true;
       });
 
-      // Sort Newest to Oldest (من الأحدث إلى الأقدم)
-      res.sort((a, b) => {
-        var ta = toComparable(a.withdrawalDate) || (a.createdAt ? new Date(a.createdAt).getTime() : 0);
-        var tb = toComparable(b.withdrawalDate) || (b.createdAt ? new Date(b.createdAt).getTime() : 0);
-        return tb - ta;
-      });
+      const sortType = document.getElementById('regSortRecords') ? document.getElementById('regSortRecords').value : 'date_desc';
+      applySorting(res, sortType);
 
       return res;
     }
@@ -1218,13 +1469,6 @@
       if (!page.length) {
         tbody.innerHTML = '<tr><td colspan="13"><div class="empty-state"><i class="fas fa-inbox"></i><p>لا توجد سجلات</p></div></td></tr>';
       } else {
-        var _stuList = []; try { _stuList = JSON.parse(localStorage.getItem('lotus_students') || '[]'); } catch(e) {}
-        function _getLevel(code) {
-          var _s = _stuList.find(function(x) { return x.studentCode === code || x.code === code; });
-          if (_s && _s.level) return _s.level;
-          return getGrade(code);
-        }
-
         var rows = '';
         page.forEach(function(r, i) {
           var staff = _getWithdrawalStaff(r);
@@ -1233,7 +1477,7 @@
             <td><code>${r.studentCode || ''}</code></td>
             <td style="font-weight:700;">${r.studentName || ''}</td>
             <td>${r.nationalId || ''}</td>
-            <td><span class="badge" style="background:rgba(6,182,212,0.15);color:var(--accent-cyan);padding:4px 8px;border-radius:6px;">${r.college || ''}</span></td>
+            <td><span class="badge" style="background:rgba(6,182,212,0.15);color:var(--accent-cyan);padding:4px 8px;border-radius:6px;">${r.college || getCollegeFromCode(r.studentCode) || ''}</span></td>
             <td>${_getLevel(r.studentCode)}</td>
             <td>${fmtDate(r.withdrawalDate)}</td>
             <td>${r.academicYear || ''}</td>
@@ -1264,7 +1508,7 @@
     }
     window.regGoPage = p => { regCurrentPage = p; renderRegTable(); };
 
-    ['regSearchInput', 'regFilterCollege', 'regFilterYear', 'regFilterPayment', 'regFilterGrade', 'regFilterDateFrom', 'regFilterDateTo'].forEach(id => {
+    ['regSearchInput', 'regFilterCollege', 'regFilterYear', 'regFilterPayment', 'regFilterGrade', 'regFilterDateFrom', 'regFilterDateTo', 'regSortRecords'].forEach(id => {
       const el = document.getElementById(id);
       if (el) {
         el.addEventListener('input', () => { regCurrentPage = 1; renderRegTable(); });
@@ -1274,10 +1518,11 @@
     const regResetBtn = document.getElementById('regResetFilters');
     if (regResetBtn) {
       regResetBtn.addEventListener('click', () => {
-        ['regSearchInput', 'regFilterCollege', 'regFilterYear', 'regFilterPayment', 'regFilterGrade', 'regFilterDateFrom', 'regFilterDateTo'].forEach(id => {
+        ['regSearchInput', 'regFilterCollege', 'regFilterYear', 'regFilterPayment', 'regFilterGrade', 'regFilterDateFrom', 'regFilterDateTo', 'regSortRecords'].forEach(id => {
           var el = document.getElementById(id);
           if (el) {
-            if (el._flatpickr) el._flatpickr.clear();
+            if (el.id === 'regSortRecords') el.value = 'date_desc';
+            else if (el._flatpickr) el._flatpickr.clear();
             else el.value = '';
           }
         });
@@ -1285,15 +1530,19 @@
       });
     }
 
-    ['searchInput', 'filterCollege', 'filterYear', 'filterPayment', 'filterGrade', 'filterDateFrom', 'filterDateTo'].forEach(id => {
-      document.getElementById(id).addEventListener('input', () => { currentPage = 1; renderTable(); });
-      document.getElementById(id).addEventListener('change', () => { currentPage = 1; renderTable(); });
+    ['searchInput', 'filterCollege', 'filterYear', 'filterPayment', 'filterGrade', 'filterDateFrom', 'filterDateTo', 'sortRecords'].forEach(id => {
+      const el = document.getElementById(id);
+      if (el) {
+        el.addEventListener('input', () => { currentPage = 1; renderTable(); });
+        el.addEventListener('change', () => { currentPage = 1; renderTable(); });
+      }
     });
     document.getElementById('resetFilters').addEventListener('click', () => {
-      ['searchInput', 'filterCollege', 'filterYear', 'filterPayment', 'filterGrade', 'filterDateFrom', 'filterDateTo'].forEach(id => {
+      ['searchInput', 'filterCollege', 'filterYear', 'filterPayment', 'filterGrade', 'filterDateFrom', 'filterDateTo', 'sortRecords'].forEach(id => {
         var el = document.getElementById(id);
         if (el) {
-          if (el._flatpickr) el._flatpickr.clear();
+          if (el.id === 'sortRecords') el.value = 'date_desc';
+          else if (el._flatpickr) el._flatpickr.clear();
           else el.value = '';
         }
       });
@@ -1326,7 +1575,12 @@
       }
       btn.classList.remove('loading');
       successSave('تم الحفظ بنجاح', `${data.studentCode} - ${data.studentName}`);
-      e.target.reset(); document.getElementById('date').valueAsDate = new Date(); document.getElementById('date').dispatchEvent(new Event('change'));
+      e.target.reset();
+      var dateEl = document.getElementById('date');
+      if (dateEl) {
+        if (dateEl._flatpickr) dateEl._flatpickr.setDate(new Date());
+        else dateEl.value = fmtDate(new Date());
+      }
       document.getElementById('addGradeDisplay').innerHTML = '<span style="color:var(--text-muted);">-</span>';
       var fnEl = document.getElementById('fileNumberInfo');
       if (fnEl) fnEl.textContent = '';
@@ -1334,15 +1588,33 @@
     });
 
     window.deleteRecord = async id => {
-      if (confirm('تأكيد الحذف؟')) {
-        const r = allRecords.find(x => x.id === id);
-        const sName = r ? r.studentName : '';
-        const sCode = r ? r.studentCode : '';
-        await requestsRef.child(id).remove();
-        toast('تم الحذف');
+      if (typeof window.authHasPermission === 'function' && !window.authHasPermission('delete')) {
+        return toast('🔒 ليس لديك صلاحية حذف السجلات', true);
+      }
+      if (!confirm('⚠️ هل أنت متأكد من حذف هذا السجل نهائياً؟')) return;
+
+      const r = allRecords.find(x => x.id === id);
+      const sName = r ? r.studentName : '';
+      const sCode = r ? r.studentCode : '';
+
+      try {
+        if (requestsRef && id) {
+          await requestsRef.child(id).remove();
+        }
+        allRecords = allRecords.filter(x => x.id !== id);
+        renderTable();
+        renderRegTable();
+        toast('✅ تم الحذف بنجاح');
+
         if (window.authLogActivity) {
           window.authLogActivity('delete_student', 'سحب ملف', sCode, sName, 'حذف طلب سحب ملف طالب', 'نظام السحب');
         }
+      } catch(err) {
+        console.error('Delete record error:', err);
+        allRecords = allRecords.filter(x => x.id !== id);
+        renderTable();
+        renderRegTable();
+        toast('⚠️ تم الحذف محلياً (' + err.message + ')', true);
       }
     };
     window.editRecord = id => {
@@ -1351,8 +1623,13 @@
       const m = { editCode: 'studentCode', editName: 'studentName', editNid: 'nationalId', editCollege: 'college', editYear: 'academicYear', editPayment: 'paymentStatus', editTransfer: 'transferUniversity', editPhone: 'phone', editNotes: 'notes', editFileNumber: 'fileNumber' };
       Object.keys(m).forEach(f => document.getElementById(f).value = r[m[f]] || '');
       var ed = document.getElementById('editDate');
-      if (ed._flatpickr) ed._flatpickr.setDate(fmtDate(r.withdrawalDate || ''));
-      else ed.value = toDateInput(r.withdrawalDate || '');
+      var dateObj = parseToDateObj(r.withdrawalDate);
+      if (ed._flatpickr) {
+        if (dateObj) ed._flatpickr.setDate(dateObj, true);
+        else ed._flatpickr.clear();
+      } else {
+        ed.value = toDateInput(r.withdrawalDate || '');
+      }
       updateGradeDisplay(r.studentCode, 'editGradeDisplay');
       const el = document.getElementById('editInline');
       el.classList.add('show');
@@ -1362,15 +1639,48 @@
     document.getElementById('editForm').addEventListener('submit', async e => {
       e.preventDefault();
       const id = document.getElementById('editId').value;
-      const data = { fileNumber: v('editFileNumber'), studentCode: v('editCode'), studentName: v('editName'), nationalId: v('editNid'), college: v('editCollege'), withdrawalDate: fmtDate(v('editDate')), academicYear: v('editYear'), paymentStatus: v('editPayment'), transferUniversity: v('editTransfer'), phone: v('editPhone'), notes: v('editNotes') };
-      await requestsRef.child(id).update(data);
-      if (window.authLogActivity) {
-        window.authLogActivity('update_student', 'سحب ملف', data.studentCode, data.studentName, 'تعديل بيانات طلب سحب ملف', 'نظام السحب');
+      const codeVal = v('editCode');
+      const data = {
+        fileNumber: v('editFileNumber'),
+        studentCode: codeVal,
+        studentName: v('editName'),
+        nationalId: v('editNid'),
+        college: v('editCollege') || getCollegeFromCode(codeVal),
+        withdrawalDate: fmtDate(v('editDate')),
+        academicYear: v('editYear'),
+        paymentStatus: v('editPayment'),
+        transferUniversity: v('editTransfer'),
+        phone: v('editPhone'),
+        notes: v('editNotes')
+      };
+
+      Object.keys(data).forEach(k => {
+        if (data[k] === undefined) data[k] = '';
+      });
+
+      try {
+        if (requestsRef && id) {
+          await requestsRef.child(id).update(data);
+        }
+
+        const idx = allRecords.findIndex(x => x.id === id);
+        if (idx !== -1) {
+          allRecords[idx] = Object.assign({}, allRecords[idx], data);
+        }
+        renderTable();
+        renderRegTable();
+
+        if (window.authLogActivity) {
+          window.authLogActivity('update_student', 'سحب ملف', data.studentCode, data.studentName, 'تعديل بيانات طلب سحب ملف', 'نظام السحب');
+        }
+        successSave('تم التعديل بنجاح', data.studentName);
+        closeEdit();
+      } catch(err) {
+        console.error('Edit error:', err);
+        toast('❌ حدث خطأ أثناء التعديل: ' + (err.message || err), true);
       }
-      successSave('تم التعديل', data.studentName);
-      closeEdit();
     });
-    function v(id) { return document.getElementById(id).value.trim(); }
+    function v(id) { var el = document.getElementById(id); return el ? el.value.trim() : ''; }
 
     // Print single
     window.printSingle = id => {
@@ -1521,59 +1831,6 @@
     document.getElementById('exportExcel').addEventListener('click', () => exportToExcel(getFiltered()));
 
     function exportToExcel(data) {
-      var _stuList = []; try { _stuList = JSON.parse(localStorage.getItem('lotus_students') || '[]'); } catch(e) {}
-      var _logsList = []; try { _logsList = JSON.parse(localStorage.getItem('lotus_activity_logs') || '[]'); } catch(e) {}
-
-      function _isStaffEmp(n) {
-        if (!n) return false;
-        var s = String(n).trim();
-        if (!s || s === 'مدير النظام' || s === 'المدير العام' || s.toLowerCase() === 'admin' || s.toLowerCase() === 'boles' || s === 'Super Admin') return false;
-        return true;
-      }
-
-      function _getWithdrawalStaff(r) {
-        var candidates = [r.staffName, r.processedBy, r.createdBy, r.employeeName, r.employeeUsername, r.user, r.staff];
-        for (var i = 0; i < candidates.length; i++) {
-          if (_isStaffEmp(candidates[i])) return candidates[i];
-        }
-
-        var wCode = String(r.studentCode || '').trim().toLowerCase();
-        var wName = String(r.studentName || '').trim().toLowerCase();
-        var wFile = String(r.fileNumber || '').trim().toLowerCase();
-
-        if (Array.isArray(_logsList)) {
-          var match = _logsList.find(function(log) {
-            var emp = log.employeeName || log.employeeUsername;
-            if (!_isStaffEmp(emp)) return false;
-
-            var sys = String(log.system || '').toLowerCase();
-            var act = String(log.action || '').toLowerCase();
-            var det = String(log.details || '').toLowerCase();
-            var target = String(log.targetName || '').toLowerCase();
-
-            var isWLog = sys.includes('withdrawal') || sys.includes('سحب') || act.includes('withdrawal') || act.includes('سحب') || det.includes('سحب');
-            if (!isWLog) return false;
-
-            var nameMatch = wName && (target.includes(wName) || det.includes(wName));
-            var codeMatch = wCode && (target.includes(wCode) || det.includes(wCode));
-            var fileMatch = wFile && det.includes(fileMatch);
-
-            return nameMatch || codeMatch || fileMatch;
-          });
-
-          if (match) {
-            var emp = match.employeeName || match.employeeUsername;
-            if (_isStaffEmp(emp)) return emp;
-          }
-        }
-        return '';
-      }
-
-      function _getLevel(code) {
-        var _s = _stuList.find(function(x) { return x.studentCode === code || x.code === code; });
-        if (_s && _s.level) return _s.level;
-        return getGrade(code);
-      }
       const rows = data.map((r, i) => ({
         'رقم الملف': r.fileNumber || '', 'كود الطالب': r.studentCode, 'اسم الطالب': r.studentName, 'الرقم القومي': r.nationalId,
         'الكلية': r.college, 'الفرقة': _getLevel(r.studentCode), 'تاريخ السحب': fmtDate(r.withdrawalDate), 'العام الجامعي': r.academicYear,
@@ -1939,7 +2196,7 @@ document.addEventListener('DOMContentLoaded', function() {
   }
 
   // Check existing session
-  var session = window.getCurrentUser ? window.getCurrentUser() : (function(){ try { return JSON.parse(localStorage.getItem('lotus_session')); } catch(e) { return null; } })();
+  var session = window.getCurrentUser ? window.getCurrentUser() : (function(){ try { return JSON.parse(localStorage.getItem('lotus_session') || localStorage.getItem('lotus_auth_session') || localStorage.getItem('auth_session')); } catch(e) { return null; } })();
   if (session && session.username && session.loginTime && Date.now() - session.loginTime < 28800000) {
     if (session.username !== 'boles' && session.role !== 'admin' && window.hasPermission && !window.hasPermission('access_withdrawal')) {
       alert('🔒 ليس لديك صلاحية للدخول إلى نظام السحب والإيداع.');
@@ -2020,7 +2277,7 @@ function renderEmps() {
     var cnt = document.getElementById('emp-count');
     if (cnt) cnt.textContent = '(' + list.length + ')';
     if (!list.length) { tb.innerHTML = '<tr><td colspan="4" style="text-align:center;color:var(--text-muted);">لا يوجد موظفين</td></tr>'; return; }
-    var curSession = (function(){ try { return JSON.parse(localStorage.getItem('lotus_session')); } catch(e) { return null; } })();
+    var curSession = (function(){ try { return JSON.parse(localStorage.getItem('lotus_session') || localStorage.getItem('lotus_auth_session') || localStorage.getItem('auth_session')); } catch(e) { return null; } })();
     var html = '';
     list.forEach(function(e) {
       var isSelf = curSession && curSession.username === e.username;
