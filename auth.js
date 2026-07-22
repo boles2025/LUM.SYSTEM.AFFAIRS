@@ -689,22 +689,25 @@ let _seedDone = false;
     const now = new Date().toISOString();
     const seedData = {
       boles: { username:'boles', name:'مهندس بولس سمير', password:hash8520, plainPassword:'8520', role:'admin', permissions:[...window.ADMIN_FIXED_PERMISSIONS], active:true, createdAt:now, employeeId:'boles' },
-      somya: { username:'somya', name:'سمية', password:hash123456, plainPassword:'123456', role:'admin', permissions:[...window.ADMIN_FIXED_PERMISSIONS], active:true, createdAt:now, employeeId:'somya' },
-      safy: { username:'safy', name:'صفاء', password:hash123456, plainPassword:'123456', role:'employee', permissions:[...window.DEFAULT_EMPLOYEE_PERMISSIONS], active:true, createdAt:now, employeeId:'safy' },
-      mai: { username:'mai', name:'مي', password:hash123456, plainPassword:'123456', role:'employee', permissions:[...window.DEFAULT_EMPLOYEE_PERMISSIONS], active:true, createdAt:now, employeeId:'mai' },
-      monica: { username:'monica', name:'مونيكا', password:hash123456, plainPassword:'123456', role:'employee', permissions:[...window.DEFAULT_EMPLOYEE_PERMISSIONS], active:true, createdAt:now, employeeId:'monica' },
-      ahmed: { username:'ahmed', name:'أحمد', password:hash123456, plainPassword:'123456', role:'employee', permissions:[...window.DEFAULT_EMPLOYEE_PERMISSIONS], active:true, createdAt:now, employeeId:'ahmed' },
-      mahmod: { username:'mahmod', name:'محمود', password:hash123456, plainPassword:'123456', role:'employee', permissions:[...window.DEFAULT_EMPLOYEE_PERMISSIONS], active:true, createdAt:now, employeeId:'mahmod' },
-      peter: { username:'peter', name:'بيتر', password:hash123456, plainPassword:'123456', role:'employee', permissions:[...window.DEFAULT_EMPLOYEE_PERMISSIONS], active:true, createdAt:now, employeeId:'peter' },
+      somya: { username:'somya', name:'د. سمية', password:hash123456, plainPassword:'123456', role:'admin', permissions:[...window.ADMIN_FIXED_PERMISSIONS], active:true, createdAt:now, employeeId:'somya' },
+      safy: { username:'safy', name:'د صافي', password:hash123456, plainPassword:'123456', role:'employee', permissions:[...window.DEFAULT_EMPLOYEE_PERMISSIONS], active:true, createdAt:now, employeeId:'safy' },
+      mai: { username:'mai', name:'د. مي', password:hash123456, plainPassword:'123456', role:'employee', permissions:[...window.DEFAULT_EMPLOYEE_PERMISSIONS], active:true, createdAt:now, employeeId:'mai' },
+      monica: { username:'monica', name:'أ. مونيكا', password:hash123456, plainPassword:'123456', role:'employee', permissions:[...window.DEFAULT_EMPLOYEE_PERMISSIONS], active:true, createdAt:now, employeeId:'monica' },
+      ahmed: { username:'ahmed', name:'أ. أحمد', password:hash123456, plainPassword:'123456', role:'employee', permissions:[...window.DEFAULT_EMPLOYEE_PERMISSIONS], active:true, createdAt:now, employeeId:'ahmed' },
+      mahmod: { username:'mahmod', name:'أ. محمود', password:hash123456, plainPassword:'123456', role:'employee', permissions:[...window.DEFAULT_EMPLOYEE_PERMISSIONS], active:true, createdAt:now, employeeId:'mahmod' },
+      peter: { username:'peter', name:'أ. بيتر', password:hash123456, plainPassword:'123456', role:'employee', permissions:[...window.DEFAULT_EMPLOYEE_PERMISSIONS], active:true, createdAt:now, employeeId:'peter' },
       omar: { username:'omar', name:'عمر', password:hash123456, plainPassword:'123456', role:'employee', permissions:['view','access_certificate'], active:true, createdAt:now, employeeId:'omar' }
     };
-    await targetDb.ref('employees').set(seedData);
-    if (AUTH_DB && AUTH_DB !== targetDb) {
-      try { await AUTH_DB.ref('employees').set(seedData); } catch(e) {}
-    }
+    // Save to localStorage FIRST so offline/fallback login always works
     authSaveLocalEmployees(Object.values(seedData));
-    console.log('[AUTH] Seed completed on PERMISSIONS_DB (loutsresults)');
     _seedDone = true;
+    try {
+      await targetDb.ref('employees').set(seedData);
+      if (AUTH_DB && AUTH_DB !== targetDb) {
+        try { await AUTH_DB.ref('employees').set(seedData); } catch(e) {}
+      }
+      console.log('[AUTH] Seed completed on PERMISSIONS_DB (loutsresults)');
+    } catch (e) { console.warn('[AUTH] Seed Firebase write skipped:', e.message); }
   } catch (e) { console.warn('[AUTH] Seed skipped:', e.message); }
 })();
 
