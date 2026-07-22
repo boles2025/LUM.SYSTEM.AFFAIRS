@@ -1,4 +1,4 @@
-﻿// ============================
+// ============================
 // PERMISSIONS MANAGEMENT (FIXED v2)
 // ============================
 
@@ -31,8 +31,9 @@ let cachedEmployees = [];
 
 document.addEventListener('DOMContentLoaded', async () => {
     const user = window.getCurrentUser();
-    if (!user || user.username !== 'boles') {
-        alert('ليس لديك صلاحية للدخول إلى هذه الصفحة. هذه الصفحة مخصصة للمدير العام فقط.');
+    const isAdmin = user && (user.username === 'boles' || user.role === 'admin');
+    if (!user || !isAdmin) {
+        alert('ليس لديك صلاحية للدخول إلى هذه الصفحة. هذه الصفحة مخصصة لمديري النظام فقط.');
         window.location.href = '../../index.html';
         return;
     }
