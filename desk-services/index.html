@@ -1,0 +1,654 @@
+<!DOCTYPE html>
+<html dir="rtl" lang="ar">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>الخدمات المكتبية والمعاملات - جامعة اللوتس</title>
+  
+  <!-- CSS Stylesheets -->
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.rtl.min.css" rel="stylesheet">
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700;800;900&family=Changa:wght@500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="styles.css">
+
+  <!-- Firebase Legacy SDKs -->
+  <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-database-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-storage-compat.js"></script>
+  
+  <!-- Word Document Preview & Rendering Engine -->
+  <script src="https://unpkg.com/jszip/dist/jszip.min.js"></script>
+  <script src="https://unpkg.com/docx-preview/dist/docx-preview.js"></script>
+  
+  <!-- System Shared Auth -->
+  <script src="../../auth.js"></script>
+</head>
+<body data-theme="dark">
+
+  <!-- Fixed Top Buttons -->
+  <a href="../../index.html" class="dash-btn" title="الرجوع للرئيسية"><i class="fas fa-home"></i></a>
+  <button class="theme-btn" id="themeBtn" onclick="toggleTheme()" title="تغيير المظهر"><i class="fas fa-sun"></i></button>
+
+  <!-- User Navigation / Info -->
+  <div class="user-menu" id="user-menu" style="display:none;">
+    <span class="user-avatar" id="user-avatar" onclick="toggleUserDropdown()"><i class="fas fa-user"></i></span>
+    <div class="user-dropdown" id="user-dropdown">
+      <div class="user-dropdown-item font-weight-bold" style="border-bottom: 1px solid var(--border);">
+        <div>
+          <div id="dropdown-name" style="font-weight: 700;">—</div>
+          <div id="dropdown-role" style="font-size: 0.7rem; color: var(--text-muted);">—</div>
+        </div>
+      </div>
+      <div class="user-dropdown-item" onclick="switchToUserMode()"><i class="fas fa-graduation-cap"></i> وضع الطالب</div>
+      <div class="user-dropdown-item" id="admin-mode-opt" onclick="switchToAdminMode()" style="display:none;"><i class="fas fa-user-tie"></i> لوحة التحكم</div>
+      <div class="user-dropdown-item logout-item" onclick="closeAndBackupAndLogout()"><i class="fas fa-sign-out-alt"></i> تسجيل الخروج</div>
+    </div>
+  </div>
+
+  <div class="login-prompt" id="login-prompt">
+    <button class="btn-login-header" onclick="openLoginModal()"><i class="fas fa-lock me-1"></i> دخول الموظفين</button>
+  </div>
+
+  <!-- Header Section -->
+  <header class="header-main no-print">
+    <div class="header-inner">
+      <div class="logo-wrapper">
+        <div class="logo-ring ring-1"></div>
+        <div class="logo-ring ring-2"></div>
+        <div class="logo-ring ring-3"></div>
+        <div class="logo-inner">
+          <img src="https://i.ibb.co/kgfm88mq/logo.png" alt="جامعة اللوتس" id="logoImg" onerror="handleLogoError()">
+        </div>
+        <div class="logo-inner-fallback" id="logoFallback"><i class="fas fa-landmark"></i></div>
+      </div>
+      <div class="header-text text-start">
+        <h1 class="title-main">الخدمات الطلابية</h1>
+        <p class="subtitle-muted">جامعة اللوتس — شؤون الطلاب</p>
+      </div>
+    </div>
+  </header>
+
+  <main class="content container-fluid">
+
+    <!-- 1. Admin Control Panel Header (Admin Mode Only) -->
+    <section id="admin-dashboard-panel" class="dashboard-panel mb-4 no-print" style="display: none;">
+      <div class="panel-header d-flex justify-content-between align-items-center mb-0">
+        <h2 class="panel-title"><i class="fas fa-chart-line me-2 text-info"></i> لوحة التحكم والإحصائيات</h2>
+        <div class="d-flex gap-2">
+          <button class="btn btn-outline-cyan px-3 py-2 font-weight-bold" style="color: #38bdf8!important; font-weight: 800!important; border-color: rgba(56, 189, 248, 0.4)!important;" onclick="openCategoriesManagerModal()">
+            <i class="fas fa-tags me-1 text-cyan"></i> إدارة التصنيفات
+          </button>
+          <button class="btn btn-outline-cyan px-3 py-2" style="color: #ffc107!important; font-weight: 800!important; border-color: rgba(245, 158, 11, 0.4)!important;" onclick="openStudentRequestsRegistryModal()">
+            <i class="fas fa-users-rectangle me-1" style="color: #ffc107;"></i> <span style="color: #ffc107!important; font-weight: 800!important;">سجل طلبات الطلاب</span> <span class="badge bg-amber text-dark ms-1" id="total-student-requests-badge" style="background:#ffc107!important; color:#000!important; font-weight:800;">0</span>
+          </button>
+          <button class="btn btn-primary-gradient px-4 py-2" onclick="openAddServiceModal()">
+            <i class="fas fa-plus me-1"></i> إضافة خدمة جديدة
+          </button>
+        </div>
+      </div>
+    </section>
+
+    <!-- 2. Search & Filtering Controls -->
+    <section class="controls-panel mb-4 no-print">
+      <div class="row g-3 align-items-center">
+        <!-- Search bar -->
+        <div class="col-lg-3 col-md-4">
+          <div class="search-box-wrapper" style="max-width: 280px;">
+            <i class="fas fa-search search-icon"></i>
+            <input type="text" id="search-input" class="search-input" placeholder="ابحث عن خدمة...">
+            <button class="clear-search-btn" id="clear-search-btn" style="display:none;" onclick="clearSearch()"><i class="fas fa-times"></i></button>
+          </div>
+        </div>
+        
+        <!-- Registry Button -->
+        <div class="col-lg-9 col-md-8 d-flex align-items-center justify-content-end gap-2 ms-auto">
+          <button class="btn btn-sm btn-cyan-gradient px-2.5 py-1 font-weight-bold" style="color: #ffc107!important; font-size: 0.82rem!important;" onclick="openStudentRequestsRegistryModal()">
+            <i class="fas fa-list-check me-1" style="color: #ffc107;"></i> <span style="color: #ffc107!important; font-weight: 800!important;">سجل طلبات الطلاب</span> <span class="badge bg-amber text-dark ms-1" id="ctrl-student-requests-badge" style="background:#ffc107!important; color:#000!important; font-weight:800; font-size:0.72rem;">0</span>
+          </button>
+        </div>
+      </div>
+
+      <!-- Categories Filter bar -->
+      <div class="categories-filter-wrapper mt-3 d-flex flex-wrap gap-2" id="categories-filter-wrapper">
+        <!-- Dynamically rendered via renderCategoryTabs() -->
+      </div>
+    </section>
+
+    <!-- Loading Indicator -->
+    <div id="loading" class="text-center py-5 no-print">
+      <div class="spinner-border text-info" role="status" style="width: 3rem; height: 3rem;">
+        <span class="visually-hidden">جاري التحميل...</span>
+      </div>
+      <p class="mt-3 text-secondary">جاري تحميل الخدمات والمستندات من السيرفر...</p>
+    </div>
+
+    <!-- Empty State -->
+    <div id="empty-state" class="empty-state py-5 no-print" style="display: none;">
+      <i class="fas fa-folder-open empty-icon mb-3"></i>
+      <h3 class="empty-title">لا توجد خدمات متاحة</h3>
+      <p class="empty-desc">لم يتم العثور على خدمات مطابقة لبحثك أو الفلاتر المحددة.</p>
+      <button class="btn btn-ghost px-4 py-2 mt-2" onclick="resetFilters()">إعادة ضبط البحث</button>
+    </div>
+
+    <!-- 3. Services Grid -->
+    <section id="services-grid-wrapper" class="services-grid-container mb-5 no-print">
+      <div class="row g-4" id="services-grid">
+        <!-- Cards will render here dynamically -->
+      </div>
+    </section>
+
+    <!-- 4. PRINT PREVIEW CONTAINER (ONLY VISIBLE ON PRINT) -->
+    <section id="print-area-wrapper" class="print-area d-none" dir="rtl">
+      <!-- Generated Print Document Will Be Injected Here -->
+    </section>
+
+  </main>
+
+  <!-- ── MODALS ── -->
+
+  <!-- Modal 1: Service Details -->
+  <div class="modal-overlay" id="details-modal">
+    <div class="modal-box modal-lg animated-glowing-modal">
+      <div class="modal-header">
+        <h3><i class="fas fa-circle-info me-2 text-info"></i> تفاصيل الخدمة</h3>
+        <button class="modal-close" onclick="closeModal('details-modal')"><i class="fas fa-times"></i></button>
+      </div>
+      <div class="modal-body p-4" id="details-modal-body">
+        <!-- Injected Dynamically -->
+      </div>
+      <div class="modal-footer justify-content-between flex-wrap gap-2">
+        <div id="details-admin-actions" style="display:none;">
+          <button class="btn btn-warning me-2 text-dark font-weight-bold" onclick="openEditCurrentService()"><i class="fas fa-edit me-1"></i> تعديل الخدمة</button>
+          <button class="btn btn-danger" onclick="deleteCurrentService()"><i class="fas fa-trash me-1"></i> حذف الخدمة</button>
+        </div>
+        <div class="d-flex gap-2 ms-auto">
+          <button class="btn btn-cyan-gradient px-4 font-weight-bold" style="color: #ffc107!important; font-size: 1.05rem;" onclick="openStudentServiceRegistrationModal(window.currentService ? window.currentService.id : null)">
+            <i class="fas fa-user-plus me-1" style="color: #ffc107;"></i> <span style="color: #ffc107!important;">تسجيل طلب</span>
+          </button>
+          <button class="btn btn-ghost" onclick="closeModal('details-modal')">إغلاق</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal 2: Add / Edit Service (Admin) -->
+  <div class="modal-overlay" id="service-form-modal">
+    <div class="modal-box modal-lg">
+      <div class="modal-header">
+        <h3 id="form-modal-title"><i class="fas fa-file-pen me-2 text-info"></i> إضافة خدمة جديدة</h3>
+        <button class="modal-close" onclick="closeModal('service-form-modal')"><i class="fas fa-times"></i></button>
+      </div>
+      <div class="modal-body p-4">
+        <form id="service-form" onsubmit="saveServiceForm(event)">
+          <input type="hidden" id="form-service-id">
+          
+          <div class="row g-3 mb-3">
+            <div class="col-md-6">
+              <label class="form-label font-weight-bold">اسم الخدمة *</label>
+              <input type="text" id="form-name" class="form-control input-main" required placeholder="مثال: إثبات قيد للطلاب">
+            </div>
+            <div class="col-md-6">
+              <label class="form-label font-weight-bold">التصنيف *</label>
+              <select id="form-category" class="form-select input-main" required>
+                <option value="proofs">إثباتات وقيد</option>
+                <option value="transfers">تحويلات</option>
+                <option value="cards">بطاقات جامعية</option>
+                <option value="withdrawal">سحب ملفات</option>
+                <option value="others">أخرى</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="row g-3 mb-3">
+            <div class="col-md-6">
+              <label class="form-label font-weight-bold">السعر بالجنيه المصري *</label>
+              <div class="input-group">
+                <input type="number" id="form-price" class="form-control input-main" required min="0" placeholder="مثال: 50">
+                <span class="input-group-text bg-card border-border">ج.م</span>
+              </div>
+            </div>
+            <div class="col-md-6">
+              <label class="form-label font-weight-bold">المدة الزمنية للاستخراج *</label>
+              <select id="form-duration-type" class="form-select input-main bg-dark text-white border-secondary mb-2" onchange="toggleDurationDaysInput(this.value)">
+                <option value="same_day">⚡ فوري</option>
+                <option value="days">📅 أيام (إدخال عدد الأيام بالحساب)</option>
+              </select>
+              <div id="form-duration-days-wrapper" style="display: none;">
+                <div class="input-group">
+                  <span class="input-group-text bg-secondary border-secondary text-white font-size-xs">عدد الأيام:</span>
+                  <input type="number" id="form-duration-days-count" class="form-control bg-dark text-white border-secondary" min="1" placeholder="اكتب عدد الأيام (مثال: 3)..." oninput="updateDurationFinalValue()">
+                  <span class="input-group-text bg-secondary border-secondary text-white font-size-xs">يوم</span>
+                </div>
+              </div>
+              <input type="hidden" id="form-duration" required value="فوري">
+            </div>
+          </div>
+
+          <div class="mb-3">
+            <label class="form-label font-weight-bold">وصف تفصيلي للخدمة *</label>
+            <textarea id="form-description" class="form-control input-main" rows="3" required placeholder="اكتب وصفاً مفصلاً ودقيقاً عن الخدمة والغرض منها..."></textarea>
+          </div>
+
+          <div class="row g-3 mb-3">
+            <div class="col-md-6">
+              <label class="form-label font-weight-bold d-flex justify-content-between align-items-center">
+                <span>المستندات المطلوبة</span>
+                <span class="text-muted font-size-xs">اضغط Enter لإضافة مستند جديد</span>
+              </label>
+              <div class="tag-input-container">
+                <input type="text" id="document-input" class="form-control input-main" placeholder="مثال: صورة البطاقة الشخصية">
+                <div class="tags-wrapper mt-2" id="form-documents-tags"></div>
+              </div>
+            </div>
+            <div class="col-md-6">
+              <label class="form-label font-weight-bold d-flex justify-content-between align-items-center">
+                <span>خطوات استخراج الخدمة</span>
+                <span class="text-muted font-size-xs">اضغط Enter لإضافة خطوة جديدة</span>
+              </label>
+              <div class="tag-input-container">
+                <input type="text" id="step-input" class="form-control input-main" placeholder="مثال: التوجه إلى مكتب شؤون الطلاب">
+                <div class="tags-wrapper mt-2" id="form-steps-tags"></div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Drag and Drop Upload Area -->
+          <div class="mb-4">
+            <label class="form-label font-weight-bold">الملفات المرفقة والنماذج الورقية</label>
+            <div class="drag-drop-zone" id="upload-drag-zone">
+              <i class="fas fa-cloud-arrow-up upload-icon"></i>
+              <p class="upload-text">اسحب وأفلت الملفات هنا أو اضغط للتصفح</p>
+              <p class="upload-hint">يدعم PDF, Word (DOC/DOCX), الصور (JPG/PNG). الحد الأقصى للحجم 10 ميجا للملف.</p>
+              <input type="file" id="file-upload-input" style="display:none;" multiple>
+            </div>
+            
+            <!-- Upload Progress Bar -->
+            <div class="upload-progress-container mt-3" id="upload-progress-bar-container" style="display: none;">
+              <div class="d-flex justify-content-between align-items-center mb-1">
+                <span id="upload-progress-filename" class="text-truncate" style="max-width: 70%; font-size: 0.8rem;">file.pdf</span>
+                <span id="upload-progress-percent" style="font-weight: 700; font-size: 0.8rem; color: var(--accent-cyan);">0%</span>
+              </div>
+              <div class="progress-bar-wrapper">
+                <div class="progress-bar-fill" id="upload-progress-bar-fill"></div>
+              </div>
+            </div>
+
+            <!-- Attached Files Table -->
+            <div class="attached-files-list mt-3" id="form-files-list-wrapper" style="display: none;">
+              <table class="table custom-table table-bordered">
+                <thead>
+                  <tr>
+                    <th>اسم الملف</th>
+                    <th>الحجم</th>
+                    <th>نوع الملف</th>
+                    <th>مرفق توضيحي / نموذج قابل للطباعة</th>
+                    <th style="width: 60px;">حذف</th>
+                  </tr>
+                </thead>
+                <tbody id="form-files-tbody">
+                  <!-- File Rows -->
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+          <div class="d-flex gap-2 justify-content-end">
+            <button type="submit" class="btn btn-primary-gradient px-4 py-2"><i class="fas fa-save me-1"></i> حفظ</button>
+            <button type="button" class="btn btn-ghost" onclick="closeModal('service-form-modal')">إلغاء</button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal 3: Document Preview (Windows Print Preview) -->
+  <div class="modal-overlay" id="preview-modal" style="z-index: 200000;">
+    <div class="modal-box modal-xl" style="height: 94vh; display: flex; flex-direction: column; border: 2px solid #0284c7;">
+      <div class="modal-header d-flex justify-content-between align-items-center bg-dark border-bottom border-secondary">
+        <h3 class="font-size-md mb-0"><i class="fas fa-print me-2 text-cyan"></i> معاينة طباعة المستند الورقي <span class="badge bg-secondary font-size-xs ms-2">Windows Print Preview (A4)</span></h3>
+        <button class="modal-close" onclick="closeModal('preview-modal')"><i class="fas fa-times"></i></button>
+      </div>
+
+      <!-- Windows Print Setup Toolbar -->
+      <div class="preview-editor-toolbar p-2 bg-dark border-bottom border-secondary d-flex flex-wrap gap-2 align-items-center justify-content-between no-print" id="preview-editor-toolbar">
+        <div class="d-flex align-items-center gap-2 flex-wrap">
+          <span class="badge bg-dark border border-secondary text-white px-2.5 py-1.5 font-size-xs">
+            <i class="fas fa-file me-1 text-info"></i> ورق A4 قياسي (210 × 297 مم)
+          </span>
+          <span class="badge bg-dark border border-secondary text-success px-2.5 py-1.5 font-size-xs">
+            <i class="fas fa-arrows-up-down me-1"></i> اتجاه عمودي (Portrait)
+          </span>
+          <span class="badge bg-dark border border-secondary text-warning px-2.5 py-1.5 font-size-xs">
+            <i class="fas fa-magnifying-glass me-1"></i> ملاءمة الصفحة 100%
+          </span>
+        </div>
+
+        <div class="d-flex align-items-center gap-2">
+          <button class="btn btn-sm btn-info text-white font-weight-bold" id="editor-print-btn" onclick="printEditedPreviewDocument()"><i class="fas fa-print me-1"></i> طباعة الويندوز (Ctrl+P)</button>
+          <button class="btn btn-sm btn-success font-weight-bold" id="editor-download-btn"><i class="fas fa-download me-1"></i> تحميل المستند الأصلي</button>
+        </div>
+      </div>
+
+      <div class="modal-body p-0 d-flex flex-column bg-dark" style="flex: 1; overflow: hidden; position: relative;">
+        <div id="preview-loading" class="text-center py-5">
+          <div class="spinner-border text-info" role="status"></div>
+          <p class="mt-2 text-secondary">جاري تهيئة وتوليد معاينة الطباعة على ورقة A4...</p>
+        </div>
+        <div id="preview-content-box" class="w-100 h-100 windows-print-preview-container" style="display:none; overflow: auto;">
+          <!-- Injected Content inside A4 Paper Sheet -->
+        </div>
+      </div>
+      <div class="modal-footer bg-dark border-top border-secondary justify-content-between">
+        <span class="font-size-xs text-secondary"><i class="fas fa-info-circle me-1"></i> يتم عرض المستند كما سيظهر تماماً عند الطباعة من الويندوز على ورقة A4.</span>
+        <div class="d-flex gap-2">
+          <button class="btn btn-primary-gradient px-4" id="preview-print-btn"><i class="fas fa-print me-1"></i> طباعة المستند</button>
+          <button class="btn btn-success px-4" id="preview-download-btn"><i class="fas fa-download me-1"></i> تحميل المستند الأصلي</button>
+          <button class="btn btn-ghost" onclick="closeModal('preview-modal')">إغلاق المعاينة</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal 6: Dynamic Categories Manager Modal -->
+  <div class="modal-overlay" id="categories-manager-modal" style="z-index: 190000;">
+    <div class="modal-box modal-lg animated-glowing-modal" style="max-width: 800px;">
+      <div class="modal-header d-flex justify-content-between align-items-center">
+        <h3><i class="fas fa-tags me-2 text-cyan"></i> إدارة وتعيين تصنيفات الخدمات</h3>
+        <button class="modal-close" onclick="closeModal('categories-manager-modal')"><i class="fas fa-times"></i></button>
+      </div>
+      <div class="modal-body p-4">
+        <!-- Add Category Form -->
+        <div class="card p-3 bg-dark border border-secondary mb-4 rounded-3" style="background: rgba(15, 23, 42, 0.6)!important;">
+          <h5 class="text-cyan font-weight-bold mb-3 font-size-sm"><i class="fas fa-plus-circle me-1"></i> إضافة تصنيف جديد للخدمات</h5>
+          <form id="add-category-form" onsubmit="handleAddNewCategory(event)">
+            <div class="row g-2 align-items-center">
+              <div class="col-md-6">
+                <input type="text" id="new-cat-name" class="form-control input-main" placeholder="اسم التصنيف (مثال: شهادات وتصديقات)..." required>
+              </div>
+              <div class="col-md-4">
+                <select id="new-cat-icon" class="form-select input-main bg-dark text-white border-secondary">
+                  <option value="fa-tag">🏷️ أيقونة تصنيف عادية</option>
+                  <option value="fa-file-signature">📜 إثباتات وتصديقات</option>
+                  <option value="fa-shuffle">🔄 تحويلات وتغيير</option>
+                  <option value="fa-id-card">🪪 بطاقات وهويات</option>
+                  <option value="fa-file-arrow-down">📥 سحب وتصفية</option>
+                  <option value="fa-graduation-cap">🎓 تخرج وشهادات</option>
+                  <option value="fa-award">🏅 جوائز وتفوق</option>
+                  <option value="fa-stethoscope">🩺 طب وشهادات صحية</option>
+                  <option value="fa-clipboard-list">📋 نماذج واستمارات</option>
+                  <option value="fa-ellipsis">⚙️ خدمات عامة أخرى</option>
+                </select>
+              </div>
+              <div class="col-md-2">
+                <button type="submit" class="btn btn-cyan-gradient w-100 font-weight-bold"><i class="fas fa-plus"></i> إضافة</button>
+              </div>
+            </div>
+          </form>
+        </div>
+
+        <!-- Categories List Table -->
+        <h5 class="font-weight-bold text-white mb-2 font-size-sm"><i class="fas fa-list me-1 text-info"></i> التصنيفات الحالية المتاحة للموظفين والنظام:</h5>
+        <div class="table-responsive border border-secondary rounded-3" style="max-height: 300px; overflow-y: auto;">
+          <table class="table custom-table table-bordered mb-0">
+            <thead>
+              <tr>
+                <th style="width: 50px;">#</th>
+                <th>اسم التصنيف</th>
+                <th>رمز الأيقونة</th>
+                <th style="width: 70px;" class="text-center">إجراءات</th>
+              </tr>
+            </thead>
+            <tbody id="categories-manager-tbody">
+              <!-- Rendered dynamically -->
+            </tbody>
+          </table>
+        </div>
+      </div>
+      <div class="modal-footer justify-content-end">
+        <button class="btn btn-ghost" onclick="closeModal('categories-manager-modal')">إغلاق</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal 5: Student Service Request Registration Form -->
+  <div class="modal-overlay" id="student-request-modal" style="z-index: 180000;">
+    <div class="modal-box" style="max-width: 650px;">
+      <div class="modal-header">
+        <h3 id="student-request-modal-title"><i class="fas fa-user-plus me-2 text-cyan"></i> تسجيل طلب طالب جديد للخدمة</h3>
+        <button class="modal-close" onclick="closeModal('student-request-modal')"><i class="fas fa-times"></i></button>
+      </div>
+      <div class="modal-body">
+        <form id="student-request-form" onsubmit="handleSaveStudentRequest(event)">
+          <input type="hidden" id="student-req-id">
+          
+          <div class="row g-3">
+            <div class="col-md-6">
+              <label class="form-label font-weight-bold">رقم الطلب</label>
+              <input type="text" id="student-req-number" class="form-control bg-dark text-white border-secondary" placeholder="أدخل رقم الطلب...">
+              <div class="form-text mt-1" style="color: #ffc107!important; font-weight: 700!important; font-size: 0.75rem;">
+                <i class="fas fa-history me-1" style="color: #ffc107;"></i> <span id="last-req-number-text">آخر رقم طلب متسجل لهذه الخدمة: —</span>
+              </div>
+            </div>
+            <div class="col-md-6">
+              <label class="form-label font-weight-bold">تاريخ الطلب</label>
+              <input type="date" id="student-req-date" class="form-control bg-dark text-white border-secondary">
+            </div>
+
+            <div class="col-md-6">
+              <label class="form-label font-weight-bold">كود الطالب</label>
+              <input type="text" id="student-req-code" class="form-control bg-dark text-white border-secondary" placeholder="أدخل كود الطالب (مثال: 251)..." oninput="autoLookupStudentData(this.value)" onkeyup="autoLookupStudentData(this.value)" onchange="autoLookupStudentData(this.value)">
+            </div>
+            <div class="col-md-6">
+              <label class="form-label font-weight-bold">الرقم القومي</label>
+              <input type="text" id="student-req-national-id" class="form-control bg-dark text-white border-secondary" placeholder="أدخل الرقم القومي (تعبئة تلقائية)..." oninput="autoLookupStudentData(this.value)">
+            </div>
+
+            <div class="col-md-6">
+              <label class="form-label font-weight-bold">اسم الطالب الرباعي</label>
+              <input type="text" id="student-req-name" class="form-control bg-dark text-white border-secondary" placeholder="أدخل اسم الطالب كاملاً...">
+            </div>
+            <div class="col-md-6">
+              <label class="form-label font-weight-bold">الخدمة المطلوبة</label>
+              <input type="hidden" id="student-req-service-id">
+              <input type="text" id="student-req-service-name-display" class="form-control bg-dark text-cyan border-info font-weight-bold" readonly disabled style="font-weight: 800!important; color: #38bdf8!important; background: rgba(15, 23, 42, 0.85)!important;">
+            </div>
+
+            <div class="col-md-6">
+              <label class="form-label font-weight-bold">الكلية (من سيستم السحب)</label>
+              <select id="student-req-college" class="form-select bg-dark text-white border-secondary">
+                <option value="">اختر الكلية...</option>
+                <!-- Colleges populated dynamically from withdrawal system -->
+              </select>
+            </div>
+            <div class="col-md-6">
+              <label class="form-label font-weight-bold">الفرقة الدراسية</label>
+              <input type="text" id="student-req-grade" class="form-control bg-dark text-white border-secondary" placeholder="مثال: الفرقة الأولى / الفرقة الثانية...">
+            </div>
+
+            <div class="col-md-6">
+              <label class="form-label font-weight-bold">حالة الطلب</label>
+              <select id="student-req-status" class="form-select bg-dark text-white border-secondary">
+                <option value="قيد المعالجة">⏳ قيد المعالجة</option>
+                <option value="جاهز للتسليم">✅ جاهز للتسليم</option>
+                <option value="تم التسليم">🎉 تم التسليم</option>
+                <option value="مرفوض">❌ مرفوض</option>
+              </select>
+            </div>
+            <div class="col-md-6">
+              <label class="form-label font-weight-bold">ملاحظات / سبب الرفض</label>
+              <input type="text" id="student-req-notes" class="form-control bg-dark text-white border-secondary" placeholder="اكتب ملاحظات الطلب أو سبب الرفض...">
+            </div>
+          </div>
+
+          <div class="d-flex gap-2 justify-content-end mt-4">
+            <button type="submit" class="btn btn-cyan-gradient px-4 py-2 font-weight-bold" style="color: #ffc107!important;"><i class="fas fa-save me-1" style="color: #ffc107;"></i> <span style="color: #ffc107!important;">حفظ الطلب</span></button>
+            <button type="button" class="btn btn-ghost" onclick="closeModal('student-request-modal')">إغلاق</button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal 6: Student Requests Unified Registry & Professional Filters -->
+  <div class="modal-overlay" id="student-requests-registry-modal" style="z-index: 150000;">
+    <div class="modal-box registry-modal-box-wide">
+      <div class="modal-header d-flex justify-content-between align-items-center">
+        <h3 style="color: #ffffff!important; font-weight: 800!important;"><i class="fas fa-users-rectangle me-2 text-cyan"></i> <span style="color: #ffffff!important; font-weight: 800!important;">سجل كافة طلبات الطلاب للخدمات المكتبية (تصفية شاملة)</span></h3>
+        <button class="modal-close" onclick="closeModal('student-requests-registry-modal')"><i class="fas fa-times"></i></button>
+      </div>
+      
+      <!-- Top Professional Filters Toolbar Bar -->
+      <div class="registry-filters-bar p-3 bg-dark border-bottom no-print">
+        <div class="row g-2 align-items-center">
+          <!-- Filter 1: Search -->
+          <div class="col-md-3">
+            <label class="form-label font-size-xs text-secondary mb-1">بحث شامل:</label>
+            <div class="input-group input-group-sm">
+              <span class="input-group-text bg-secondary border-secondary text-white"><i class="fas fa-search"></i></span>
+              <input type="text" id="reg-filter-search" class="form-control bg-dark text-white border-secondary" placeholder="اسم، كود، أو رقم طلب..." oninput="renderStudentRequestsRegistry()">
+            </div>
+          </div>
+
+          <!-- Filter 2: College -->
+          <div class="col-md-3">
+            <label class="form-label font-size-xs text-secondary mb-1">الكلية:</label>
+            <select id="reg-filter-college" class="form-select form-select-sm bg-dark text-white border-secondary" onchange="renderStudentRequestsRegistry()">
+              <option value="all">كافة الكليات</option>
+            </select>
+          </div>
+          
+          <!-- Filter 3: Service -->
+          <div class="col-md-2">
+            <label class="form-label font-size-xs text-secondary mb-1">الخدمة:</label>
+            <select id="reg-filter-service" class="form-select form-select-sm bg-dark text-white border-secondary" onchange="renderStudentRequestsRegistry()">
+              <option value="all">كافة الخدمات</option>
+            </select>
+          </div>
+
+          <!-- Filter 4: Status -->
+          <div class="col-md-2">
+            <label class="form-label font-size-xs text-secondary mb-1">الحالة:</label>
+            <select id="reg-filter-status" class="form-select form-select-sm bg-dark text-white border-secondary" onchange="renderStudentRequestsRegistry()">
+              <option value="all">كافة الحالات</option>
+              <option value="قيد المعالجة">⏳ قيد المعالجة</option>
+              <option value="جاهز للتسليم">✅ جاهز للتسليم</option>
+              <option value="تم التسليم">🎉 تم التسليم</option>
+              <option value="مرفوض">❌ مرفوض</option>
+            </select>
+          </div>
+
+          <!-- Filter 5: Date -->
+          <div class="col-md-2">
+            <label class="form-label font-size-xs text-secondary mb-1">التاريخ:</label>
+            <input type="date" id="reg-filter-date" class="form-control form-control-sm bg-dark text-white border-secondary" onchange="renderStudentRequestsRegistry()">
+          </div>
+
+          <!-- Filter 6: Staff -->
+          <div class="col-md-2">
+            <label class="form-label font-size-xs text-secondary mb-1">اسم الموظف:</label>
+            <select id="reg-filter-staff" class="form-select form-select-sm bg-dark text-white border-secondary" onchange="renderStudentRequestsRegistry()">
+              <option value="all">كافة الموظفين</option>
+            </select>
+          </div>
+        </div>
+      </div>
+
+      <!-- Requests Table Body -->
+      <div class="modal-body p-2 bg-secondary-dark" style="flex: 1; overflow-y: auto;">
+        <div class="table-responsive">
+          <table class="table table-sm custom-table table-bordered table-hover align-middle text-nowrap" style="color: #ffffff!important; font-weight: 800!important; font-size: 0.78rem!important;">
+            <thead>
+              <tr class="table-dark text-center text-nowrap" style="color: #ffffff!important; font-weight: 800!important; font-size: 0.78rem!important;">
+                <th style="width: 75px; color: #ffffff!important; font-weight: 800!important; white-space: nowrap!important;">رقم الطلب</th>
+                <th style="width: 80px; color: #ffffff!important; font-weight: 800!important; white-space: nowrap!important;">كود الطالب</th>
+                <th style="width: 105px; color: #ffffff!important; font-weight: 800!important; white-space: nowrap!important;">الرقم القومي</th>
+                <th style="color: #ffffff!important; font-weight: 800!important; white-space: nowrap!important;">اسم الطالب</th>
+                <th style="color: #ffffff!important; font-weight: 800!important; white-space: nowrap!important;">الخدمة المطلوبة</th>
+                <th style="color: #ffffff!important; font-weight: 800!important; white-space: nowrap!important;">الكلية</th>
+                <th style="width: 100px; color: #ffffff!important; font-weight: 800!important; white-space: nowrap!important;">اسم الموظف</th>
+                <th style="width: 85px; color: #ffffff!important; font-weight: 800!important; white-space: nowrap!important;">تاريخ الطلب</th>
+                <th style="width: 110px; color: #ffffff!important; font-weight: 800!important; white-space: nowrap!important;">حالة الطلب</th>
+                <th style="width: 60px; color: #ffffff!important; font-weight: 800!important; white-space: nowrap!important;">الإجراءات</th>
+              </tr>
+            </thead>
+            <tbody id="student-requests-tbody">
+              <!-- Rendered rows -->
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <div class="modal-footer d-flex justify-content-between align-items-center">
+        <span class="text-secondary font-size-sm">عدد الطلبات المعروضة: <strong id="reg-rendered-count" class="text-cyan">0</strong></span>
+        <div class="d-flex gap-2">
+          <button class="btn btn-sm btn-outline-secondary" onclick="resetRegistryFilters()"><i class="fas fa-undo me-1"></i> إعادة ضبط الفلاتر</button>
+          <button class="btn btn-ghost" onclick="closeModal('student-requests-registry-modal')">إغلاق السجل</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal 7: Quick Small Status Change Modal -->
+  <div class="modal-overlay" id="quick-status-modal" style="z-index: 160000;">
+    <div class="modal-box modal-sm border border-secondary shadow-lg" style="max-width: 400px; width: 92%; border-radius: 12px;">
+      <div class="modal-header d-flex justify-content-between align-items-center py-2 px-3 bg-dark border-bottom">
+        <h5 class="m-0 text-white font-weight-bold" style="font-size: 0.95rem;"><i class="fas fa-tasks text-cyan me-1"></i> تعديل حالة الطلب السريع</h5>
+        <button class="modal-close" onclick="closeModal('quick-status-modal')"><i class="fas fa-times"></i></button>
+      </div>
+      <div class="modal-body p-3 bg-dark text-white">
+        <input type="hidden" id="quick-status-req-id">
+        <div class="mb-3 text-cyan font-weight-bold font-size-xs p-2 bg-secondary-dark rounded border border-secondary" id="quick-status-student-info">
+          الطالب: —
+        </div>
+
+        <div class="mb-3">
+          <label class="form-label font-weight-bold font-size-xs text-secondary mb-1">اختر الحالة الجديدة:</label>
+          <select id="quick-status-select" class="form-select form-select-sm bg-dark text-white border-secondary" onchange="handleQuickStatusSelectChange(this.value)">
+            <option value="قيد المعالجة">⏳ قيد المعالجة</option>
+            <option value="جاهز للتسليم">✅ جاهز للتسليم</option>
+            <option value="تم التسليم">🎉 تم التسليم</option>
+            <option value="مرفوض">❌ مرفوض</option>
+          </select>
+        </div>
+
+        <div class="mb-2" id="quick-status-reason-box" style="display: none;">
+          <label class="form-label font-weight-bold font-size-xs text-danger mb-1"><i class="fas fa-exclamation-circle me-1"></i>سبب الرفض:</label>
+          <input type="text" id="quick-status-notes" class="form-control form-control-sm bg-dark text-white border-danger" placeholder="اكتب سبب الرفض هنا...">
+        </div>
+
+        <div class="d-flex gap-2 justify-content-end mt-3 pt-2 border-top border-secondary">
+          <button type="button" class="btn btn-sm btn-cyan-gradient px-3 font-weight-bold" style="color: #ffc107!important;" onclick="saveQuickStatusChange()"><i class="fas fa-check me-1" style="color: #ffc107;"></i> حفظ الحالة</button>
+          <button type="button" class="btn btn-sm btn-ghost px-2" onclick="closeModal('quick-status-modal')">إلغاء</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal 4: Login (Auth fallback) -->
+  <div class="modal-overlay" id="login-modal">
+    <div class="modal-box" style="max-width: 400px;">
+      <div class="modal-header">
+        <h3><i class="fas fa-lock me-1 text-info"></i> تسجيل دخول الموظفين</h3>
+        <button class="modal-close" onclick="closeModal('login-modal')"><i class="fas fa-times"></i></button>
+      </div>
+      <div class="modal-body">
+        <div id="login-error" class="alert alert-danger" style="display:none;"></div>
+        <label class="form-label mt-2">اسم المستخدم</label>
+        <input type="text" class="form-control input-main text-start" id="login-username" placeholder="اسم المستخدم" style="direction: ltr;" onkeydown="if(event.key==='Enter')document.getElementById('login-password').focus()">
+        <label class="form-label mt-3">كلمة المرور</label>
+        <input type="password" class="form-control input-main text-start" id="login-password" placeholder="كلمة المرور" style="direction: ltr;" onkeydown="if(event.key==='Enter')submitLocalLogin()">
+        <div class="d-flex gap-2 mt-4">
+          <button class="btn btn-primary-gradient flex-grow-1" onclick="submitLocalLogin()"><i class="fas fa-sign-in-alt me-1"></i> دخول</button>
+          <button class="btn btn-ghost flex-grow-1" onclick="closeModal('login-modal')">إلغاء</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Toasts Notification Container -->
+  <div class="toast-container position-fixed bottom-0 end-0 p-3" id="toastContainer" style="z-index: 999999;"></div>
+
+  <!-- JavaScript Logics -->
+  <script src="app.js"></script>
+</body>
+</html>
