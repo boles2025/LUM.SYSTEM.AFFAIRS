@@ -169,6 +169,98 @@ document.addEventListener("DOMContentLoaded", async () => {
   setupDeliverySearch();
 });
 
+function standardizeCollegeName(name) {
+  if (!name) return '';
+  name = String(name).trim();
+  const defaults = [
+    "كلية الهندسة",
+    "كلية طب الفم والاسنان",
+    "كلية العلاج الطبيعي",
+    "كلية التمريض",
+    "كلية الحاسبات والمعلومات والذكاء الاصطناعي",
+    "كلية الادارة والاقتصاد والعلوم السياسية",
+    "كلية تكنولوجيا العلوم الصحية التطبيقية",
+    "كلية الصيدلة"
+  ];
+  function norm(str) {
+    if (!str) return '';
+    return str.replace(/^كلية\s+/, '')
+              .replace(/[أإآ]/g, 'ا')
+              .replace(/ة/g, 'ه')
+              .replace(/ى/g, 'ي')
+              .replace(/\s+/g, ' ')
+              .trim();
+  }
+  const normName = norm(name);
+  for (const d of defaults) {
+    if (norm(d) === normName) return d;
+  }
+  if (normName.includes('اداره') || normName.includes('اقتصاد') || normName.includes('علوم سياسيه') || normName.includes('سياسيه')) {
+    return 'كلية الادارة والاقتصاد والعلوم السياسية';
+  }
+  if (normName.includes('اسنان') || normName.includes('أسنان')) {
+    return 'كلية طب الفم والاسنان';
+  }
+  if (normName.includes('حاسبات') || normName.includes('ذكاء اصطناعي') || normName.includes('معلومات')) {
+    return 'كلية الحاسبات والمعلومات والذكاء الاصطناعي';
+  }
+  if (normName.includes('صحيه') || normName.includes('تكنولوجيا العلوم الصحيه')) {
+    return 'كلية تكنولوجيا العلوم الصحية التطبيقية';
+  }
+  if (normName.includes('هندسه') || normName.includes('هندسة')) {
+    return 'كلية الهندسة';
+  }
+  if (normName.includes('صيدله') || normName.includes('صيدلة')) {
+    return 'كلية الصيدلة';
+  }
+  if (normName.includes('علاج طبيعي') || normName.includes('علاج')) {
+    return 'كلية العلاج الطبيعي';
+  }
+  if (normName.includes('تمريض')) {
+    return 'كلية التمريض';
+  }
+  for (const d of defaults) {
+    if (normName.includes(norm(d)) || norm(d).includes(normName)) return d;
+  }
+  return name;
+}
+
+function compareColleges(col1, col2) {
+  function norm(str) {
+    if (!str) return '';
+    return String(str).replace(/^كلية\s+/, '').replace(/[أإآ]/g, 'ا').replace(/ة/g, 'ه').replace(/ى/g, 'ي').replace(/\s+/g, ' ').trim();
+  }
+  return norm(col1) === norm(col2);
+}
+
+function getCollegeFromCode(code) {
+  if (!code) return '';
+  var s = String(code).trim().replace(/\D/g, '');
+  var map = {
+    '1': 'طب الفم والاسنان',
+    '2': 'الادارة والاقتصاد والعلوم السياسية',
+    '3': 'العلاج الطبيعي',
+    '4': 'الحاسبات والمعلومات والذكاء الاصطناعي',
+    '5': 'التمريض',
+    '6': 'تكنولوجيا العلوم الصحية التطبيقية',
+    '7': 'الهندسة',
+    '8': 'الصيدلة'
+  };
+  if (s.startsWith('20')) {
+    if (s.length >= 5) {
+      var d5 = s.substring(4, 5);
+      if (map[d5]) return map[d5];
+    }
+    return '';
+  } else {
+    if (s.length >= 3) {
+      var d3 = s.substring(2, 3);
+      if (map[d3]) return map[d3];
+    }
+    return '';
+  }
+}
+
 function seedMockStudents() {
   studentsIndex = [];
   allStudentsList = [];
@@ -185,7 +277,7 @@ function setupRealtimeListener() {
     if (data) {
       Object.keys(data).forEach(key => {
         const d = data[key];
-        newStudents.push({ id: key, name: d.name||"", code: d.code||"", nationalId: d.nationalId||"", level: d.level||"", college: d.college||"", fileNo: d.fileNo||"", cabinetNo: d.cabinetNo||"", attachments: d.attachments||{}, delivery: d.delivery||{}, customFields: d.customFields||{}, createdAt: d.createdAt||null, address: d.address||"", phone: d.phone||"", whatsapp: d.whatsapp||"" });
+        newStudents.push({ id: key, name: d.name||"", code: d.code||"", nationalId: d.nationalId||"", level: d.level||"", college: standardizeCollegeName(d.college || getCollegeFromCode(d.code)), fileNo: d.fileNo||"", cabinetNo: d.cabinetNo||"", attachments: d.attachments||{}, delivery: d.delivery||{}, customFields: d.customFields||{}, createdAt: d.createdAt||null, address: d.address||"", phone: d.phone||"", whatsapp: d.whatsapp||"" });
       });
     }
     
@@ -364,7 +456,7 @@ async function loadSearchIndex() {
   if (data) {
     Object.keys(data).forEach(key => {
       const d = data[key];
-       const s = { id: key, name: d.name||"", code: d.code||"", nationalId: d.nationalId||"", level: d.level||"", college: d.college||"", fileNo: d.fileNo||"", cabinetNo: d.cabinetNo||"", attachments: d.attachments||{}, delivery: d.delivery||{}, customFields: d.customFields||{}, createdAt: d.createdAt||null, whatsapp: d.whatsapp||"" };
+       const s = { id: key, name: d.name||"", code: d.code||"", nationalId: d.nationalId||"", level: d.level||"", college: standardizeCollegeName(d.college || getCollegeFromCode(d.code)), fileNo: d.fileNo||"", cabinetNo: d.cabinetNo||"", attachments: d.attachments||{}, delivery: d.delivery||{}, customFields: d.customFields||{}, createdAt: d.createdAt||null, whatsapp: d.whatsapp||"" };
       studentsIndex.push(s);
       allStudentsList.push(s);
     });
@@ -373,6 +465,7 @@ async function loadSearchIndex() {
   // Merge local students (avoid duplicates by code)
   localStudents.forEach(ls => {
     if (!studentsIndex.find(s => s.code === ls.code && s.code !== "")) {
+      ls.college = standardizeCollegeName(ls.college || getCollegeFromCode(ls.code));
       studentsIndex.push(ls);
       allStudentsList.push(ls);
     }
@@ -1044,7 +1137,7 @@ window.saveStudentEdits = async function() {
   const whatsapp = document.getElementById("edit-whatsapp") ? document.getElementById("edit-whatsapp").value.trim() : "";
   if (!name || !code) { showToast("الاسم والكود إجباريين!", "warning"); return; }
   const cf = {}; if (globalConfig.customFieldsSchema) globalConfig.customFieldsSchema.forEach(f => { const i = document.getElementById(`edit-custom-${f.id}`); if (i) cf[f.id] = i.value.trim(); });
-  const ud = { name, code, nationalId, college, level, cabinetNo, fileNo, whatsapp, customFields: cf };
+  const ud = { name, code, nationalId, college: standardizeCollegeName(college), level, cabinetNo, fileNo, whatsapp, customFields: cf };
   if (isOfflineMode || !db || selectedStudent.id.startsWith("mock_")) {
     const idx = studentsIndex.findIndex(s => s.id === selectedStudent.id); if (idx !== -1) { studentsIndex[idx] = Object.assign({}, studentsIndex[idx], ud); localStorage.setItem("lotus_students", JSON.stringify(studentsIndex)); }
     Object.assign(selectedStudent, ud); 
@@ -1512,7 +1605,7 @@ window.adminDeleteStudent = async function(id) {
 // ==================== REGISTERED STUDENTS ====================
 
 function getRegisteredStudents() {
-  return allStudentsList.filter(s => s.createdAt || (s.id && !s.id.startsWith("mock_") && studentsIndex.indexOf(s) !== -1));
+  return allStudentsList.filter(s => s && s.name);
 }
 
 function renderRegisteredStudentsTable() {
@@ -1520,7 +1613,7 @@ function renderRegisteredStudentsTable() {
   const counter = document.getElementById("registered-counter");
   if (!tb) return;
   tb.innerHTML = "";
-  const registered = allStudentsList.filter(s => s.id && !s.id.startsWith("mock_"));
+  const registered = allStudentsList.filter(s => s && s.name);
   if (registered.length === 0) {
     tb.innerHTML = `<tr><td colspan="7" style="text-align:center;color:var(--text-muted);">لا يوجد طلاب مسجلين بعد.</td></tr>`;
     if (counter) counter.textContent = "(0 طالب)";
@@ -1544,7 +1637,7 @@ function renderCollegeStats() {
   if (!container) return;
   container.innerHTML = "";
   
-  const registered = allStudentsList.filter(s => s.id && !s.id.startsWith("mock_"));
+  const registered = allStudentsList.filter(s => s && s.name);
   if (registered.length === 0) return;
   
   const collegeCounts = {};
@@ -1567,7 +1660,7 @@ function renderCollegeStats() {
 }
 
 window.showCollegeDetails = function(college) {
-  const registered = allStudentsList.filter(s => s.id && !s.id.startsWith("mock_") && (s.college || "غير محدد") === college);
+  const registered = allStudentsList.filter(s => s && s.name && compareColleges(s.college || "غير محدد", college));
   
   let html = `<div class="college-modal"><div class="college-modal-header"><h3>${escapeHtml(college)}</h3><span>${registered.length} طالب</span><button class="gallery-close" onclick="closeCollegeModal()"><i class="fas fa-times"></i></button></div><div class="college-modal-body">`;
   
@@ -1737,8 +1830,9 @@ document.addEventListener("DOMContentLoaded", () => {
     if (!name || !code) { showToast("الاسم والكود مطلوبين!", "warning"); return; }
     if (studentsIndex.find(s => s.code === code)) { showToast("الكود مسجل بالفعل!", "error"); return; }
     showToast("جاري التسجيل...", "info");
-    if (isOfflineMode || !db) { const ns = { id: "student_" + Date.now(), name, code, nationalId, college, level, fileNo, cabinetNo, whatsapp, attachments: {}, delivery: {}, customFields: {}, createdAt: new Date().toISOString() }; studentsIndex.push(ns); allStudentsList.push(ns); localStorage.setItem("lotus_students", JSON.stringify(studentsIndex)); showToast("تم التسجيل محلياً.", "success"); e.target.reset(); renderAdminStudentsTable(); return; }
-    const ns = { name, code, nationalId, college, level, fileNo, cabinetNo, whatsapp, attachments: {}, delivery: {}, customFields: {}, createdAt: new Date().toISOString() };
+    const stdCollege = standardizeCollegeName(college);
+    if (isOfflineMode || !db) { const ns = { id: "student_" + Date.now(), name, code, nationalId, college: stdCollege, level, fileNo, cabinetNo, whatsapp, attachments: {}, delivery: {}, customFields: {}, createdAt: new Date().toISOString() }; studentsIndex.push(ns); allStudentsList.push(ns); localStorage.setItem("lotus_students", JSON.stringify(studentsIndex)); showToast("تم التسجيل محلياً.", "success"); e.target.reset(); renderAdminStudentsTable(); return; }
+    const ns = { name, code, nationalId, college: stdCollege, level, fileNo, cabinetNo, whatsapp, attachments: {}, delivery: {}, customFields: {}, createdAt: new Date().toISOString() };
     try { const dr = await db.ref("students").push(ns); ns.id = dr.key; studentsIndex.push(ns); allStudentsList.push(ns); localStorage.setItem("lotus_students", JSON.stringify(studentsIndex)); showToast("تم التسجيل.", "success"); e.target.reset(); renderAdminStudentsTable(); } catch (err) { showToast("خطأ: " + err.message, "error"); }
   });
 });
@@ -1752,7 +1846,7 @@ function handleExcelFile(file) {
       if (rows.length < 2) { showToast("الملف فارغ.", "warning"); return; }
       const h = rows[0].map(x => String(x).trim()); const cm = { name: h.findIndex(x => x.includes("الاسم")||x.includes("كامل")), code: h.findIndex(x => x.includes("كود")||x.includes("الكود")), nationalId: h.findIndex(x => x.includes("القومي")||x.includes("القومى")||x.includes("الهوية")), college: h.findIndex(x => x.includes("الكلية")||x.includes("كليه")), level: h.findIndex(x => x.includes("الفرقة")||x.includes("المستوى")), fileNo: h.findIndex(x => x.includes("الملف")), cabinetNo: h.findIndex(x => x.includes("الدولاب")) };
       if (cm.name === -1 || cm.code === -1) { showToast("أعمدة 'الاسم' و 'الكود' مطلوبة.", "error"); return; }
-      const st = []; for (let i = 1; i < rows.length; i++) { const r = rows[i]; if (!r||!r.length||!r[cm.name]) continue; const cv = r[cm.code]?String(r[cm.code]).trim():""; if (!cv) continue; st.push({ name: String(r[cm.name]).trim(), code: cv, nationalId: cm.nationalId!==-1&&r[cm.nationalId]?String(r[cm.nationalId]).trim():"", college: cm.college!==-1&&r[cm.college]?String(r[cm.college]).trim():"", level: cm.level!==-1&&r[cm.level]?String(r[cm.level]).trim():"", fileNo: cm.fileNo!==-1&&r[cm.fileNo]?String(r[cm.fileNo]).trim():"", cabinetNo: cm.cabinetNo!==-1&&r[cm.cabinetNo]?String(r[cm.cabinetNo]).trim():"", attachments: {}, customFields: {} }); }
+      const st = []; for (let i = 1; i < rows.length; i++) { const r = rows[i]; if (!r||!r.length||!r[cm.name]) continue; const cv = r[cm.code]?String(r[cm.code]).trim():""; if (!cv) continue; st.push({ name: String(r[cm.name]).trim(), code: cv, nationalId: cm.nationalId!==-1&&r[cm.nationalId]?String(r[cm.nationalId]).trim():"", college: standardizeCollegeName(cm.college!==-1&&r[cm.college]?String(r[cm.college]).trim():getCollegeFromCode(cv)), level: cm.level!==-1&&r[cm.level]?String(r[cm.level]).trim():"", fileNo: cm.fileNo!==-1&&r[cm.fileNo]?String(r[cm.fileNo]).trim():"", cabinetNo: cm.cabinetNo!==-1&&r[cm.cabinetNo]?String(r[cm.cabinetNo]).trim():"", attachments: {}, customFields: {} }); }
       if (!st.length) { showToast("لا توجد سجلات صالحة.", "warning"); return; }
       if (confirm(`${st.length} طالب. بدأ الاستيراد؟`)) importStudentsInBatches(st);
     } catch (err) { showToast("خطأ في قراءة الملف.", "error"); }
@@ -1985,7 +2079,7 @@ function getDocBaseList() {
   const f = document.getElementById("doc-college-filter");
   const c = f ? f.value : "";
   if (!c) return allStudentsList;
-  return allStudentsList.filter(s => (s.college || "غير محدد") === c);
+  return allStudentsList.filter(s => compareColleges(s.college || "غير محدد", c));
 }
 
 function isCustomDelivered(s, name) {
@@ -2050,7 +2144,7 @@ window.renderDocReportOptions = function() {
   const cf = document.getElementById("doc-college-filter");
   if (cf) {
     const cur = cf.value;
-    const uniq = [...new Set(allStudentsList.map(s => s.college || "غير محدد"))];
+    const uniq = [...new Set(allStudentsList.map(s => standardizeCollegeName(s.college || "غير محدد")))];
     cf.innerHTML = `<option value="">كل الكليات</option>` + uniq.map(c => `<option value="${escapeHtml(c)}">${escapeHtml(c)}</option>`).join("");
     cf.value = cur;
   }
@@ -2199,12 +2293,12 @@ window.renderMissingReport = function() {
   const filter = document.getElementById("missing-college-filter");
   const college = filter ? filter.value : "";
   if (filter) {
-    const uniq = [...new Set(allStudentsList.map(s=>s.college||"غير محدد"))];
-    filter.innerHTML = `<option value="">كل الكليات</option>` + uniq.map(c=>`<option value="${escapeHtml(c)}">${escapeHtml(c)}</option>`).join("");
+    const uniq = [...new Set(allStudentsList.map(s => standardizeCollegeName(s.college || "غير محدد")))];
+    filter.innerHTML = `<option value="">كل الكليات</option>` + uniq.map(c => `<option value="${escapeHtml(c)}">${escapeHtml(c)}</option>`).join("");
     filter.value = college;
   }
   let list = allStudentsList.filter(s => getMissingDocs(s).length > 0);
-  if (college) list = list.filter(s => (s.college||"غير محدد") === college);
+  if (college) list = list.filter(s => compareColleges(s.college || "غير محدد", college));
   let html = "";
   if (!list.length) { html = '<p style="text-align:center;color:var(--text-gold);padding:20px;">🎉 لا يوجد طلاب بنواقص</p>'; }
   else {
@@ -2231,7 +2325,7 @@ window.exportMissingReportToExcel = function() {
   const filter = document.getElementById("missing-college-filter");
   const college = filter ? filter.value : "";
   let list = allStudentsList.filter(s => getMissingDocs(s).length > 0);
-  if (college) list = list.filter(s => (s.college||"غير محدد") === college);
+  if (college) list = list.filter(s => compareColleges(s.college || "غير محدد", college));
   const data = list.map(s => ({ "الاسم": s.name||"", "الكود": s.code||"", "الكلية": s.college||"", "المستندات الناقصة": getMissingDocs(s).join(" - "), "واتساب": s.whatsapp||"" }));
   if (!data.length) { showToast("لا توجد نواقص", "warning"); return; }
   exportToExcel(data, "تقرير_النواقص");
@@ -2241,7 +2335,7 @@ window.printMissingReportWord = function() {
   const filter = document.getElementById("missing-college-filter");
   const college = filter ? filter.value : "";
   let list = allStudentsList.filter(s => getMissingDocs(s).length > 0);
-  if (college) list = list.filter(s => (s.college||"غير محدد") === college);
+  if (college) list = list.filter(s => compareColleges(s.college || "غير محدد", college));
   const uniName = globalConfig.universityName || "جامعة اللوتس";
   const logo = globalConfig.universityLogo || "";
   let rows = "";
