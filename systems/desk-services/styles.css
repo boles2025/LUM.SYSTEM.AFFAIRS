@@ -1480,6 +1480,19 @@ body {
   box-sizing: border-box !important;
 }
 
+@keyframes frameGlow {
+  0% { border-color: #f43f5e; box-shadow: 0 0 15px rgba(244,63,94,0.4); }
+  20% { border-color: #f59e0b; box-shadow: 0 0 15px rgba(245,158,11,0.4); }
+  40% { border-color: #10b981; box-shadow: 0 0 15px rgba(16,185,129,0.4); }
+  60% { border-color: #3b82f6; box-shadow: 0 0 15px rgba(59,130,246,0.4); }
+  80% { border-color: #8b5cf6; box-shadow: 0 0 15px rgba(139,92,246,0.4); }
+  100% { border-color: #f43f5e; box-shadow: 0 0 15px rgba(244,63,94,0.4); }
+}
+#student-request-modal .modal-box {
+  border: 2px solid #f43f5e !important;
+  animation: frameGlow 4s ease-in-out infinite !important;
+}
+
 @media screen and (max-width: 992px) {
   .windows-print-paper-sheet {
     width: 98% !important;

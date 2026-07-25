@@ -250,25 +250,7 @@ async function fetchCategoriesList() {
 }
 
 function renderCategoryTabs() {
-  const container = document.getElementById('categories-filter-wrapper');
-  if (!container) return;
-
-  let html = `
-    <button class="filter-pill ${activeCategory === 'all' ? 'active' : ''}" data-category="all" onclick="selectCategory('all')">
-      <i class="fas fa-border-all me-1"></i> الكل
-    </button>
-  `;
-
-  categoriesList.forEach(cat => {
-    const icon = cat.icon || 'fa-tag';
-    html += `
-      <button class="filter-pill ${activeCategory === cat.id ? 'active' : ''}" data-category="${cat.id}" onclick="selectCategory('${cat.id}')">
-        <i class="fas ${icon} me-1"></i> ${escapeHtml(cat.name)}
-      </button>
-    `;
-  });
-
-  container.innerHTML = html;
+  // Categories filter removed - search only
 }
 
 function renderCategoryFormOptions() {
@@ -393,7 +375,7 @@ function filterAndRenderServices() {
 
   // A. Filter
   let filtered = services.filter(s => {
-    const matchesCategory = (activeCategory === 'all' || s.category === activeCategory);
+    const matchesCategory = true;
     
     const nameMatch = s.name.toLowerCase().includes(searchQuery);
     const descMatch = s.description.toLowerCase().includes(searchQuery);
@@ -525,115 +507,85 @@ function openServiceDetails(serviceId) {
   }
 
   const modalBody = document.getElementById('details-modal-body');
-  
-  // Render details modal body
+
+  const isRecent = service.lastUpdated && (Date.now() - new Date(service.lastUpdated).getTime() < 48 * 60 * 60 * 1000);
+  const updatedBadge = (isRecent) ? `<span class="badge-updated-part ms-2" style="background:#e11d48; color:#fff; font-size:0.65rem; padding:2px 8px; border-radius:4px; font-weight:bold; vertical-align:middle; display:inline-block;">محدث</span>` : '';
+
   let docsHTML = '';
   if (service.documents && service.documents.length) {
-    docsHTML = `<ul class="custom-list">` + service.documents.map(d => `<li style="color: #ffffff!important; font-weight: 800!important;">${escapeHtml(d)}</li>`).join('') + `</ul>`;
-  } else {
-    docsHTML = `<p class="font-size-sm mb-0" style="color: #ffffff!important; font-weight: 400!important;">لا توجد مستندات خاصة مطلوبة.</p>`;
+    docsHTML = `<div class="d-flex flex-column gap-1">` + service.documents.map(d =>
+      `<div class="d-flex align-items-start gap-2 px-1"><span style="color:#f472b6;font-size:1.2rem;line-height:1;">•</span><span class="text-white">${escapeHtml(d)}</span></div>`
+    ).join('') + `</div>`;
   }
 
   let stepsHTML = '';
   if (service.steps && service.steps.length) {
-    stepsHTML = `<ol class="custom-list steps-list">` + service.steps.map(s => `<li style="color: #ffffff!important; font-weight: 800!important;">${escapeHtml(s)}</li>`).join('') + `</ol>`;
-  } else {
-    stepsHTML = `<p class="font-size-sm mb-0" style="color: #ffffff!important; font-weight: 400!important;">لا توجد خطوات محددة للخدمة.</p>`;
+    stepsHTML = `<div class="d-flex flex-column gap-2">` + service.steps.map((s, i) =>
+      `<div class="d-flex align-items-start gap-2"><span class="d-flex align-items-center justify-content-center rounded-circle font-weight-bold" style="width:26px;height:26px;min-width:26px;background:rgba(251,191,36,0.2);color:#fbbf24;font-size:0.8rem;">${i+1}</span><span class="text-white" style="padding-top:2px;">${escapeHtml(s)}</span></div>`
+    ).join('') + `</div>`;
   }
 
   let filesHTML = '';
   if (service.files && Object.keys(service.files).length) {
-    filesHTML = `<div class="files-grid mt-2 d-flex flex-column gap-2">` + Object.keys(service.files).map(fKey => {
+    filesHTML = Object.keys(service.files).map(fKey => {
       const file = service.files[fKey];
       const fileExt = file.fileName.split('.').pop().toLowerCase();
       let fileIcon = 'fa-file-alt';
-      let iconColorClass = 'others';
-      
-      if (fileExt === 'pdf') { fileIcon = 'fa-file-pdf'; iconColorClass = 'pdf'; }
-      else if (fileExt === 'doc' || fileExt === 'docx') { fileIcon = 'fa-file-word'; iconColorClass = 'word'; }
-      else if (['jpg', 'jpeg', 'png', 'gif', 'webp'].includes(fileExt)) { fileIcon = 'fa-file-image'; iconColorClass = 'image'; }
-
+      let iconColor = '#6c757d';
+      if (fileExt === 'pdf') { fileIcon = 'fa-file-pdf'; iconColor = '#f43f5e'; }
+      else if (fileExt === 'doc' || fileExt === 'docx') { fileIcon = 'fa-file-word'; iconColor = '#3b82f6'; }
+      else if (['jpg', 'jpeg', 'png', 'gif', 'webp'].includes(fileExt)) { fileIcon = 'fa-file-image'; iconColor = '#10b981'; }
       return `
-        <div class="file-item-card p-2 rounded-3 bg-dark border border-secondary d-flex align-items-center justify-content-between gap-2" style="background: rgba(15, 23, 42, 0.6)!important;">
-          <div class="d-flex align-items-center gap-2" style="overflow: hidden;">
-            <div class="file-icon-box ${iconColorClass}" style="width:32px; height:32px; min-width:32px; border-radius:8px; display:flex; align-items:center; justify-content:center;">
-              <i class="fas ${fileIcon}"></i>
-            </div>
-            <span class="file-name font-weight-bold text-white text-truncate" style="font-size: 0.85rem!important; color: #ffffff!important;" title="${escapeHtml(file.fileName)}">${escapeHtml(file.fileName)}</span>
+        <div class="d-flex align-items-center justify-content-between p-2 rounded-3" style="background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.06);">
+          <div class="d-flex align-items-center gap-2 text-truncate">
+            <i class="fas ${fileIcon}" style="color:${iconColor};width:20px;"></i>
+            <span class="text-white text-truncate" style="font-size:0.85rem;">${escapeHtml(file.fileName)}</span>
           </div>
-          <div class="d-flex gap-1.5 align-items-center">
-            <button class="btn btn-sm btn-outline-warning px-2 py-1" onclick="printAttachedFile('${service.id}', '${fKey}')" title="طباعة الملف"><i class="fas fa-print"></i></button>
-            <button class="btn btn-sm btn-success px-3 py-1 font-weight-bold" onclick="downloadAttachedFile('${service.id}', '${fKey}')" title="تحميل المستند الأصلي"><i class="fas fa-download me-1"></i> تحميل المستند</button>
-          </div>
-        </div>
-      `;
-    }).join('') + `</div>`;
-  } else {
-    filesHTML = `
-      <div class="no-files-card p-3 text-center border border-secondary rounded-3" style="background: rgba(15, 23, 42, 0.4);">
-        <i class="fas fa-circle-exclamation text-secondary fs-4 mb-2"></i>
-        <div class="font-size-xs text-white" style="color: #ffffff!important; font-weight: 400!important;">لا توجد مستندات أو نماذج ورقية مرفقة مع هذه الخدمة.</div>
-      </div>
-    `;
+          <button class="btn btn-sm px-2 py-0" style="background:rgba(52,211,153,0.15);color:#34d399;border:1px solid rgba(52,211,153,0.2);" onclick="downloadAttachedFile('${service.id}', '${fKey}')" title="تحميل"><i class="fas fa-download"></i></button>
+        </div>`;
+    }).join('');
   }
 
-  const isRecent = service.lastUpdated && (Date.now() - new Date(service.lastUpdated).getTime() < 48 * 60 * 60 * 1000);
-  const updatedBadge = (isRecent) ? `<span class="badge-updated-part ms-2" style="background:var(--accent-rose); color:#fff; font-size:0.7rem; padding:2px 6px; border-radius:4px; font-weight:bold; animation: pulseBadge 2s infinite; vertical-align:middle; display:inline-block;">محدث</span>` : '';
-  
-  const isTitleUpdated = isRecent && (service.updatedPart === "التفاصيل" || service.updatedPart === "التفاصيل العامة" || service.updatedPart === "الخدمة بالكامل");
-  const isStepsUpdated = isRecent && (service.updatedPart === "الخطوات" || service.updatedPart === "الخطوات المتبعة" || service.updatedPart === "خطوات الاستخراج");
-  const isDocsUpdated = isRecent && (service.updatedPart === "الأوراق المطلوبة" || service.updatedPart === "المستندات المطلوبة" || service.updatedPart === "المستندات" || service.updatedPart === "المستندات والأوراق المطلوبة" || service.updatedPart === "الأوراق والمستندات المطلوبة");
-  const isFilesUpdated = isRecent && (service.updatedPart === "المستندات المرفقة" || service.updatedPart === "الملفات المرفقة" || service.updatedPart === "المرفقات" || service.updatedPart === "المستندات والنماذج الورقية");
-  const isPriceUpdated = isRecent && (service.updatedPart === "السعر" || service.updatedPart === "سعر الخدمة");
+  const firstFileKey = (service.files && Object.keys(service.files).length) ? Object.keys(service.files)[0] : null;
 
   modalBody.innerHTML = `
-    <div class="row g-4">
-      <!-- Left Column: Title/Desc, Steps, Docs -->
-      <div class="col-md-8">
-        <!-- 1. Title & Description Block (Cyan Glow Card) -->
-        <div class="glowing-part-card p-3.5 rounded-4 mb-4" style="border: 2px solid #0284c7; background: rgba(2, 132, 199, 0.08); box-shadow: 0 0 15px rgba(2, 132, 199, 0.25);">
-          <h4 class="font-weight-bold text-cyan mb-2"><i class="fas fa-file-signature me-2"></i> ${escapeHtml(service.name)} ${isTitleUpdated ? updatedBadge : ''}</h4>
-          <p class="text-white font-size-sm leading-relaxed mb-0">${escapeHtml(service.description)}</p>
-        </div>
-
-        <!-- 2. Steps & Procedures Block (Gold Glow Card) -->
-        <div class="glowing-part-card p-3.5 rounded-4 mb-4" style="border: 2px solid #f59e0b; background: rgba(245, 158, 11, 0.08); box-shadow: 0 0 15px rgba(245, 158, 11, 0.25);">
-          <h5 class="font-weight-bold text-warning mb-3" style="font-size: 1rem;"><i class="fas fa-list-check me-2"></i> الخطوات والإجراءات المتبعة ${isStepsUpdated ? updatedBadge : ''}</h5>
-          ${stepsHTML}
-        </div>
-
-        <!-- 3. Required Documents Block (Rose Glow Card) -->
-        <div class="glowing-part-card p-3.5 rounded-4" style="border: 2px solid #ec4899; background: rgba(236, 72, 153, 0.08); box-shadow: 0 0 15px rgba(236, 72, 153, 0.25);">
-          <h5 class="font-weight-bold mb-3" style="color: #f472b6!important; font-size: 1rem;"><i class="fas fa-folder-open me-2"></i> المستندات والأوراق المطلوبة ${isDocsUpdated ? updatedBadge : ''}</h5>
-          ${docsHTML}
+    <div class="p-1">
+      <!-- Header -->
+      <div class="d-flex align-items-center justify-content-between mb-3 pb-3" style="border-bottom:2px solid rgba(56,189,248,0.2);">
+        <h4 class="font-weight-bold mb-0" style="color:#38bdf8;">${escapeHtml(service.name)} ${updatedBadge}</h4>
+        <div class="d-flex gap-2 align-items-center">
+          ${firstFileKey ? `<button class="btn font-weight-bold px-3 py-2 rounded-pill" style="background:linear-gradient(135deg,#059669,#10b981);color:#fff;border:none;font-size:0.85rem;" onclick="downloadAttachedFile('${service.id}', '${firstFileKey}')" title="تحميل المستند"><i class="fas fa-download me-1"></i> تحميل</button>` : ''}
+          <span class="badge font-weight-bold px-3 py-2 rounded-pill" style="background:rgba(16,185,129,0.15);color:#34d399;border:1px solid rgba(16,185,129,0.3);font-size:0.85rem;">
+            ${service.price > 0 ? service.price + ' ج.م' : 'مجانًا'}
+          </span>
+          <span class="badge font-weight-bold px-3 py-2 rounded-pill" style="background:rgba(56,189,248,0.15);color:#38bdf8;border:1px solid rgba(56,189,248,0.3);font-size:0.85rem;">
+            <i class="far fa-clock me-1"></i> ${escapeHtml(service.duration)}
+          </span>
         </div>
       </div>
 
-      <!-- Right Column: Price & Duration, Printable Files -->
-      <div class="col-md-4">
-        <!-- 4. Price & Extraction Duration Meta Block (Emerald Green Glow Card) -->
-        <div class="glowing-part-card p-3.5 rounded-4 mb-4" style="border: 2px solid #10b981; background: rgba(16, 185, 129, 0.08); box-shadow: 0 0 15px rgba(16, 185, 129, 0.25);">
-          <div class="row g-2 text-center align-items-center">
-            <div class="col-6 border-end border-secondary">
-              <div class="detail-part-meta font-weight-bold">
-                <span class="d-block text-secondary font-size-xs mb-1" title="تكلفة الخدمة"><i class="fas fa-coins text-warning fs-5"></i> ${isPriceUpdated ? updatedBadge : ''}</span>
-                <span class="fs-5 text-success font-weight-bold">${service.price > 0 ? service.price + ' ج.م' : 'مجانًا'}</span>
-              </div>
-            </div>
-            <div class="col-6">
-              <div class="detail-part-meta font-weight-bold">
-                <span class="d-block text-secondary font-size-xs mb-1" title="مدة الاستخراج والتسليم"><i class="far fa-clock text-info fs-5"></i></span>
-                <span class="fs-5 text-cyan font-weight-bold" style="font-size: 0.95rem!important;">${escapeHtml(service.duration)}</span>
-              </div>
-            </div>
-          </div>
-        </div>
+      <!-- الوصف -->
+      <div class="rounded-4 p-3 mb-3" style="border:1.5px solid #0891b2;background:rgba(8,145,178,0.06);">
+        <h6 class="font-weight-bold mb-2" style="color:#22d3ee;font-size:0.9rem;"><i class="fas fa-align-right me-1"></i> وصف الخدمة</h6>
+        <p class="text-white mb-0" style="font-size:0.9rem;line-height:1.7;">${escapeHtml(service.description || 'لا يوجد وصف')}</p>
+      </div>
 
-        <!-- 5. Printable Paper Forms & Templates Block (Purple Glow Card) -->
-        <div class="glowing-part-card p-3.5 rounded-4" style="border: 2px solid #8b5cf6; background: rgba(139, 92, 246, 0.08); box-shadow: 0 0 15px rgba(139, 92, 246, 0.25);">
-          <h5 class="font-weight-bold mb-3" style="color: #c084fc!important; font-size: 1rem;"><i class="fas fa-file-lines me-2"></i> المستندات والنماذج الورقية ${isFilesUpdated ? updatedBadge : ''}</h5>
-          ${filesHTML}
-        </div>
+      <!-- الخطوات -->
+      <div class="rounded-4 p-3 mb-3" style="border:1.5px solid #d97706;background:rgba(217,119,6,0.06);">
+        <h6 class="font-weight-bold mb-2" style="color:#fbbf24;font-size:0.9rem;"><i class="fas fa-list-check me-1"></i> خطوات الاستخراج</h6>
+        ${stepsHTML || '<div class="text-secondary font-size-sm">لا توجد خطوات محددة</div>'}
+      </div>
+
+      <!-- المستندات -->
+      <div class="rounded-4 p-3 mb-3" style="border:1.5px solid #db2777;background:rgba(219,39,119,0.06);">
+        <h6 class="font-weight-bold mb-2" style="color:#f472b6;font-size:0.9rem;"><i class="fas fa-folder-open me-1"></i> المستندات المطلوبة</h6>
+        ${docsHTML || '<div class="text-secondary font-size-sm">لا توجد مستندات مطلوبة</div>'}
+      </div>
+
+      <!-- المرفقات -->
+      <div class="rounded-4 p-3" style="border:1.5px solid #7c3aed;background:rgba(124,58,237,0.06);">
+        <h6 class="font-weight-bold mb-2" style="color:#a78bfa;font-size:0.9rem;"><i class="fas fa-paperclip me-1"></i> المرفقات</h6>
+        ${filesHTML || '<div class="text-secondary font-size-sm">لا توجد مرفقات</div>'}
       </div>
     </div>
   `;
@@ -749,11 +701,87 @@ async function printAttachedFile(serviceId, fileId) {
     db.ref(`deskServices/${serviceId}/files/${fileId}/printCount`).transaction(c => (c || 0) + 1);
   }
 
-  // Open preview of exact uploaded Word file and trigger print
-  await previewAttachedFile(serviceId, fileId);
-  setTimeout(() => {
-    printEditedPreviewDocument();
-  }, 1000);
+  showLoading(true);
+  const fileData = await getFileContent(serviceId, fileId);
+  showLoading(false);
+
+  if (!fileData) {
+    showToast("⚠️ فشل تحميل الملف للطباعة", "error");
+    return;
+  }
+
+  const src = fileData.type === 'url' ? fileData.url : fileData.dataUrl;
+  const isBase64 = fileData.type === 'base64' || (src && src.startsWith('data:'));
+
+  // Helper: create blob URL from base64
+  function dataUrlToBlobUrl(dataUrl) {
+    const parts = dataUrl.split(',');
+    const mime = parts[0].match(/:(.*?);/)[1];
+    const raw = atob(parts[1]);
+    const arr = new Uint8Array(raw.length);
+    for (let i = 0; i < raw.length; i++) arr[i] = raw.charCodeAt(i);
+    return URL.createObjectURL(new Blob([arr], { type: mime }));
+  }
+
+  const fileName = fileData.name || '';
+  const ext = fileName.split('.').pop().toLowerCase();
+
+  if (ext === 'pdf') {
+    const blobUrl = isBase64 ? dataUrlToBlobUrl(src) : src;
+    const win = window.open(blobUrl, '_blank');
+    if (win) {
+      win.onload = () => { win.focus(); win.print(); };
+    }
+  } else if (['jpg', 'jpeg', 'png', 'gif', 'webp'].includes(ext)) {
+    const html = `<!DOCTYPE html><html dir="rtl"><head><meta charset="UTF-8"><style>body{margin:0;display:flex;align-items:center;justify-content:center;min-height:100vh;}img{max-width:100%;max-height:100vh;}</style></head><body><img src="${src}"></body></html>`;
+    const blob = new Blob([html], { type: 'text/html' });
+    const url = URL.createObjectURL(blob);
+    const win = window.open(url, '_blank');
+    if (win) {
+      win.onload = () => { win.focus(); win.print(); };
+    }
+  } else if (ext === 'docx' || ext === 'doc') {
+    const printWin = window.open('', '_blank');
+    if (!printWin) return;
+    printWin.document.write(`<!DOCTYPE html><html dir="rtl"><head><meta charset="UTF-8"><title>طباعة - ${escapeHtml(fileName)}</title><style>body{background:#fff;color:#000;font-family:'Tajawal',sans-serif;padding:20px;direction:rtl;}</style></head><body><p style="text-align:center;color:#666;">جاري تحميل المستند...</p></body></html>`);
+    printWin.document.close();
+
+    try {
+      let docxBlob;
+      if (isBase64) {
+        const base64Data = src.split(',')[1] || src;
+        const byteChars = atob(base64Data);
+        const byteNums = new Array(byteChars.length);
+        for (let i = 0; i < byteChars.length; i++) byteNums[i] = byteChars.charCodeAt(i);
+        docxBlob = new Blob([new Uint8Array(byteNums)], { type: 'application/vnd.openxmlformats-officedocument.wordprocessingml.document' });
+      } else {
+        const resp = await fetch(src);
+        docxBlob = await resp.blob();
+      }
+
+      if (window.docx && window.docx.renderAsync) {
+        const container = printWin.document.createElement('div');
+        container.style.cssText = 'background:#fff;color:#000;text-align:right;direction:rtl;font-family:Tajawal,sans-serif;padding:20px;';
+        printWin.document.body.innerHTML = '';
+        printWin.document.body.appendChild(container);
+        await window.docx.renderAsync(docxBlob, container, null, {
+          className: "docx", inWrapper: true, ignoreWidth: false, ignoreHeight: false,
+          experimental: true, renderHeaders: true, renderFooters: true,
+          renderFootnotes: true, renderEndnotes: true, useBase64URL: true, breakPages: true
+        });
+        printWin.focus();
+        setTimeout(() => printWin.print(), 800);
+      } else {
+        printWin.document.body.innerHTML = '<p style="text-align:center;color:red;">مكتبة المعاينة غير متاحة</p>';
+      }
+    } catch (e) {
+      printWin.document.body.innerHTML = `<p style="text-align:center;color:red;">فشل تحميل المستند: ${e.message}</p>`;
+    }
+  } else {
+    // Fallback: try opening directly
+    const blobUrl = isBase64 ? dataUrlToBlobUrl(src) : src;
+    window.open(blobUrl, '_blank');
+  }
 }
 
 function printIframe(url) {

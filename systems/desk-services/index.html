@@ -108,10 +108,6 @@
         </div>
       </div>
 
-      <!-- Categories Filter bar -->
-      <div class="categories-filter-wrapper mt-3 d-flex flex-wrap gap-2" id="categories-filter-wrapper">
-        <!-- Dynamically rendered via renderCategoryTabs() -->
-      </div>
     </section>
 
     <!-- Loading Indicator -->
@@ -162,8 +158,8 @@
           <button class="btn btn-danger" onclick="deleteCurrentService()"><i class="fas fa-trash me-1"></i> حذف الخدمة</button>
         </div>
         <div class="d-flex gap-2 ms-auto">
-          <button class="btn btn-cyan-gradient px-4 font-weight-bold" style="color: #ffc107!important; font-size: 1.05rem;" onclick="openStudentServiceRegistrationModal(window.currentService ? window.currentService.id : null)">
-            <i class="fas fa-user-plus me-1" style="color: #ffc107;"></i> <span style="color: #ffc107!important;">تسجيل طلب</span>
+          <button class="btn btn-animated-frame px-4 font-weight-bold" style="background:rgba(15,23,42,0.95);background-clip:padding-box;color:#fff;font-size:1.05rem;padding:10px 24px;" onclick="openStudentServiceRegistrationModal(window.currentService ? window.currentService.id : null)">
+            <i class="fas fa-user-plus me-1"></i> تسجيل طلب
           </button>
           <button class="btn btn-ghost" onclick="closeModal('details-modal')">إغلاق</button>
         </div>
