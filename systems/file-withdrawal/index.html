@@ -808,12 +808,13 @@
       return '—';
     }
 
-    function _getLevel(code) {
+    function _getLevel(code, record) {
+      if (record && (record.level || record.grade || record.academicLevel)) return record.level || record.grade || record.academicLevel;
       var _stuList = [];
       try { _stuList = JSON.parse(localStorage.getItem('lotus_students') || '[]'); } catch(e) {}
       var _s = _stuList.find(function(x) { return x.studentCode === code || x.code === code; });
       if (_s && _s.level) return _s.level;
-      return typeof getGrade === 'function' ? getGrade(code) : '—';
+      return typeof getGrade === 'function' ? getGrade(code, record) : '—';
     }
 
     function toEnglishDigits(str) {
@@ -1117,6 +1118,70 @@
     });
 
     // Colleges
+    function standardizeCollegeName(name) {
+      if (!name) return '';
+      name = String(name).trim();
+      const defaults = [
+        'طب الفم والاسنان',
+        'الادارة والاقتصاد والعلوم السياسية',
+        'العلاج الطبيعي',
+        'الحاسبات والمعلومات والذكاء الاصطناعي',
+        'التمريض',
+        'تكنولوجيا العلوم الصحية التطبيقية',
+        'الهندسة',
+        'الصيدلة'
+      ];
+      function norm(str) {
+        if (!str) return '';
+        return str.replace(/^كلية\s+/, '')
+                  .replace(/[أإآ]/g, 'ا')
+                  .replace(/ة/g, 'ه')
+                  .replace(/ى/g, 'ي')
+                  .replace(/\s+/g, ' ')
+                  .trim();
+      }
+      const normName = norm(name);
+      for (const d of defaults) {
+        if (norm(d) === normName) return d;
+      }
+      if (normName.includes('اداره') || normName.includes('اقتصاد') || normName.includes('علوم سياسيه') || normName.includes('سياسيه')) {
+        return 'الادارة والاقتصاد والعلوم السياسية';
+      }
+      if (normName.includes('اسنان') || normName.includes('أسنان')) {
+        return 'طب الفم والاسنان';
+      }
+      if (normName.includes('حاسبات') || normName.includes('ذكاء اصطناعي') || normName.includes('معلومات')) {
+        return 'الحاسبات والمعلومات والذكاء الاصطناعي';
+      }
+      if (normName.includes('صحيه') || normName.includes('تكنولوجيا العلوم الصحيه')) {
+        return 'تكنولوجيا العلوم الصحية التطبيقية';
+      }
+      if (normName.includes('هندسه') || normName.includes('هندسة')) {
+        return 'الهندسة';
+      }
+      if (normName.includes('صيدله') || normName.includes('صيدلة')) {
+        return 'الصيدلة';
+      }
+      if (normName.includes('علاج طبيعي') || normName.includes('علاج')) {
+        return 'العلاج الطبيعي';
+      }
+      if (normName.includes('تمريض')) {
+        return 'التمريض';
+      }
+      for (const d of defaults) {
+        if (normName.includes(norm(d)) || norm(d).includes(normName)) return d;
+      }
+      return name;
+    }
+
+    function compareColleges(col1, col2) {
+      function norm(str) {
+        if (!str) return '';
+        return String(str).replace(/^كلية\s+/, '').replace(/[أإآ]/g, 'ا').replace(/ة/g, 'ه').replace(/ى/g, 'ي').replace(/\s+/g, ' ').trim();
+      }
+      return norm(col1) === norm(col2);
+    }
+
     function renderCollegeSelects() {
       const defaultColleges = [
         'طب الفم والاسنان',
@@ -1126,11 +1191,12 @@
         'التمريض',
         'تكنولوجيا العلوم الصحية التطبيقية',
         'الهندسة',
-        'الصيدلة',
-        'الفنون التطبيقية'
+        'الصيدلة'
       ];
-      const fromRecords = [...new Set(allRecords.map(r => r.college).filter(Boolean))];
-      const allNames = [...new Set([...defaultColleges, ...colleges.map(c => c.name), ...fromRecords])].sort((a, b) => a.localeCompare(b, 'ar'));
+      const fromRecords = [...new Set(allRecords.map(r => standardizeCollegeName(r.college)).filter(Boolean))];
+      const allNames = [...new Set([...defaultColleges, ...colleges.map(c => standardizeCollegeName(c.name)), ...fromRecords])]
+        .filter(c => c && !c.includes('فنون'))
+        .sort((a, b) => a.localeCompare(b, 'ar'));
       const opts = '<option value="">اختر الكلية</option>' + allNames.map(n => '<option value="' + n + '">' + n + '</option>').join('');
       const fo = '<option value="">كل الكليات</option>' + allNames.map(n => '<option value="' + n + '">' + n + '</option>').join('');
 
@@ -1275,7 +1341,10 @@
     try {
       var _cachedData = JSON.parse(localStorage.getItem('lotus_withdrawalRequests_cache') || '[]');
       if (Array.isArray(_cachedData) && _cachedData.length > 0) {
-        allRecords = _cachedData;
+        allRecords = _cachedData.map(function(rec) {
+          rec.college = standardizeCollegeName(rec.college || getCollegeFromCode(rec.studentCode));
+          return rec;
+        });
         setTimeout(function() {
           renderTable();
           renderRegTable();
@@ -1297,38 +1366,10 @@
         rec.nationalId = rec.nationalId || rec.nid || rec.national_id || rec.NationalId || '';
         rec.fileNumber = rec.fileNumber || rec.fileNo || rec.file_number || rec.FileNumber || '';
         rec.withdrawalDate = fmtDate(rec.withdrawalDate || rec.date || rec.withdrawal_date || rec.Date || '');
+        rec.college = standardizeCollegeName(rec.college || getCollegeFromCode(rec.studentCode));
 
         if (!isEmptyRecord(rec)) {
-          var studentKey = '';
-          if (rec.studentCode && rec.studentCode !== '-') {
-            studentKey = 'code:' + rec.studentCode.trim().toLowerCase();
-          } else if (rec.nationalId && rec.nationalId !== '-') {
-            studentKey = 'nid:' + rec.nationalId.trim().toLowerCase();
-          } else if (rec.studentName && rec.studentName !== '-') {
-            studentKey = 'name:' + rec.studentName.trim().toLowerCase();
-          } else {
-            studentKey = 'id:' + rec.id;
-          }
-
-          if (!studentMap.has(studentKey)) {
-            studentMap.set(studentKey, rec);
-          } else {
-            // FIX: Do NOT auto-delete duplicates from Firebase (was causing records to vanish/revert)
-            // Instead, keep the newer record in memory only
-            var existingRec = studentMap.get(studentKey);
-            var existingTime = Number(existingRec.updatedAt || existingRec.createdAt || 0);
-            var newTime = Number(rec.updatedAt || rec.createdAt || 0);
-            if (newTime >= existingTime) {
-              studentMap.set(studentKey, rec);
-            }
-            // Keep the older record too but with different key to avoid data loss
-            if (rec.id !== existingRec.id) {
-              var altKey = studentKey + '_alt_' + (newTime >= existingTime ? existingRec.id : rec.id);
-              if (!studentMap.has(altKey)) {
-                studentMap.set(altKey, newTime >= existingTime ? existingRec : rec);
-              }
-            }
-          }
+          studentMap.set(rec.id, rec);
         }
       });
 
@@ -1367,11 +1408,29 @@
       var dt = new Date(d);
       return isNaN(dt.getTime()) ? 0 : dt.getTime();
     }
-    function getGrade(code) {
-      var c = String(code || '').substring(0, 2);
-      if (c === '24') return 'الفرقة الثالثة';
-      if (c === '25') return 'الفرقة الثانية';
-      if (c === '26') return 'الفرقة الأولى';
+    function getGrade(code, record) {
+      if (record && (record.level || record.grade || record.academicLevel)) {
+        var lev = String(record.level || record.grade || record.academicLevel).trim();
+        if (lev && lev !== 'غير محدد' && lev !== '-') return lev;
+      }
+      if (!code) return 'غير محدد';
+      var s = toEnglishDigits(code).replace(/\D/g, '');
+      if (!s) return 'غير محدد';
+      
+      var c = s;
+      if (s.startsWith('20') && s.length >= 4) {
+        c = s.substring(2, 4);
+      } else {
+        c = s.substring(0, 2);
+      }
+      
+      if (c === '26' || c === '01' || c === '1') return 'الفرقة الأولى';
+      if (c === '25' || c === '02' || c === '2') return 'الفرقة الثانية';
+      if (c === '24' || c === '03' || c === '3') return 'الفرقة الثالثة';
+      if (c === '23' || c === '04' || c === '4') return 'الفرقة الرابعة';
+      if (c === '22' || c === '05' || c === '5') return 'الفرقة الخامسة';
+      if (c === '21' || c === '06' || c === '6') return 'الفرقة السادسة';
+
       return 'غير محدد';
     }
     function getCollegeFromCode(code) {
@@ -1387,8 +1446,7 @@
         '5': 'التمريض',
         '6': 'تكنولوجيا العلوم الصحية التطبيقية',
         '7': 'الهندسة',
-        '8': 'الصيدلة',
-        '9': 'الفنون التطبيقية'
+        '8': 'الصيدلة'
       };
 
       if (s.startsWith('20')) {
@@ -1454,10 +1512,10 @@
           var nid = String(r.nationalId || '');
           if (!(code.includes(s) || name.includes(s) || nid.includes(s))) return false;
         }
-        if (c && r.college !== c) return false;
+        if (c && !compareColleges(r.college, c)) return false;
         if (y && r.academicYear !== y) return false;
         if (p && r.paymentStatus !== p) return false;
-        if (g && getGrade(r.studentCode) !== g) return false;
+        if (g && getGrade(r.studentCode, r) !== g) return false;
         var rd = toComparable(r.withdrawalDate);
         var cdf = toComparable(df);
         var cdt = toComparable(dt);
@@ -1575,10 +1633,10 @@
           var nid = String(r.nationalId || '');
           if (!(code.includes(s) || name.includes(s) || nid.includes(s))) return false;
         }
-        if (c && r.college !== c) return false;
+        if (c && !compareColleges(r.college, c)) return false;
         if (y && r.academicYear !== y) return false;
         if (p && r.paymentStatus !== p) return false;
-        if (g && getGrade(r.studentCode) !== g) return false;
+        if (g && getGrade(r.studentCode, r) !== g) return false;
         var rd = toComparable(r.withdrawalDate);
         var cdf = toComparable(df);
         var cdt = toComparable(dt);
@@ -1618,7 +1676,7 @@
             <td style="font-weight:700;">${r.studentName || ''}</td>
             <td>${r.nationalId || ''}</td>
             <td><span class="badge" style="background:rgba(6,182,212,0.15);color:var(--accent-cyan);padding:4px 8px;border-radius:6px;">${r.college || getCollegeFromCode(r.studentCode) || ''}</span></td>
-            <td>${_getLevel(r.studentCode)}</td>
+            <td>${_getLevel(r.studentCode, r)}</td>
             <td>${fmtDate(r.withdrawalDate)}</td>
             <td>${r.academicYear || ''}</td>
             <td><span class="badge-status ${r.paymentStatus === 'مسدد' ? 'badge-paid' : 'badge-unpaid'}">${r.paymentStatus || ''}</span></td>
@@ -1698,7 +1756,7 @@
         studentCode: document.getElementById('code').value.trim(),
         studentName: document.getElementById('name').value.trim(),
         nationalId: document.getElementById('nid').value.trim(),
-        college: document.getElementById('college').value,
+        college: standardizeCollegeName(document.getElementById('college').value),
         withdrawalDate: fmtDate(document.getElementById('date').value),
         academicYear: document.getElementById('acYear').value,
         paymentStatus: document.getElementById('payment').value,
@@ -1856,7 +1914,7 @@
         studentCode: codeVal,
         studentName: v('editName'),
         nationalId: v('editNid'),
-        college: v('editCollege') || getCollegeFromCode(codeVal),
+        college: standardizeCollegeName(v('editCollege') || getCollegeFromCode(codeVal)),
         withdrawalDate: editDateVal,
         academicYear: v('editYear'),
         paymentStatus: v('editPayment'),
@@ -2021,7 +2079,7 @@
         var cto = toComparable(to);
         if (cfrom && rd < cfrom) return false;
         if (cto && rd > cto) return false;
-        if (college && r.college !== college) return false;
+        if (college && !compareColleges(r.college, college)) return false;
         if (payment && r.paymentStatus !== payment) return false;
         if (year && year !== 'كل الأعوام' && r.academicYear !== year) return false;
         if (grade && getGrade(r.studentCode) !== grade) return false;
@@ -2228,9 +2286,11 @@
             var acYear = r['العام الجامعي'] || '';
             var code = r['كود الطالب'] || r['الكود'] || '';
             var college = r['الكلية'] || r['القسم'] || '';
-            if (!college && code) {
+            if (college) {
+              college = standardizeCollegeName(college);
+            } else if (code) {
               var shortName = getCollegeFromCode(code);
-              if (shortName) college = matchCollegeName(shortName);
+              if (shortName) college = standardizeCollegeName(shortName);
             }
             if (!acYear && dateStr) {
               var y = parseYearFromStr(dateStr);
