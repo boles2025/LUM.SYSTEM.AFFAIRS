@@ -482,7 +482,7 @@
         <script>
             (function(){
                 try {
-                    var s = JSON.parse(localStorage.getItem('lotus_session'));
+                    var s = JSON.parse(localStorage.getItem('lotus_session') || localStorage.getItem('lotus_auth_session') || localStorage.getItem('auth_session'));
                     if (s && s.username && Date.now() - (s.loginTime||0) < 28800000) {
                         document.getElementById('login-overlay').style.display = 'none';
                     }
@@ -632,31 +632,33 @@
 <script>
     function applySystemCardPermissions(user) {
         if (!user) return;
-        const isBoles = user.username === 'boles' || user.role === 'admin';
+        const username = (user.username || '').trim().toLowerCase();
+        const isAdmin = username === 'boles' || user.role === 'admin';
+        const isOmar = username === 'omar';
 
         const cardMgmt = document.getElementById('file-mgmt-card');
         if (cardMgmt) {
-            cardMgmt.style.display = (isBoles || (window.hasPermission && window.hasPermission('access_file_management'))) ? 'block' : 'none';
+            cardMgmt.style.display = (!isOmar) ? 'block' : 'none';
         }
 
         const cardWithdrawal = document.getElementById('file-withdrawal-card');
         if (cardWithdrawal) {
-            cardWithdrawal.style.display = (isBoles || (window.hasPermission && window.hasPermission('access_withdrawal'))) ? 'block' : 'none';
+            cardWithdrawal.style.display = (!isOmar) ? 'block' : 'none';
         }
 
         const cardCert = document.getElementById('cert-calc-card');
         if (cardCert) {
-            cardCert.style.display = (isBoles || (window.hasPermission && window.hasPermission('access_certificate'))) ? 'block' : 'none';
+            cardCert.style.display = 'block';
         }
 
         const cardDesk = document.getElementById('desk-services-card');
         if (cardDesk) {
-            cardDesk.style.display = (isBoles || (window.hasPermission && window.hasPermission('access_desk_services'))) ? 'block' : 'none';
+            cardDesk.style.display = (!isOmar) ? 'block' : 'none';
         }
 
         const cardPerm = document.getElementById('permissions-card');
         if (cardPerm) {
-            cardPerm.style.display = (user.username === 'boles') ? 'block' : 'none';
+            cardPerm.style.display = isAdmin ? 'block' : 'none';
         }
     }
 
@@ -668,23 +670,50 @@
             return;
         }
 
-        const isBoles = user.username === 'boles' || user.role === 'admin';
+        const username = (user.username || '').trim().toLowerCase();
+        const isAdmin = username === 'boles' || user.role === 'admin';
+        const isOmar = username === 'omar';
+
         let permNeeded = null;
         let systemName = 'نظام غير معروف';
 
-        if (url.indexOf('file-management') !== -1) { permNeeded = 'access_file_management'; systemName = 'نظام الملفات'; }
-        else if (url.indexOf('file-withdrawal') !== -1) { permNeeded = 'access_withdrawal'; systemName = 'نظام السحب والإيداع'; }
-        else if (url.indexOf('certificate-calc') !== -1) { permNeeded = 'access_certificate'; systemName = 'حساب الشهادات'; }
-        else if (url.indexOf('desk-services') !== -1) { permNeeded = 'access_desk_services'; systemName = 'الخدمات المكتبية'; }
+        if (url.indexOf('file-management') !== -1) {
+            if (isOmar) {
+                alert('🔒 عذراً، ليس لديك صلاحية للدخول إلى نظام إدارة الملفات.');
+                return;
+            }
+            permNeeded = 'access_file_management';
+            systemName = 'نظام إدارة الملفات';
+        }
+        else if (url.indexOf('file-withdrawal') !== -1) {
+            if (isOmar) {
+                alert('🔒 عذراً، ليس لديك صلاحية للدخول إلى نظام السحب والإيداع.');
+                return;
+            }
+            permNeeded = 'access_withdrawal';
+            systemName = 'نظام السحب والإيداع';
+        }
+        else if (url.indexOf('certificate-calc') !== -1) {
+            permNeeded = 'access_certificate';
+            systemName = 'حساب الشهادات';
+        }
+        else if (url.indexOf('desk-services') !== -1) {
+            if (isOmar) {
+                alert('🔒 عذراً، ليس لديك صلاحية للدخول إلى الخدمات الطلابية.');
+                return;
+            }
+            permNeeded = 'access_desk_services';
+            systemName = 'الخدمات الطلابية';
+        }
         else if (url.indexOf('permissions') !== -1) {
-            if (user.username !== 'boles') {
-                alert('🔒 هذه الصفحة مخصصة لمدير النظام الأساسي (boles) فقط.');
+            if (!isAdmin) {
+                alert('🔒 هذه الصفحة مخصصة لمديري النظام فقط.');
                 return;
             }
             systemName = 'إدارة الصلاحيات والسجل';
         }
 
-        if (!isBoles && permNeeded && window.hasPermission && !window.hasPermission(permNeeded)) {
+        if (!isAdmin && permNeeded && window.hasPermission && !window.hasPermission(permNeeded)) {
             alert('🔒 ليس لديك صلاحية للدخول إلى (' + systemName + '). يرجى مراجعة مدير النظام.');
             return;
         }
@@ -983,115 +1012,91 @@ async function closeAndBackup() {
     try {
         animBar();
         
-        setStatus(15, 'جاري قراءة بيانات الطلاب من الخادم...');
-        await sleep(200);
+        setStatus(25, 'جاري قراءة وتجهيز كافة بيانات النظام في وقت واحد...');
+
+        const safeTimeout = (promise, ms) => Promise.race([
+            promise,
+            new Promise(resolve => setTimeout(() => resolve(null), ms))
+        ]);
+
+        const authDb = window.AUTH_DB && !window.AUTH_IS_OFFLINE ? window.AUTH_DB : null;
+        const withDb = window.WITHDRAWAL_DB && !window.AUTH_IS_OFFLINE ? window.WITHDRAWAL_DB : null;
+
+        const stuTask = authDb ? safeTimeout(authDb.ref('students').once('value'), 1500).catch(() => null) : Promise.resolve(null);
+        const wTask = withDb ? safeTimeout(withDb.ref('withdrawalRequests').once('value'), 1500).catch(() => null) : Promise.resolve(null);
+        const empTask = authDb ? safeTimeout(authDb.ref('employees').once('value'), 1500).catch(() => null) : Promise.resolve(null);
+        const logTask = authDb ? safeTimeout(authDb.ref('activityLog').once('value'), 1500).catch(() => null) : Promise.resolve(null);
+        const certTask = authDb ? safeTimeout(authDb.ref('certificateRecords').once('value'), 1500).catch(() => null) : Promise.resolve(null);
+        const colTask = withDb ? safeTimeout(withDb.ref('colleges').once('value'), 1500).catch(() => null) : Promise.resolve(null);
+        const cfgTask = authDb ? safeTimeout(authDb.ref('settings/config').once('value'), 1500).catch(() => null) : Promise.resolve(null);
+
+        const [stuSnap, wSnap, empSnap, logSnap, certSnap, colSnap, cfgSnap] = await Promise.all([
+            stuTask, wTask, empTask, logTask, certTask, colTask, cfgTask
+        ]);
+
+        setStatus(60, 'جاري معالجة البيانات وتجميع الجداول...');
+
         let studentsArr = lsGet('lotus_students') || [];
-        if (window.AUTH_DB && !window.AUTH_IS_OFFLINE) {
-            try {
-                const snap = await window.AUTH_DB.ref('students').once('value');
-                if (snap.exists()) {
-                    const fb = snap.val();
-                    const fbArr = Object.keys(fb).map(k => ({ id: k, ...fb[k] }));
-                    const map = {};
-                    studentsArr.forEach(s => map[s.id] = s);
-                    fbArr.forEach(s => map[s.id] = s);
-                    studentsArr = Object.values(map);
-                }
-            } catch(e) { /* use local */ }
+        if (stuSnap && stuSnap.exists()) {
+            const fb = stuSnap.val() || {};
+            const fbArr = Object.keys(fb).map(k => ({ id: k, ...fb[k] }));
+            const map = {};
+            studentsArr.forEach(s => map[s.id] = s);
+            fbArr.forEach(s => map[s.id] = s);
+            studentsArr = Object.values(map);
         }
 
-        setStatus(30, 'جاري قراءة سجلات السحب...');
-        await sleep(200);
         let withdrawalArr = lsGet('lotus_withdrawalRequests') || [];
-        if (window.WITHDRAWAL_DB && !window.AUTH_IS_OFFLINE) {
-            try {
-                const snap = await window.WITHDRAWAL_DB.ref('withdrawalRequests').once('value');
-                if (snap.exists()) {
-                    const fb = snap.val();
-                    const fbArr = Object.keys(fb).map(k => ({ id: k, ...fb[k] }));
-                    const map = {};
-                    withdrawalArr.forEach(w => map[w.id] = w);
-                    fbArr.forEach(w => map[w.id] = w);
-                    withdrawalArr = Object.values(map);
-                }
-            } catch(e) {}
+        if (wSnap && wSnap.exists()) {
+            const fb = wSnap.val() || {};
+            const fbArr = Object.keys(fb).map(k => ({ id: k, ...fb[k] }));
+            const map = {};
+            withdrawalArr.forEach(w => map[w.id] = w);
+            fbArr.forEach(w => map[w.id] = w);
+            withdrawalArr = Object.values(map);
         }
 
-        setStatus(40, 'جاري قراءة بيانات الموظفين...');
-        await sleep(200);
         let employeesArr = lsGet('lotus_employees') || [];
-        if (window.AUTH_DB && !window.AUTH_IS_OFFLINE) {
-            try {
-                const snap = await window.AUTH_DB.ref('employees').once('value');
-                if (snap.exists()) {
-                    const fb = snap.val();
-                    const fbArr = Object.keys(fb).map(k => ({ username: k, ...fb[k] }));
-                    const map = {};
-                    employeesArr.forEach(e => map[e.username] = e);
-                    fbArr.forEach(e => map[e.username] = e);
-                    employeesArr = Object.values(map);
-                }
-            } catch(e) {}
+        if (empSnap && empSnap.exists()) {
+            const fb = empSnap.val() || {};
+            const fbArr = Object.keys(fb).map(k => ({ username: k, ...fb[k] }));
+            const map = {};
+            employeesArr.forEach(e => map[e.username] = e);
+            fbArr.forEach(e => map[e.username] = e);
+            employeesArr = Object.values(map);
         }
 
-        setStatus(50, 'جاري قراءة سجل النشاطات وسجل الشهادات...');
-        await sleep(200);
         let logArr = lsGet('lotus_activity_log') || [];
-        if (window.AUTH_DB && !window.AUTH_IS_OFFLINE) {
-            try {
-                const snap = await window.AUTH_DB.ref('activityLog').once('value');
-                if (snap.exists()) {
-                    const fb = snap.val();
-                    const fbArr = Object.keys(fb).map(k => ({ id: k, ...fb[k] }));
-                    const map = {};
-                    logArr.forEach(l => map[l.id] = l);
-                    fbArr.forEach(l => map[l.id] = l);
-                    logArr = Object.values(map);
-                }
-            } catch(e) {}
+        if (logSnap && logSnap.exists()) {
+            const fb = logSnap.val() || {};
+            const fbArr = Object.keys(fb).map(k => ({ id: k, ...fb[k] }));
+            const map = {};
+            logArr.forEach(l => map[l.id] = l);
+            fbArr.forEach(l => map[l.id] = l);
+            logArr = Object.values(map);
         }
 
         let certRecordsArr = [];
-        try {
-            certRecordsArr = JSON.parse(localStorage.getItem('lotus_certificate_records') || '[]');
-        } catch(e) {}
-        if (window.AUTH_DB && !window.AUTH_IS_OFFLINE) {
-            try {
-                const snap = await window.AUTH_DB.ref('certificateRecords').once('value');
-                if (snap.exists()) {
-                    const fb = snap.val();
-                    const fbArr = Object.keys(fb).map(k => fb[k]);
-                    const map = {};
-                    certRecordsArr.forEach(c => map[c.id] = c);
-                    fbArr.forEach(c => map[c.id] = c);
-                    certRecordsArr = Object.values(map);
-                }
-            } catch(e) {}
+        try { certRecordsArr = JSON.parse(localStorage.getItem('lotus_certificate_records') || '[]'); } catch(e) {}
+        if (certSnap && certSnap.exists()) {
+            const fb = certSnap.val() || {};
+            const fbArr = Object.keys(fb).map(k => fb[k]);
+            const map = {};
+            certRecordsArr.forEach(c => map[c.id] = c);
+            fbArr.forEach(c => map[c.id] = c);
+            certRecordsArr = Object.values(map);
         }
 
-        setStatus(65, 'جاري قراءة الإعدادات والكليات...');
-        await sleep(200);
         let configObj = lsGet('lotus_config') || {};
+        if (cfgSnap && cfgSnap.exists()) configObj = cfgSnap.val() || {};
+
         let collegesArr = [];
-        if (window.WITHDRAWAL_DB && !window.AUTH_IS_OFFLINE) {
-            try {
-                const snapCol = await window.WITHDRAWAL_DB.ref('colleges').once('value');
-                if (snapCol.exists()) {
-                    const fb = snapCol.val();
-                    Object.keys(fb).forEach(k => { collegesArr.push({ id: k, ...fb[k] }); });
-                }
-            } catch(e) {}
-        }
-        if (window.AUTH_DB && !window.AUTH_IS_OFFLINE) {
-            try {
-                const snapConfig = await window.AUTH_DB.ref('settings/config').once('value');
-                if (snapConfig.exists()) {
-                    configObj = snapConfig.val() || {};
-                }
-            } catch(e) {}
+        if (colSnap && colSnap.exists()) {
+            const fb = colSnap.val() || {};
+            Object.keys(fb).forEach(k => { collegesArr.push({ id: k, ...fb[k] }); });
         }
 
-        setStatus(75, 'جاري معالجة البيانات وتحضير ورقات الإكسيل...');
+        setStatus(85, 'جاري تحضير ورقات إكسيل الشاملة...');
         await sleep(200);
 
         const attachmentDefs = configObj.globalAttachments || [];
@@ -1134,6 +1139,20 @@ async function closeAndBackup() {
             };
         });
 
+        function _mapStaffName(name) {
+            var map = {
+                'سمية': 'د. سمية',
+                'صفاء': 'د صافي',
+                'مي': 'د. مي',
+                'أحمد': 'أ. أحمد',
+                'محمود': 'أ. محمود',
+                'بيتر': 'أ. بيتر',
+                'مونيكا': 'أ. مونيكا'
+            };
+            if (name && map[name.trim()]) return map[name.trim()];
+            return name;
+        }
+
         function isStaffEmployee(name) {
             if (!name) return false;
             const str = String(name).trim();
@@ -1156,7 +1175,7 @@ async function closeAndBackup() {
             ];
 
             for (let c of candidates) {
-                if (isStaffEmployee(c)) return c;
+                if (isStaffEmployee(c)) return _mapStaffName(c);
             }
 
             const wCode = String(w.studentCode || '').trim();
@@ -1185,7 +1204,7 @@ async function closeAndBackup() {
 
                 if (match) {
                     const emp = match.employeeName || match.employeeUsername;
-                    if (isStaffEmployee(emp)) return emp;
+                    if (isStaffEmployee(emp)) return _mapStaffName(emp);
                 }
             }
 
